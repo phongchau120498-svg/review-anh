@@ -1,8 +1,8 @@
 {
   "san_pham": "san-pham-mau",
   "anh": [
-    {"mau":"bia","nguon":"nguon/san-pham-mau/IMG_1861.jpg","tieu_de":"MẪU: một góc nhìn từ ảnh thật","phu":"Thử bố cục và chữ tiếng Việt.\nNội dung này chờ brief thật."},
-    {"mau":"chi-tiet","nguon":"nguon/san-pham-mau/IMG_2240.jpg","tieu_de":"MẪU: nhìn gần tư liệu","y":["Ảnh minh họa có sẵn trong kho","Chưa suy diễn công dụng sản phẩm"]},
-    {"mau":"chi-tiet","nguon":"nguon/san-pham-mau/IMG_2297.jpg","tieu_de":"MẪU: chờ câu chuyện thật","y":["Chờ tên và điểm nổi bật từ brief","Chờ anh duyệt phong cách bộ ảnh"]}
+    {"mau":"bia","nguon":"nguon/san-pham-mau/IMG_2424.jpg","tieu_de":"MẪU: Body oil\nnhìn ngoài đời ra sao?"},
+    {"mau":"chi-tiet","nguon":"nguon/san-pham-mau/IMG_1861.jpg","tieu_de":"MẪU: Chai khi cầm trên tay","y":["Cận nhãn trên thân chai","Nhìn rõ màu dầu qua vỏ chai"]},
+    {"mau":"chi-tiet","nguon":"nguon/san-pham-mau/IMG_2240.jpg","tieu_de":"MẪU: Thêm một góc nhìn","y":["Ba chai đặt cạnh nhau","Chụp trên nền khăn trắng"]}
   ]
 }

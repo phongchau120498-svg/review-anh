@@ -1,17 +1,14 @@
 @font-face{font-family:BeVietnam;src:url('/*FONT_REGULAR*/') format('truetype');font-weight:400;font-display:block}
 @font-face{font-family:BeVietnam;src:url('/*FONT_BOLD*/') format('truetype');font-weight:700;font-display:block}
 *{box-sizing:border-box}html,body{margin:0;width:1080px;height:1920px;overflow:hidden}
-body{font-family:BeVietnam,sans-serif;background:#f4f0e8;color:#19372f}
+body{font-family:BeVietnam,sans-serif;background:#111;color:#fff}
 h1,p,ul{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}
-.an-toan{position:absolute;left:70px;top:240px;width:810px;height:1140px}
-.nhan{font-size:25px;line-height:1.5;letter-spacing:4px;font-weight:700}
-.tieu-de{font-weight:700;line-height:1.14;letter-spacing:-3px}
-.bia,.chi-tiet{color:#fff}.nen{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.phu-nen{position:absolute;inset:0}
-.bia .phu-nen{background:linear-gradient(180deg,rgba(9,31,25,.78),rgba(9,31,25,.24) 60%,rgba(9,31,25,.82))}
-.chi-tiet .phu-nen{background:linear-gradient(180deg,rgba(9,31,25,.76) 17%,transparent 37% 48%,rgba(9,31,25,.76) 58% 73%,transparent 100%)}
-.bia .tieu-de{position:absolute;top:100px;width:810px;height:570px;font-size:106px}
-.phu{position:absolute;top:880px;width:810px;height:250px;font-size:38px;line-height:1.5;border-left:5px solid #ddedb4;padding-left:25px}
-.chi-tiet .tieu-de{position:absolute;top:65px;width:810px;height:235px;font-size:76px}
-.y{position:absolute;top:870px;width:810px;height:260px;padding-left:38px;font-size:34px;line-height:1.45}
+.an-toan{position:absolute;left:70px;top:240px;width:810px;height:1140px;text-align:center}
+.nen{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tieu-de,.phu,.y{-webkit-text-stroke:.065em #161310;paint-order:stroke fill;text-shadow:0 2px 6px #0009}
+.tieu-de{position:absolute;width:100%;font-weight:700;line-height:1.2;letter-spacing:-.025em}
+.bia .tieu-de{top:290px;height:300px;font-size:72px}
+.phu{position:absolute;top:615px;width:100%;height:250px;font-size:40px;line-height:1.4}
+.chi-tiet .tieu-de{top:75px;height:235px;font-size:60px}
+.y{position:absolute;top:870px;width:100%;height:260px;padding:0;list-style:none;font-size:44px;font-weight:700;line-height:1.4}
 .y li+li{margin-top:12px}
