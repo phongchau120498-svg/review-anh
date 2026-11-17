@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { readFile, writeFile, mkdir, readdir, rename, rm, stat } from 'node:fs/promises';
+import { writeFile, mkdir, readdir, rename, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash, randomUUID } from 'node:crypto';
@@ -9,7 +9,7 @@ import { chromium } from 'playwright';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { ROOT, normalizeProduct, safePath, readBrief, validateCopy, checkImages, renderSet } from '../tools/dung-bo-anh.mjs';
+import { ROOT, MAX_POST_IMAGE_BYTES, normalizeProduct, safePath, readBoundedFile, readBrief, validateCopy, checkImages, renderSet } from '../tools/dung-bo-anh.mjs';
 
 const exec = promisify(execFile);
 const imagePattern = /\.(jpe?g|png|heic|webp)$/i;
@@ -32,8 +32,7 @@ const slideSchema = z.object({
 const setSchema = z.object({ san_pham: productSchema, anh: z.array(slideSchema).min(1).max(20), gia: string(200).optional(), link: string(1000).optional() }).strict();
 
 async function readJson(file) {
-  if ((await stat(file)).size > 100000) throw new Error('JSON tối đa 100 KB');
-  return JSON.parse(await readFile(file, 'utf8'));
+  return JSON.parse(await readBoundedFile(file, 100000, 'JSON'));
 }
 
 async function atomicJson(file, value) {
@@ -85,8 +84,14 @@ async function imageContent(file) {
 
 function validateCaption(input, brief) {
   if (input.kenh === 'threads' && [...input.caption].length > 500) throw new Error('Threads: caption tối đa 500 ký tự');
-  if (input.kenh === 'tiktok' && (!input.tieu_de || [...input.tieu_de].length > 90)) throw new Error('TikTok: cần tieu_de tối đa 90 ký tự');
+  if (input.kenh === 'tiktok' && (!input.tieu_de || input.tieu_de.length > 90)) throw new Error('TikTok: cần tieu_de tối đa 90 đơn vị UTF-16');
   validateCopy({ anh: [{ tieu_de: input.caption, phu: input.tieu_de }] }, brief);
+}
+
+async function verifiedImage(file, sha256) {
+  const bytes = await readBoundedFile(file, MAX_POST_IMAGE_BYTES, 'Ảnh đăng');
+  if (hash(bytes) !== sha256) throw new Error('Ảnh đã đổi từ lúc dựng; dựng lại bộ ảnh và xin duyệt lại trước khi tải');
+  return bytes;
 }
 
 async function loadRun(product, runId) {
@@ -103,11 +108,19 @@ async function loadRun(product, runId) {
   for (const file of manifest.anh) {
     const absolute = await safePath(file, 'ra');
     if (path.dirname(absolute) !== folder || !/\.jpe?g$/i.test(absolute) ||
-        !manifest.kiem?.some(check => check.path === file && check.dat === true)) throw new Error('Manifest chỉ được chứa ảnh đăng đã kiểm trong đúng run');
-    images.push({ file, absolute, sha256: hash(await readFile(absolute)) });
+        !Array.isArray(manifest.kiem)) throw new Error('Manifest chỉ được chứa ảnh đăng đã kiểm trong đúng run');
+    const check = manifest.kiem.find(item => item?.path === file && item.dat === true);
+    if (!check) throw new Error('Manifest chỉ được chứa ảnh đăng đã kiểm trong đúng run');
+    if (typeof check.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(check.sha256)) {
+      throw new Error('Manifest chưa có SHA-256 từ lúc dựng; dựng lại bộ ảnh và xin duyệt trước khi tải');
+    }
+    await verifiedImage(absolute, check.sha256);
+    images.push({ file, absolute, sha256: check.sha256 });
   }
-  const checks = await checkImages(images.map(image => image.file));
-  if (checks.some(check => !check.dat)) throw new Error('Ảnh trong manifest không còn đạt kiểm chuẩn');
+  const checks = await checkImages(images.map(image => image.absolute));
+  if (checks.some((check, i) => !check.dat || check.sha256 !== images[i].sha256)) {
+    throw new Error('Ảnh trong manifest không còn đạt kiểm chuẩn hoặc đã đổi lúc kiểm');
+  }
   const stateFile = await safePath(path.join(folder, 'dang.json'), 'ra', { allowMissing: true });
   if (path.dirname(stateFile) !== folder) throw new Error('dang.json phải thuộc đúng run');
   let state;
@@ -213,7 +226,7 @@ export function createReviewServer({ env = process.env, launchBrowser = () => ch
       return { content: [...textResult({ ...result, bang_xem_tuyet_doi: path.join(ROOT, result.bang_xem) }).content, await imageContent(result.bang_xem)] };
     }));
 
-  register('tai_len_postiz', 'Tải đúng ảnh manifest đã kiểm lên Postiz; không đăng. Cần san_pham, run_id, kenh, caption; TikTok thêm tieu_de tối đa 90 ký tự. Threads caption tối đa 500 ký tự. Giá/link phải khớp brief. Gọi lại cùng run trả ảnh đã tải, không tải lại; upload không rõ kết quả bị khóa chờ đối chiếu. Ví dụ {san_pham:"kem-mau",run_id:"...",kenh:"threads",caption:"Sản phẩm MẪU"}.',
+  register('tai_len_postiz', 'Tải đúng ảnh manifest đã kiểm lên Postiz; không đăng. Cần san_pham, run_id, kenh, caption; TikTok thêm tieu_de tối đa 90 đơn vị UTF-16. Threads caption tối đa 500 ký tự. Giá/link phải khớp brief. Gọi lại cùng run trả ảnh đã tải, không tải lại; upload không rõ kết quả bị khóa chờ đối chiếu. Ví dụ {san_pham:"kem-mau",run_id:"...",kenh:"threads",caption:"Sản phẩm MẪU"}.',
     z.object(publishSchema).strict(), locked(async input => {
       const run = await loadRun(input.san_pham, input.run_id);
       validateCaption(input, run.brief);
@@ -226,12 +239,11 @@ export function createReviewServer({ env = process.env, launchBrowser = () => ch
           if (existing.sha256 !== image.sha256) throw new Error('Ảnh đã thay đổi sau upload');
           continue;
         }
-        run.state.upload_dang_cho = { file: image.file, sha256: image.sha256 };
-        await atomicJson(run.stateFile, run.state);
-        const bytes = await readFile(image.absolute);
-        if (hash(bytes) !== image.sha256) throw new Error('Ảnh vừa thay đổi trước upload; cần đối chiếu');
+        const bytes = await verifiedImage(image.absolute, image.sha256);
         const form = new FormData();
         form.append('file', new Blob([bytes], { type: 'image/jpeg' }), path.basename(image.absolute));
+        run.state.upload_dang_cho = { file: image.file, sha256: image.sha256 };
+        await atomicJson(run.stateFile, run.state);
         let response;
         try {
           response = await fetch(endpoint, { method: 'POST', headers: { Authorization: env.POSTIZ_API_KEY }, body: form,

@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { realpath, readFile, writeFile, mkdir, mkdtemp, rename, rm, stat } from 'node:fs/promises';
+import { constants, open, realpath, readFile, writeFile, mkdir, mkdtemp, rename, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { chromium } from 'playwright';
 
 export const ROOT = await realpath(path.join(path.dirname(fileURLToPath(import.meta.url)), '..'));
+export const MAX_POST_IMAGE_BYTES = 8000000;
 const exec = promisify(execFile);
 const inside = (base, file) => {
   const relative = path.relative(base, file);
@@ -57,11 +58,30 @@ async function mediaPath(value) {
   return safePath(value, inside(path.join(ROOT, 'nguon'), absolute) ? 'nguon' : 'ra');
 }
 
+export async function readBoundedFile(file, maxBytes, label) {
+  // Mở nonblocking để FIFO đổi vào giữa realpath và open không giữ tool vô hạn.
+  const handle = await open(file, constants.O_RDONLY | constants.O_NONBLOCK | constants.O_NOFOLLOW);
+  try {
+    const info = await handle.stat();
+    if (!info.isFile()) throw new Error(`${label}: cần file thường`);
+    const { size } = info;
+    if (size > maxBytes) throw new Error(`${label}: tối đa ${maxBytes} byte`);
+    const bytes = Buffer.allocUnsafe(size + 1);
+    let offset = 0;
+    while (offset < bytes.length) {
+      const { bytesRead } = await handle.read(bytes, offset, bytes.length - offset, offset);
+      if (!bytesRead) break;
+      offset += bytesRead;
+    }
+    if (offset !== size) throw new Error(`${label}: kích thước file vừa thay đổi`);
+    return bytes.subarray(0, size);
+  } finally { await handle.close(); }
+}
+
 export async function readBrief(product) {
   const slug = normalizeProduct(product);
   const file = await safePath(`nguon/${slug}/brief.json`, 'nguon');
-  if ((await stat(file)).size > 100000) throw new Error('brief.json tối đa 100 KB');
-  const brief = JSON.parse(await readFile(file, 'utf8'));
+  const brief = JSON.parse(await readBoundedFile(file, 100000, 'brief.json'));
   text(brief.ten, 'brief.ten', 200);
   text(brief.gia, 'brief.gia', 200);
   text(brief.link, 'brief.link', 1000);
@@ -85,25 +105,34 @@ export function validateCopy(data, brief) {
     if (data[key] !== undefined && data[key] !== brief[key]) throw new Error(`${key} không khớp nguyên văn brief`);
   }
   const copy = data.anh.flatMap(slide => [slide.tieu_de, slide.phu, ...(slide.y ?? [])]).filter(Boolean).join('\n');
-  for (const url of copy.match(/\b(?:https?:\/\/|www\.)[^\s<>"']+/giu) ?? []) {
-    if (url !== brief.link) throw new Error('Link trong chữ không khớp nguyên văn brief');
-  }
+  // shortcut: hostname trần dùng ASCII; tên miền quốc tế cần URL đầy đủ, mở rộng nếu brief thật cần.
+  const links = /(?<![\p{L}\p{M}\p{N}_-])(?:https?:\/\/[^\s<>"]+|(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,63}(?![\p{L}\p{M}\p{N}_-])(?::\d+)?(?:[/?#][^\s<>"]*)?)/giu;
+  const withoutLinks = copy.replace(links, url => {
+    if (!/^www\./i.test(url) && /^(?:[^:/?#]+)\.(?:jpe?g|png|heic|webp)$/i.test(url)) return url;
+    if (url.startsWith(brief.link) && /^[.,!?;:…'’”»\)\]}]*$/u.test(url.slice(brief.link.length))) return ' ';
+    throw new Error('Link trong chữ không khớp nguyên văn brief');
+  });
   // shortcut: chỉ nhận giá có đơn vị, mở rộng khi brief thật cần cách ghi khác.
-  const money = /\b\d+(?:[., \u00a0]\d+)*(?:[ \t]*)(?:₫|đ|vnđ|vnd|k|nghìn|triệu)(?![\p{L}\p{N}])/giu;
+  const money = /\b\d+(?:[., \u00a0\u202f]\d+)*[ \t\u00a0\u202f]*(?:đồng|₫|đ|vnđ|vnd|k|nghìn|triệu)(?![\p{L}\p{M}\p{N}])/giu;
   const allowed = brief.gia.match(money) ?? [];
-  for (const price of copy.match(money) ?? []) {
+  for (const price of withoutLinks.match(money) ?? []) {
     if (!allowed.includes(price)) throw new Error('Giá trong chữ không khớp nguyên văn brief');
   }
 }
 
-async function command(args) {
-  return exec('magick', args, { cwd: ROOT, timeout: 15000, maxBuffer: 32 * 1024 * 1024 });
+async function command(args, input) {
+  const pending = exec('magick', args, { cwd: ROOT, timeout: 15000, maxBuffer: 32 * 1024 * 1024 });
+  if (input) {
+    pending.child.stdin.on('error', () => {});
+    pending.child.stdin.end(input);
+  }
+  return pending;
 }
 
-function rasterInput(file) {
+function rasterInput(file, input = file) {
   const format = { '.jpg': 'jpeg', '.jpeg': 'jpeg', '.png': 'png', '.heic': 'heic', '.webp': 'webp' }[path.extname(file).toLowerCase()];
   if (!format) throw new Error('Nguồn phải là ảnh JPEG/PNG/HEIC/WebP');
-  return `${format}:${file}`;
+  return `${format}:${input}`;
 }
 
 export async function checkImages(paths) {
@@ -111,22 +140,33 @@ export async function checkImages(paths) {
   for (const value of paths) {
     const errors = [];
     let bytes;
+    let sha256;
     try {
       const file = await mediaPath(value);
-      if (!(await stat(file)).isFile()) throw new Error('Không phải file ảnh');
-      const { stdout } = await command(['identify', '-ping', '-format', '%m|%w|%h|%[colorspace]|%[profiles]|%c', '--', rasterInput(file)]);
-      const [format, width, height, colorspace, profiles, ...comment] = stdout.split('|');
-      bytes = (await stat(file)).size;
-      if (format !== 'JPEG') errors.push('Threads: cần JPEG');
-      if (width !== '1080' || height !== '1920') errors.push('TikTok: cần 1080x1920');
-      if (colorspace !== 'sRGB') errors.push('TikTok: cần sRGB');
-      if (profiles.trim() || comment.join('|').trim()) errors.push('Còn metadata/profile/comment');
+      const info = await stat(file);
+      if (!info.isFile()) throw new Error('Không phải file ảnh');
+      bytes = info.size;
       if (bytes >= 20000000) errors.push('TikTok: phải dưới 20 MB');
-      if (bytes > 8000000) errors.push('Threads: tối đa 8 MB');
+      if (bytes > MAX_POST_IMAGE_BYTES) errors.push('Threads: tối đa 8 MB');
+      if (!errors.length) {
+        const input = await readBoundedFile(file, MAX_POST_IMAGE_BYTES, 'Ảnh đăng');
+        bytes = input.length;
+        const raster = rasterInput(file, '-');
+        const { stdout } = await command(['identify', '-regard-warnings', '-limit', 'width', '4096', '-limit', 'height', '4096',
+          '-format', '%m|%w|%h|%[colorspace]|%c', '--', raster], input);
+        const [format, width, height, colorspace, ...comment] = stdout.split('|');
+        // ImageMagick 7 cảnh báo property profiles chưa có trên JPEG đã strip.
+        const { stdout: profiles } = await command(['identify', '-ping', '-format', '%[profiles]', '--', raster], input);
+        if (format !== 'JPEG') errors.push('Threads: cần JPEG');
+        if (width !== '1080' || height !== '1920') errors.push('TikTok: cần 1080x1920');
+        if (colorspace !== 'sRGB') errors.push('TikTok: cần sRGB');
+        if (profiles.trim() || comment.join('|').trim()) errors.push('Còn metadata/profile/comment');
+        if (!errors.length) sha256 = createHash('sha256').update(input).digest('hex');
+      }
     } catch (error) {
       errors.push(error.message);
     }
-    results.push({ path: value, dat: errors.length === 0, bytes, loi: errors });
+    results.push({ path: value, dat: errors.length === 0, bytes, loi: errors, ...(sha256 ? { sha256 } : {}) });
   }
   return results;
 }
@@ -140,7 +180,7 @@ export async function createPreview(paths) {
   const folder = await safePath(path.join(path.dirname(files[0]), '_xem'), 'ra', { allowMissing: true });
   await mkdir(folder, { recursive: true });
   const output = await safePath(path.join(folder, 'bang-ket-qua.jpg'), 'ra', { allowMissing: true });
-  await command(['montage', '--', ...files.map(rasterInput), '-geometry', '270x480+8+8', '-background', '#e8e4db', '-tile', `${files.length}x1`, '-strip', '-quality', '85', output]);
+  await command(['montage', '--', ...files.map(file => rasterInput(file)), '-geometry', '270x480+8+8', '-background', '#e8e4db', '-tile', `${files.length}x1`, '-strip', '-quality', '85', output]);
   return relative(output);
 }
 

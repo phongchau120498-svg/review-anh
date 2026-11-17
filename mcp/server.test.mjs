@@ -1,7 +1,8 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { cp, mkdir, writeFile, readFile, rm, symlink, mkdtemp, readdir } from 'node:fs/promises';
+import { cp, mkdir, writeFile, readFile, rm, symlink, mkdtemp, readdir, truncate } from 'node:fs/promises';
 import { createServer } from 'node:http';
+import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
@@ -11,7 +12,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { createReviewServer } from './server.mjs';
-import { ROOT } from '../tools/dung-bo-anh.mjs';
+import { ROOT, MAX_POST_IMAGE_BYTES, checkImages } from '../tools/dung-bo-anh.mjs';
 
 const exec = promisify(execFile);
 const product = `mcp-${process.pid}`;
@@ -118,12 +119,14 @@ test('giá/link/domain từ chối trước render; thật dựng ảnh qua MCP 
   assert(path.isAbsolute(result.bang_xem_tuyet_doi));
 });
 
-test('caption Threads 600 và title TikTok 91 bị chặn trước upload; codepoint emoji không đếm đôi', async () => {
+test('Threads đếm code point, tiêu đề TikTok đếm UTF-16 theo Postiz; sai caption bị chặn trước upload', async () => {
   const count = requests.length;
   for (const input of [
     { ...args(), caption: 'a'.repeat(600) }, { ...args(), caption: 'Giá 999k' },
-    { ...args(), caption: 'https://evil.example/' },
-    { ...args(), kenh: 'tiktok', tieu_de: 'a'.repeat(91) }, { ...args(), kenh: 'tiktok' },
+    { ...args(), caption: 'https://evil.example/' }, { ...args(), caption: 'Chỉ 999.000 đồng' },
+    { ...args(), caption: 'Mua ở evil.example/mau' },
+    { ...args(), kenh: 'tiktok', tieu_de: 'a'.repeat(91) },
+    { ...args(), kenh: 'tiktok', tieu_de: '😀'.repeat(46) }, { ...args(), kenh: 'tiktok' },
   ]) assert((await call('tai_len_postiz', input)).isError);
   assert.equal(requests.length, count);
   const uploaded = await call('tai_len_postiz', { ...args(), caption: '😀'.repeat(500) });
@@ -133,11 +136,14 @@ test('caption Threads 600 và title TikTok 91 bị chặn trước upload; codep
   assert.equal(requests.at(-1).key, key);
   assert(requests.at(-1).body.includes(await readFile(path.join(ROOT, result.anh[0]))));
   assert(!requests.at(-1).body.includes(Buffer.from('bang-ket-qua')));
+  const tiktok = await call('tai_len_postiz', { ...args(), kenh: 'tiktok', tieu_de: '😀'.repeat(45) });
+  assert(!tiktok.isError, JSON.stringify(tiktok));
+  assert.equal(requests.length, count + 1);
 });
 
 test('upload gọi hai lần hoặc server khởi động lại không tải lại; dang đọc qua tool, không lộ key', async () => {
   const count = requests.length;
-  const again = await call('tai_len_postiz', args());
+  const again = await call('tai_len_postiz', { ...args(), caption: `Mua ngay: (${brief.link}).` });
   assert(!again.isError);
   assert.equal(requests.length, count);
   const other = await connect({ env });
@@ -151,6 +157,48 @@ test('upload gọi hai lần hoặc server khởi động lại không tải l�
   assert(!JSON.stringify(again).includes(key));
   assert(!(await readFile(path.join(ROOT, result.thu_muc, 'dang.json'), 'utf8')).includes(key));
   assert(!(await readdir(path.join(ROOT, result.thu_muc))).some(name => name.endsWith('.tmp')));
+});
+
+test('trước upload đầu tiên, ảnh JPEG thay thế dù đạt kiem vẫn bị chặn; thiếu hash, file quá lớn và FIFO cũng bị chặn', { timeout: 10000 }, async () => {
+  const rendered = decoded(await call('dung_bo_anh', data));
+  const input = { ...args(), run_id: rendered.run_id };
+  const image = path.join(ROOT, rendered.anh[0]);
+  const manifest = path.join(ROOT, rendered.manifest);
+  const original = await readFile(image);
+  const originalManifest = await readFile(manifest, 'utf8');
+  const count = requests.length;
+  const rejectUpload = async reason => {
+    const failed = await call('tai_len_postiz', input);
+    assert(failed.isError);
+    assert.match(failed.content[0].text, reason);
+    assert.equal(requests.length, count);
+    await assert.rejects(readFile(path.join(ROOT, rendered.thu_muc, 'dang.json')), { code: 'ENOENT' });
+  };
+
+  await exec('magick', ['-size', '1080x1920', 'xc:#cc5566', '-colorspace', 'sRGB', '-strip', image]);
+  assert((await checkImages([image]))[0].dat);
+  await rejectUpload(/Ảnh đã đổi từ lúc dựng/);
+  await writeFile(image, original);
+
+  const old = JSON.parse(originalManifest);
+  delete old.kiem[0].sha256;
+  await writeFile(manifest, JSON.stringify(old));
+  await rejectUpload(/Manifest chưa có SHA-256/);
+  await writeFile(manifest, originalManifest);
+
+  const truncated = original.subarray(0, Math.floor(original.length / 2));
+  await writeFile(image, truncated);
+  const forged = JSON.parse(originalManifest);
+  forged.kiem[0].sha256 = createHash('sha256').update(truncated).digest('hex');
+  await writeFile(manifest, JSON.stringify(forged));
+  await rejectUpload(/không còn đạt kiểm chuẩn/);
+  await writeFile(manifest, originalManifest);
+
+  await truncate(image, MAX_POST_IMAGE_BYTES + 1);
+  await rejectUpload(/tối đa 8000000 byte/);
+  await rm(image);
+  await exec('mkfifo', ['--', image]);
+  await rejectUpload(/cần file thường/);
 });
 
 test('hash bytes và manifest chặn cache sau khi ảnh đổi, chặn bảng xem/cross-run/symlink trong manifest', async () => {

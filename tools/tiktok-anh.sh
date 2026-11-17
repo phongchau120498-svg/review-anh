@@ -54,7 +54,10 @@ chu() {
     "$lop" -gravity north -geometry "-70+$y" -compose over -composite \
     -colorspace sRGB -strip -sampling-factor 4:2:0 -interlace JPEG -quality 92 "$ra"
   rm -f "$lop"
-  kiem "$ra"
+  local checked="$ra"
+  [[ "$checked" == /* ]] || checked="$PWD/$checked"
+  local check_result
+  check_result="$(kiem "$checked")" || { echo "$check_result" >&2; return 1; }
   echo "$ra"
 }
 

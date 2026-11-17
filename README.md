@@ -46,9 +46,9 @@ CLI trả JSON gồm `san_pham`, `run_id`, `thu_muc`, `manifest`, `anh` (danh s�
 
 Chữ được gán bằng `textContent`. Trang tắt JavaScript, có CSP, nhúng font/raster data URI và chặn mọi yêu cầu mạng/file. Decoder ảnh ép theo đuôi JPEG/PNG/HEIC/WebP để từ chối SVG/MVG giả ảnh. Vùng chữ chừa ít nhất 220px trên, 520px dưới và 170px phải; chữ tự xuống dòng/co cỡ, không đủ chỗ thì báo lỗi và bỏ bản tạm.
 
-Giá trong chữ hỗ trợ số có dấu phân cách `.`/`,`/khoảng trắng kèm `đ`, `₫`, `VNĐ`, `VND`, `k`, `nghìn`, `triệu`; đoạn giá phải khớp nguyên văn trong brief. URL `http(s)://` hoặc `www.` trong chữ cũng phải bằng nguyên link brief, tách khỏi dấu câu. Không dùng cách viết giá bằng chữ hay số trần để né kiểm; công cụ không kiểm chứng công dụng hay sự thật thay người duyệt.
+Giá trong chữ hỗ trợ số có dấu phân cách `.`/`,`/khoảng trắng kèm `đ`, `đồng`, `₫`, `VNĐ`, `VND`, `k`, `nghìn`, `triệu`. Đoạn giá phải khớp nguyên văn brief. Link phải dùng URL HTTPS đầy đủ trong brief. Tool nhận ra cả tên miền ASCII viết trần và cho phép dấu câu sau URL đúng. Người duyệt vẫn kiểm giá viết bằng chữ hoặc số trần và các công dụng được nêu.
 
-`kiem` báo đủ từng ảnh rồi mới trả mã lỗi chung: JPEG, 1080x1920, sRGB, không profile/comment/metadata, dưới 20.000.000 byte TikTok và tối đa 8.000.000 byte Threads. Bảng xem chỉ ghi trong `_xem/`, không nằm trong `manifest.anh`.
+`kiem` báo đủ từng ảnh rồi trả mã lỗi chung. Tiêu chí gồm JPEG giải mã được toàn bộ, 1080x1920, sRGB, không profile/comment/metadata, dưới 20.000.000 byte TikTok và tối đa 8.000.000 byte Threads. Manifest giữ `anh` là danh sách đường dẫn ảnh đăng và ghi `kiem[].sha256` cho bytes đã kiểm lúc dựng. Bảng xem nằm riêng trong `_xem/`.
 
 Bộ hiện có gắn rõ **MẪU**, giá/link `example.com` chỉ để kiểm kỹ thuật. Phong cách còn chờ anh duyệt; chưa dùng làm bài đăng.
 
@@ -92,10 +92,10 @@ Thay các đường dẫn khi chuyển máy; cài browser vào đúng `PLAYWRIGH
 | `list_nguon` | `{san_pham? ,run_id?}`; muốn đọc run phải có sản phẩm | Nguồn (tối đa 100), brief bọc dữ liệu/cắt rõ ở 2000 codepoint, 50 run gần nhất; thêm `dang` khi chỉ định run |
 | `view_bang_anh_nguon` | `{san_pham}` | Bảng tối đa 40 ảnh, thu nhỏ ≤1280px mỗi chiều dạng ảnh MCP; đường dẫn tuyệt đối và tên từng nguồn |
 | `dung_bo_anh` | JSON bộ ảnh ở trên, trực tiếp `{san_pham,anh,gia?,link?}` | Manifest/checks và bảng xem MCP, đường dẫn tuyệt đối; dùng lại renderer |
-| `tai_len_postiz` | `{san_pham,run_id,kenh,caption,tieu_de?}` | `{anh:[{id,path}],dang,...}`; `kenh` là `threads`/`tiktok`; TikTok cần `tieu_de` ≤90 codepoint, Threads caption ≤500 |
+| `tai_len_postiz` | `{san_pham,run_id,kenh,caption,tieu_de?}` | `{anh:[{id,path}],dang,...}`. `kenh` là `threads`/`tiktok`. TikTok cần `tieu_de` ≤90 đơn vị UTF-16 để Postiz không cắt. Threads caption ≤500 code point. |
 | `ghi_dang` | Các trường đăng ở trên + `trang_thai`, `postiz_id?` | Ghi `dang_dang` **trước** gọi Postiz, `da_dang` + ID khi rõ thành công, hoặc `khong_ro`/`that_bai` |
 
-Upload kiểm lại chuẩn ảnh/brief, chỉ lấy `manifest.anh` trong đúng run, loại `_xem`, lưu hash bytes và tiến độ vào `dang.json` bằng atomic rename. Gọi upload lại sau thành công/khi server restart trả cùng ID/link, không tải lại. Đổi bytes/manifest bị chặn. Upload timeout, redirect, HTTP lỗi hoặc kết quả không hợp lệ giữ trạng thái đang chờ để đối chiếu, không tự retry mù. Một upload thành công trước lỗi ảnh sau vẫn được giữ lại. Key và nội dung lỗi từ Postiz không được trả/log; redirect bị từ chối, mỗi upload timeout 30 giây.
+Upload chỉ lấy `manifest.anh` trong đúng run và kiểm lại chuẩn ảnh lẫn SHA-256 từ lúc dựng. Nếu ảnh đã đổi hoặc manifest cũ chưa có SHA-256, dựng lại bộ ảnh và xin duyệt bảng xem mới trước khi tải. Mỗi ảnh upload thành công được ghi vào `dang.json` bằng atomic rename. Gọi lại sau thành công hoặc sau khi server restart trả cùng ID/link. Upload timeout, redirect, HTTP lỗi hoặc kết quả không hợp lệ giữ trạng thái đang chờ để đối chiếu. Mỗi upload timeout 30 giây. Tool không trả key hay nội dung lỗi gốc từ Postiz.
 
 `ghi_dang` giữ nguyên ID và nội dung đã nhận đăng; `dang_dang`/`khong_ro` không được đặt lại để thử đăng. Khi mơ hồ, bot gọi `postsListTool` của thẻ Postiz để đối chiếu; xác nhận có bài thì ghi `da_dang` cùng ID, chưa rõ thì báo anh. Tool không tự đăng nên chống trùng còn phụ thuộc bot tuân thủ thứ tự này. Mỗi sản phẩm có khóa `flock` xuyên tiến trình; thao tác trùng báo đang bận, crash tự nhả khóa. Browser chỉ mở ở lệnh dựng đầu, sập thì mở lại; render có timeout 60 giây, launch tối đa 30 giây.
 

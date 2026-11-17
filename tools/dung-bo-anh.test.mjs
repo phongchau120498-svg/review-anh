@@ -5,6 +5,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { createHash } from 'node:crypto';
 import { chromium } from 'playwright';
 import { ROOT, normalizeProduct, safePath, readBrief, validateCopy, checkImages, createPreview, fillPage, renderSet } from './dung-bo-anh.mjs';
 
@@ -59,8 +60,17 @@ test('brief và copy bắt buộc đúng giá/link/domain, cả giá được gh
   assert.throws(() => validateCopy(set('Giá MẪU: 23.000 đ'), brief), /Giá trong chữ/);
   assert.throws(() => validateCopy(set('Giá MẪU: 999k'), brief), /Giá trong chữ/);
   assert.throws(() => validateCopy(set('Giá MẪU: 999 000 đ'), { ...brief, gia: 'MẪU: 123 000 đ' }), /Giá trong chữ/);
+  assert.throws(() => validateCopy(set('Chỉ 999.000 đồng'), brief), /Giá trong chữ/);
+  assert.throws(() => validateCopy(set('Chỉ 999.000\u00a0ĐỒNG'), brief), /Giá trong chữ/);
+  assert.doesNotThrow(() => validateCopy(set('Chỉ 123.000 ĐỒNG'), { ...brief, gia: '123.000 ĐỒNG' }));
   assert.throws(() => validateCopy(set('Xem https://example.com/khac'), brief), /Link trong chữ/);
+  assert.throws(() => validateCopy(set('Mua ở evil.example/mau'), brief), /Link trong chữ/);
+  assert.throws(() => validateCopy(set('Mua ở evil.example.'), brief), /Link trong chữ/);
   assert.doesNotThrow(() => validateCopy(set(`MẪU ${brief.gia} ${brief.link}`), brief));
+  assert.doesNotThrow(() => validateCopy(set(`Mua ngay: (${brief.link}). Xem anh.jpg và phẩm.mẫu`), brief));
+  const punctuatedLink = 'https://example.com/mau_(a)?ma=999k.';
+  assert.doesNotThrow(() => validateCopy(set(`“${punctuatedLink}”`), { ...brief, link: punctuatedLink }));
+  assert.throws(() => validateCopy(set(punctuatedLink.slice(0, -1)), { ...brief, link: punctuatedLink }), /Link trong chữ/);
   await writeFile(path.join(source, 'brief.json'), JSON.stringify({ ...brief, domains_thuong_hieu: ['other.example'] }));
   await assert.rejects(readBrief(product), /ngoài domain/);
   await writeFile(path.join(source, 'brief.json'), JSON.stringify({ ...brief, gia: 123 }));
@@ -115,6 +125,10 @@ test('dựng JPEG/PNG, tên bắt đầu bằng -, manifest đúng ảnh đăng 
   assert(result.anh.every(file => !file.includes('_xem')));
   const manifest = JSON.parse(await readFile(path.join(ROOT, result.manifest), 'utf8'));
   assert.deepEqual(manifest.anh, result.anh);
+  assert.deepEqual(manifest.kiem, result.kiem);
+  for (const check of manifest.kiem) {
+    assert.equal(check.sha256, createHash('sha256').update(await readFile(path.join(ROOT, check.path))).digest('hex'));
+  }
   assert.deepEqual((await readdir(path.join(ROOT, result.thu_muc))).sort(), ['01.jpg', '02.jpg', '_xem', 'manifest.json']);
   assert(!(await readdir(output)).some(name => name.startsWith('.tam-')));
   assert.equal(await createPreview(result.anh), result.bang_xem);
@@ -134,18 +148,23 @@ test('kiem duyệt hết từng ảnh, báo format/kích thước/metadata/8MB/2
   const png = path.join(output, 'sai.png');
   const meta = path.join(output, 'metadata.jpg');
   const big = path.join(output, 'to.jpg');
+  const truncated = path.join(output, 'anh-cat.jpg');
+  const jpeg = await readFile(ok);
+  await writeFile(truncated, jpeg.subarray(0, Math.floor(jpeg.length / 2)));
   await exec('magick', ['-size', '10x20', 'xc:white', png]);
   await exec('magick', [ok, '-set', 'comment', 'metadata test', meta]);
   await copyFile(ok, big);
   await truncate(big, 8000001);
-  let checks = await checkImages([png, meta, big, 'ra/khong-co.jpg', result.anh[0]]);
-  assert.equal(checks.length, 5);
+  let checks = await checkImages([png, meta, big, 'ra/khong-co.jpg', truncated, result.anh[0]]);
+  assert.equal(checks.length, 6);
   assert(checks[0].loi.some(error => error.includes('JPEG')));
   assert(checks[0].loi.some(error => error.includes('1080x1920')));
   assert(checks[1].loi.some(error => error.includes('metadata')));
   assert(checks[2].loi.some(error => error.includes('8 MB')));
   assert.equal(checks[3].dat, false);
-  assert.equal(checks[4].dat, true);
+  assert.equal(checks[4].dat, false);
+  assert.match(checks[4].loi.join(' '), /premature end|corrupt JPEG/i);
+  assert.equal(checks[5].dat, true);
   await truncate(big, 20000000);
   checks = await checkImages([big]);
   assert(checks[0].loi.some(error => error.includes('20 MB')));
@@ -157,4 +176,14 @@ test('kiem duyệt hết từng ảnh, báo format/kích thước/metadata/8MB/2
   await writeFile(path.join(source, 'bo-anh.json'), JSON.stringify(set('MẪU chạy từ /tmp')));
   const cli = await exec(process.execPath, [path.join(ROOT, 'tools/dung-bo-anh.mjs'), `nguon/${product}/bo-anh.json`], { cwd: os.tmpdir() });
   assert(JSON.parse(cli.stdout).kiem.every(check => check.dat));
+});
+
+test('chu từ thư mục con theo cwd cũ và chỉ in đúng đường dẫn ra trên stdout', async () => {
+  const outputName = path.relative(source, path.join(output, 'chu.jpg'));
+  const command = await exec('bash', [path.join(ROOT, 'tools/tiktok-anh.sh'), 'chu', './-anh.jpg', outputName, 'MẪU tiếng Việt'], {
+    cwd: source, env: { ...process.env, TIKTOK_ANH_FONT: path.join(ROOT, 'fonts/BeVietnamPro-Bold.ttf') },
+  });
+  assert.equal(command.stdout, `${outputName}\n`);
+  assert.equal(command.stderr, '');
+  assert((await checkImages([path.join(output, 'chu.jpg')]))[0].dat);
 });
