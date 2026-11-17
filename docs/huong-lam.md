@@ -9,8 +9,8 @@ Cập nhật: 17/11/2026.
 
 ## Chuỗi xử lý
 
-1. **Lọc khung (rẻ):** FFmpeg lấy 15–20 khung theo chuyển cảnh, bỏ khung mờ. Hiện `khung` mới chia đều theo thời lượng.
-2. **Chọn ảnh:** model có thị giác chọn 3–4 khung theo tiêu chí: nét, thấy rõ sản phẩm, mỗi ảnh một góc (tổng thể / cận chi tiết / đang dùng / kết quả).
+1. **Lọc khung (rẻ):** video HDR của iPhone chuyển sang SDR trước, rồi FFmpeg lấy 15–20 khung theo chuyển cảnh, bỏ khung mờ. Hiện `khung` mới chia đều theo thời lượng.
+2. **Chọn ảnh:** model có thị giác chọn 3–4 khung theo tiêu chí: nét, thấy rõ sản phẩm, mỗi ảnh một góc (tổng thể / cận chi tiết / đang dùng / kết quả). Cách khác: cho AI xem cả video (đã nén 720p) và trả về mốc giây của các khung đẹp nhất. Chi tiết và các ý mượn được nằm trong [tham khảo Agent Edit](tham-khao-agent-edit.md).
 3. **Chữ và thiết kế:** dùng 3–4 mẫu HTML/CSS cố định (bìa có câu móc, chi tiết, ưu/nhược, kêu gọi), chụp ra ảnh bằng Playwright. Mẫu cố định giữ phong cách đồng nhất; CSS tự xuống dòng và co chữ nên không tràn. Hiện `chu` dùng ImageMagick, từng bị tràn với dòng dài.
 4. **Duyệt:** gửi bảng lưới (`luoi`) cùng caption để chủ kênh duyệt.
 5. **Đăng:**
