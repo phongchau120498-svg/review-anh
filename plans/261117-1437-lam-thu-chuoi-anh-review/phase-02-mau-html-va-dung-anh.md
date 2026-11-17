@@ -124,3 +124,5 @@ dependencies: []
 
 - Sau review độc lập, `kiem` giải mã đầy đủ để từ chối JPEG cắt dở và kiểm tiếp ảnh sau trong bộ. Manifest ghi `kiem[].sha256` từ bytes vừa kiểm. `chu` giữ đường dẫn theo cwd và stdout một dòng. Validator kiểm thêm giá có `đồng`, tên miền ASCII viết trần và dấu câu sau URL đúng. Các test mới chạy cùng fixture MCP, kết quả ghi ở phase 4.
 - Chạy trực tiếp `.githooks/pre-commit` trên 18 file staged: Gitleaks 8.30.1 quét ~45.47 KB, no leaks found; không stage `nguon/`/`ra/` hay file Postiz của phiên khác.
+
+Anh góp ý hai ảnh chi tiết cần phủ kín khung dọc. Đã thay nền giấy và ô ảnh ngang bằng ảnh tràn viền 9:16, đặt chữ trắng trên lớp tối. Dựng lại bằng `node tools/dung-bo-anh.mjs nguon/san-pham-mau/bo-anh.json`. Cả 3 ảnh đạt `kiem`. Đã xem bản render mới tại `ra/san-pham-mau/2026-11-17T08-46-21-291Z-60a3e9ab/_xem/bang-ket-qua.jpg`. `node --test tools/dung-bo-anh.test.mjs` đạt 8/8 và `git diff --check` đạt. Chờ anh xem lại mẫu.
