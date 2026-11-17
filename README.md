@@ -64,3 +64,9 @@ tools/tiktok-anh.sh chu ra/video/khung-03.jpg ra/bo/1.jpg "Câu móc" tren
 ## Dùng từ MCP
 
 `tools/dung-bo-anh.mjs` export `ROOT`, `normalizeProduct(value)`, `safePath(value, area, {allowMissing})`, `readBrief(product)`, `validateCopy(data, brief)`, `checkImages(paths)`, `createPreview(paths)` và `renderSet(data, {browser, timeoutMs})`. `area` là `nguon` hoặc `ra`; mặc định file phải tồn tại. `renderSet` mặc định timeout 60 giây, mở Chromium khi được gọi, tự đóng browser do nó tạo; có thể nhận browser còn kết nối để dùng lại. Khi browser truyền vào đã sập, renderer mở bản thay thế cho lần dựng đó. Mỗi lần dựng có context riêng tắt JavaScript; lỗi/timeout dọn thư mục tạm. `fillPage` là hàm điền mẫu dùng chung với test trình duyệt.
+
+## Chạy Postiz
+
+Đã có [Docker Compose](postiz/docker-compose.yml) theo Postiz v2.26.0 chính thức, ghim mọi image bằng digest, chỉ mở `127.0.0.1:4007`; Postgres/Redis/Temporal/Elasticsearch không mở cổng ra máy. [Mẫu env](postiz/.env.example) chỉ có tên biến trống. `postiz/.env` và `postiz/data/` bị ignore; hook Gitleaks ở trên dùng chung cho phần này.
+
+Làm theo [hướng dẫn Postiz local](docs/postiz-local.md) để anh tạo Cloudflare/domain/R2, named tunnel có Access chỉ email anh, app Threads/TikTok và kết nối kênh thử. **Chưa chạy container hoặc tunnel**: còn chờ tài khoản thử và domain. Sau khi anh tạo admin đầu tiên phải khóa đăng ký ngay; chỉ dùng bot thử ở mức Ask, thẻ Postiz có sẵn trong MausBot. Với Docker, địa chỉ server trên thẻ và `POSTIZ_URL` của công cụ upload là `https://postiz.<domain>/api`; thẻ tự thêm `/mcp`, upload thêm `/public/v1/upload`.

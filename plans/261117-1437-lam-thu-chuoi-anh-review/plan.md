@@ -49,7 +49,7 @@ Bản thử đầu tiên theo kiến trúc đã chốt trong [docs/huong-lam.md]
 | 2 | [Mẫu HTML và dựng ảnh](./phase-02-mau-html-va-dung-anh.md) | In Progress |
 | 3 | [Lọc khung từ video](./phase-03-loc-khung-tu-video.md) | Pending |
 | 4 | [MCP server tay chân](./phase-04-mcp-server-tay-chan.md) | Pending |
-| 5 | [Postiz local và kết nối kênh](./phase-05-postiz-local-va-ket-noi-kenh.md) | Pending |
+| 5 | [Postiz local và kết nối kênh](./phase-05-postiz-local-va-ket-noi-kenh.md) | In Progress |
 | 6 | [Nối MausBot và chạy trọn một sản phẩm](./phase-06-noi-mausbot-va-chay-tron-mot-san-pham.md) | Pending |
 
 ## Thứ tự và phụ thuộc
@@ -149,3 +149,4 @@ Không còn mâu thuẫn chưa xử lý.
 |---|---|---|
 | `/root/verify_settings` | `phase-01-kiem-thiet-lap-that.md`; status/Tracking trong `plan.md` | Readonly local xong 17/11/2026: GET bots/MCP/Postiz/instances HTTP 200; version và auth status không tốn lượt. Chờ tài khoản thử, tư liệu/brief và kiểm engine; Cloud chưa kiểm. Chi tiết ở Kết quả kiểm phase 1. |
 | `/root/render_images` | `phase-02`; `package*`; `mau/`; `fonts/`; `tools/dung-bo-anh*`; `tools/tiktok-anh.sh` (`kiem`, `luoi`); `README.md`; `.gitignore`; `.githooks/` | Xong phần kỹ thuật: bộ 3 ảnh MẪU đã dựng; npm test 7/7, audit 0, syntax/diff đạt. Chờ anh duyệt phong cách nên phase 2 giữ in-progress; không push/deploy. Chi tiết ở Kết quả phase 2. |
+| `/root/prepare_postiz` | `postiz/`; `docs/postiz-local.md`; mục Postiz trong `README.md`; `phase-05`; status/Tracking `plan.md` | Xong chuẩn bị local: Compose 6 dịch vụ ghim digest đã kiểm registry; config env giả exit 0, env trống bị chặn; cloudflared 2026.11.0 checksum đúng; gitleaks 0 leak, ignore/diff đạt. Chờ tài khoản/domain và chốt nhận diện/thời gian giữ ảnh chưa đăng; không up/bật dịch vụ/connect/đăng. Chi tiết Kết quả phase 5; nhả file sau commit. |
