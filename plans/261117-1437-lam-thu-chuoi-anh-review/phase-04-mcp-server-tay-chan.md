@@ -1,9 +1,10 @@
 ---
 phase: 4
-title: "MCP server tay chân"
-status: pending
+title: MCP server tay chân
+status: completed
 priority: P1
-dependencies: [2]
+dependencies:
+  - 2
 ---
 
 # Phase 4: MCP server tay chân
@@ -18,11 +19,11 @@ Các tool:
 
 | Tool | Loại | Vào | Ra |
 |---|---|---|---|
-| `liet_ke_nguon` | đọc | tên sản phẩm (tùy chọn) | danh sách sản phẩm, ảnh, video; nội dung `brief.json` được bọc rõ là **dữ liệu**, cắt tối đa 2.000 ký tự; báo lỗi rõ nếu thiếu brief |
-| `bang_anh_nguon` | đọc | tên sản phẩm | bảng ảnh trả về **dạng ảnh MCP** (đã thu nhỏ), kèm đường dẫn tuyệt đối |
+| `list_nguon` | đọc | tên sản phẩm (tùy chọn), `run_id` nếu đọc trạng thái | danh sách sản phẩm, ảnh, video; nội dung `brief.json` được bọc rõ là **dữ liệu**, cắt tối đa 2.000 ký tự; báo lỗi rõ nếu thiếu brief; trả `dang` của run để chống trùng |
+| `view_bang_anh_nguon` | đọc | tên sản phẩm | bảng ảnh trả về **dạng ảnh MCP** (đã thu nhỏ), kèm đường dẫn tuyệt đối |
 | `dung_bo_anh` | tạo | JSON bộ ảnh (phase 2) | `ra/<sp>/<run-id>/`, `manifest.json`, kết quả `kiem` từng ảnh, bảng xem dạng ảnh MCP |
-| `tai_len_postiz` | tạo | `run-id` | tải đúng các ảnh trong `manifest.json` lên `POST /public/v1/upload` của Postiz, trả về `[{id, path}]`, ghi kết quả vào `ra/<sp>/<run-id>/dang.json` |
-| `ghi_dang` | tạo | `run-id`, kênh, `postiz_id`, trạng thái | ghi vào `dang.json`, để chạy lại thì không đăng trùng |
+| `tai_len_postiz` | tạo | `san_pham`, `run_id`, `kenh`, `caption`, `tieu_de?` (TikTok bắt buộc) | tải đúng các ảnh trong `manifest.json` lên `<POSTIZ_URL>/public/v1/upload`, trả `{anh:[{id,path}],dang,...}`, ghi tiến độ/hash vào `ra/<sp>/<run-id>/dang.json` |
+| `ghi_dang` | tạo | các trường đăng ở trên, `trang_thai`, `postiz_id?` | ghi vào `dang.json`; nhận `dang_dang` trước đăng, `da_dang` kèm ID, `khong_ro` hoặc `that_bai`; không ghi đè ID hay mở khóa kết quả mơ hồ |
 | `lay_khung` | tạo | video | thêm khi phase 3 xong |
 
 Ràng buộc:
@@ -70,12 +71,23 @@ Ràng buộc:
 
 ## Success Criteria
 
-- [ ] Inspector liệt kê đủ tool; gọi thật ra kết quả đúng như khi chạy lệnh tay.
-- [ ] Toàn bộ test ở bước 2 đạt.
-- [ ] Trên bản cô lập, engine giả gọi được `dung_bo_anh` và `tai_len_postiz` (tới Postiz giả).
+- [x] Inspector liệt kê đủ tool; gọi thật ra kết quả đúng như khi chạy lệnh tay.
+- [x] Toàn bộ test ở bước 2 đạt.
+- [x] Trên bản cô lập, engine giả gọi được `dung_bo_anh` và `tai_len_postiz` (tới Postiz giả).
 
 ## Risk Assessment
 
 - **Bot đọc hoặc ghi ra ngoài phạm vi:** đã có `realpath`, chuẩn hóa tên và test. Lưu ý MCP không phải sandbox cho shell; giới hạn quyền shell là việc của mức duyệt Ask ở phase 6.
 - **Đăng trùng:** `dang.json` cộng luật của bot ở phase 6.
 - **Lộ key Postiz:** key chỉ ở biến môi trường, không trả trong kết quả tool.
+
+## Kết quả — 17/11/2026
+
+- Đã đọc cấu hình thật readonly ở phase 1: chưa có MCP/Postiz; phần thiếu là server tay chân. Thêm stdio 5 tool, dùng lại renderer/validation phase 2, không thêm tool đăng hay gọi AI. Hai tool đọc đổi tên theo quyết định anh duyệt trong plan; `lay_khung` còn chờ video/phase 3.
+- `node --test mcp/server.test.mjs tests/mausbot-review.test.mjs`: **13/13**, khoảng 5 giây. Gồm symlink ra ngoài/prefix/traversal/tên ảnh `-`, giá/link/domain, caption Threads 600, TikTok 91, codepoint emoji, thumbnail MCP, manifest không chứa bảng xem/cross-run, hash bytes đổi, upload hai lần/restart không tải lại, partial progress, khóa xuyên server, crash nhả khóa, browser sập mở lại, clone mới chưa có `ra/` dựng được và `ra/` symlink bị chặn, timeout/redirect/key-echo không lộ credential, trạng thái/ID chống retry mù.
+- Inspector **2.15.0** chạy CLI/stdio, không mở cổng. Lệnh thật đạt: `npx --no-install @modelcontextprotocol/inspector --cli --format json --quiet --method tools/list node mcp/server.mjs` (đủ 5 tool) và `... --method tools/call --tool-name list_nguon --tool-args-json '{}' node mcp/server.mjs`. Test còn gọi tool với sản phẩm fixture thật từ `/tmp`. Handshake dưới 8 giây, không launch Chromium lúc startup.
+- Isolated `launchVerificationServer` từ source OpenMausBot `3cb89871f` (khác app đóng gói live 0.1.161): fake Claude gọi **thật** `dung_bo_anh` → `tai_len_postiz`, JPEG 1080x1920 đạt kiểm → fake upload loopback `/api/public/v1/upload`; gọi lại chỉ có **1 upload**. Thẻ Postiz dùng `startFakePostiz` gốc; backend này chưa có upload nên đứng riêng một stand-in upload loopback trong test repo, không sửa OpenMausBot. Bot được chọn mount đủ 2 server, bot khác mount **không server nào**. Key canary không xuất trong API answer/transcript/log. Tóm tắt và ảnh ở `ra/omb-670343/` (Git ignore); không chép credentials/config/log fixture vào repo. Không có bài đăng hay API trả phí.
+- `dang.json` atomic rename, giữ từng ảnh upload thành công và một dấu đang chờ trước request; lỗi mơ hồ dừng để đối chiếu. Ghi `dang_dang` là bước nhận đăng độc quyền; lần nhận lại bị từ chối, `da_dang` giữ nguyên ID. Đây không thay thế việc bot dùng đúng thứ tự khi gọi thẻ Postiz.
+- Môi trường server hướng dẫn rõ PATH và PLAYWRIGHT_BROWSERS_PATH tuyệt đối. Khóa kernel `flock` từ util-linux tự nhả sau crash, không xóa file lock của tiến trình khác. Upload HTTP chỉ cho loopback fixture, production phải HTTPS, cấm redirect, timeout 30 giây.
+- Ghim SDK **1.32.2**, Zod **4.6.7**, Inspector **2.15.0** và lockfile; `npm audit --omit=dev`: **0 vulnerabilities**. Nguồn contract: [MCP SDK stdio](https://ts.sdk.modelcontextprotocol.io/server), [Postiz Public API auth](https://docs.postiz.com/public-api/introduction), [upload multipart/id/path](https://docs.postiz.com/public-api/uploads/upload-file), source controller v2.26.0 đã đối chiếu.
+- `ck plan check 4 --start` và `ck plan check 4` thành công trong thư mục plan. CLI sửa nhầm Applied To Red Team #4; đã khôi phục nguyên `phase 1, 5, 6`, không sửa phần review/ngoại lệ cố định. Full gate chỉ chạy một lần sau review độc lập bởi phiên chính; phase 4 hoàn tất theo 3 tiêu chí trên, các phase/live acceptance khác vẫn giữ trạng thái thật.

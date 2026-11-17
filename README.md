@@ -1,11 +1,12 @@
 # review-anh
 
-Làm series review dạng ảnh từ kho tư liệu sản phẩm, ưu tiên TikTok dọc **9:16, 1080x1920**, đồng thời kiểm chuẩn JPEG của Threads. Repo chỉ dựng/kiểm ảnh; về sau MausBot điều khiển qua MCP.
+Làm series review dạng ảnh từ kho tư liệu sản phẩm, ưu tiên TikTok dọc **9:16, 1080x1920**, đồng thời kiểm chuẩn JPEG của Threads. MausBot gọi MCP của repo để chọn nguồn, dựng/kiểm ảnh và tải lên Postiz; đăng bài dùng thẻ Postiz có sẵn của MausBot.
 
 ## Cấu trúc
 
 - `tools/dung-bo-anh.mjs`: dựng ảnh từ JSON và mẫu HTML; xuất manifest và bảng xem.
 - `tools/tiktok-anh.sh`: trích khung, chèn chữ kiểu cũ, dựng bảng và kiểm ảnh.
+- `mcp/server.mjs`: server stdio gồm 5 tool nguồn/dựng/upload/trạng thái, không tự gọi AI hay đăng bài.
 - `mau/`: bìa và chi tiết; chưa thêm mẫu giá/CTA vì còn chờ duyệt phong cách.
 - `fonts/`: Be Vietnam Pro Regular/Bold, kèm giấy phép OFL 1.1; nguồn [Google Fonts](https://github.com/google/fonts/tree/main/ofl/bevietnampro).
 - `nguon/<san-pham>/`: `brief.json`, ảnh/video và JSON bộ ảnh; **không vào Git**.
@@ -14,7 +15,7 @@ Làm series review dạng ảnh từ kho tư liệu sản phẩm, ưu tiên TikT
 
 ## Cài trên máy
 
-Cần Node.js 22+, FFmpeg/ffprobe, ImageMagick 7 (`magick`) có decoder HEIC, Gitleaks **8.30.1**. Lệnh chữ kiểu cũ dùng Noto Sans Bold hệ thống (đổi bằng `TIKTOK_ANH_FONT`).
+Cần Node.js 22+, FFmpeg/ffprobe, ImageMagick 7 (`magick`) có decoder HEIC, util-linux (`flock`) và Gitleaks **8.30.1**. Kiểm cô lập MausBot bằng `npm test` cần Node.js 24+ và checkout OpenMausBot có dependencies ở thư mục anh em `../OpenMausBot`; test không sửa checkout đó. Lệnh chữ kiểu cũ dùng Noto Sans Bold hệ thống (đổi bằng `TIKTOK_ANH_FONT`).
 
 ```bash
 npm ci
@@ -62,6 +63,52 @@ tools/tiktok-anh.sh chu ra/video/khung-03.jpg ra/bo/1.jpg "Câu móc" tren
 `chu` và `khung` giữ cách dựng cũ. `kiem`/`luoi` dùng chung bộ kiểm/đường dẫn với renderer mới.
 
 ## Dùng từ MCP
+
+Trong **Plugins → MCP servers → Add server → Run a command**, đặt tên `review-anh`, executable Node và argument là đường dẫn tuyệt đối tới `mcp/server.mjs`. Với workspace hiện tại:
+
+```json
+{
+  "mcpServers": {
+    "review-anh": {
+      "command": "/home/thanh-phong/.local/bin/node",
+      "args": ["/home/thanh-phong/CTP DESKTOP/review-anh/mcp/server.mjs"],
+      "env": {
+        "PATH": "/home/thanh-phong/.local/bin:/usr/local/bin:/usr/bin:/bin",
+        "PLAYWRIGHT_BROWSERS_PATH": "/home/thanh-phong/.cache/ms-playwright",
+        "POSTIZ_URL": "https://postiz.example.com/api",
+        "POSTIZ_API_KEY": ""
+      }
+    }
+  }
+}
+```
+
+Thay các đường dẫn khi chuyển máy; cài browser vào đúng `PLAYWRIGHT_BROWSERS_PATH`. Nhập key thật vào biến môi trường riêng của server trong MausBot, không chép vào file ví dụ hay argv. `POSTIZ_URL` là API base HTTPS **có `/api`** của Docker Postiz, tool nối thêm `/public/v1/upload`. Header upload dùng `Authorization: <key>` theo [Public API](https://docs.postiz.com/public-api/introduction); thẻ MCP Postiz của MausBot tự dùng Bearer. HTTP chỉ được chấp nhận cho loopback fixture. Không có key vẫn khởi động/liệt kê/dựng được; upload mới yêu cầu key.
+
+**Trước khi nhập key/connect:** đặt bot thử ở Ask, chọn riêng `review-anh` và `postiz` cho bot đó; mọi bot khác dùng danh sách riêng không có hai server. Chỉ Always allow `list_nguon` và `view_bang_anh_nguon`. Xem [hướng dẫn bot](docs/huong-dan-bot.md) trước khi chạy thật.
+
+| Tool | Dữ liệu vào chính | Kết quả |
+|---|---|---|
+| `list_nguon` | `{san_pham? ,run_id?}`; muốn đọc run phải có sản phẩm | Nguồn (tối đa 100), brief bọc dữ liệu/cắt rõ ở 2000 codepoint, 50 run gần nhất; thêm `dang` khi chỉ định run |
+| `view_bang_anh_nguon` | `{san_pham}` | Bảng tối đa 40 ảnh, thu nhỏ ≤1280px mỗi chiều dạng ảnh MCP; đường dẫn tuyệt đối và tên từng nguồn |
+| `dung_bo_anh` | JSON bộ ảnh ở trên, trực tiếp `{san_pham,anh,gia?,link?}` | Manifest/checks và bảng xem MCP, đường dẫn tuyệt đối; dùng lại renderer |
+| `tai_len_postiz` | `{san_pham,run_id,kenh,caption,tieu_de?}` | `{anh:[{id,path}],dang,...}`; `kenh` là `threads`/`tiktok`; TikTok cần `tieu_de` ≤90 codepoint, Threads caption ≤500 |
+| `ghi_dang` | Các trường đăng ở trên + `trang_thai`, `postiz_id?` | Ghi `dang_dang` **trước** gọi Postiz, `da_dang` + ID khi rõ thành công, hoặc `khong_ro`/`that_bai` |
+
+Upload kiểm lại chuẩn ảnh/brief, chỉ lấy `manifest.anh` trong đúng run, loại `_xem`, lưu hash bytes và tiến độ vào `dang.json` bằng atomic rename. Gọi upload lại sau thành công/khi server restart trả cùng ID/link, không tải lại. Đổi bytes/manifest bị chặn. Upload timeout, redirect, HTTP lỗi hoặc kết quả không hợp lệ giữ trạng thái đang chờ để đối chiếu, không tự retry mù. Một upload thành công trước lỗi ảnh sau vẫn được giữ lại. Key và nội dung lỗi từ Postiz không được trả/log; redirect bị từ chối, mỗi upload timeout 30 giây.
+
+`ghi_dang` giữ nguyên ID và nội dung đã nhận đăng; `dang_dang`/`khong_ro` không được đặt lại để thử đăng. Khi mơ hồ, bot gọi `postsListTool` của thẻ Postiz để đối chiếu; xác nhận có bài thì ghi `da_dang` cùng ID, chưa rõ thì báo anh. Tool không tự đăng nên chống trùng còn phụ thuộc bot tuân thủ thứ tự này. Mỗi sản phẩm có khóa `flock` xuyên tiến trình; thao tác trùng báo đang bận, crash tự nhả khóa. Browser chỉ mở ở lệnh dựng đầu, sập thì mở lại; render có timeout 60 giây, launch tối đa 30 giây.
+
+SDK **1.32.2**, Zod **4.6.7** và Inspector **2.15.0** ghim exact trong lockfile. Kiểm hẹp:
+
+```bash
+node --test mcp/server.test.mjs
+node --test tests/mausbot-review.test.mjs
+npx --no-install @modelcontextprotocol/inspector --cli --method tools/list node mcp/server.mjs
+npx --no-install @modelcontextprotocol/inspector --cli --method tools/call --tool-name list_nguon --tool-args-json '{}' node mcp/server.mjs
+```
+
+Inspector dùng CLI/stdio, không mở public port. `npm test` là gate toàn repo (renderer + MCP + các fixture MausBot); mỗi fixture dùng home/data/port riêng, engine giả, Postiz giả và upload loopback, không đọc đăng nhập thật. Tóm tắt fixture nằm trong `ra/omb-<pid>/verification-summary.json`, bị Git ignore.
 
 `tools/dung-bo-anh.mjs` export `ROOT`, `normalizeProduct(value)`, `safePath(value, area, {allowMissing})`, `readBrief(product)`, `validateCopy(data, brief)`, `checkImages(paths)`, `createPreview(paths)` và `renderSet(data, {browser, timeoutMs})`. `area` là `nguon` hoặc `ra`; mặc định file phải tồn tại. `renderSet` mặc định timeout 60 giây, mở Chromium khi được gọi, tự đóng browser do nó tạo; có thể nhận browser còn kết nối để dùng lại. Khi browser truyền vào đã sập, renderer mở bản thay thế cho lần dựng đó. Mỗi lần dựng có context riêng tắt JavaScript; lỗi/timeout dọn thư mục tạm. `fillPage` là hàm điền mẫu dùng chung với test trình duyệt.
 

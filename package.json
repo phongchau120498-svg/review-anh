@@ -4,10 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tools/dung-bo-anh.test.mjs",
-    "dung": "node tools/dung-bo-anh.mjs"
+    "test": "node --test tools/*.test.mjs mcp/*.test.mjs tests/mausbot-*.test.mjs",
+    "dung": "node tools/dung-bo-anh.mjs",
+    "mcp": "node mcp/server.mjs"
   },
   "dependencies": {
-    "playwright": "1.65.1"
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "playwright": "1.65.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/inspector": "2.15.0"
   }
 }

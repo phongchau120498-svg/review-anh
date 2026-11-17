@@ -48,7 +48,7 @@ Bản thử đầu tiên theo kiến trúc đã chốt trong [docs/huong-lam.md]
 | 1 | [Kiểm thiết lập thật](./phase-01-kiem-thiet-lap-that.md) | In Progress |
 | 2 | [Mẫu HTML và dựng ảnh](./phase-02-mau-html-va-dung-anh.md) | In Progress |
 | 3 | [Lọc khung từ video](./phase-03-loc-khung-tu-video.md) | Pending |
-| 4 | [MCP server tay chân](./phase-04-mcp-server-tay-chan.md) | Pending |
+| 4 | [MCP server tay chân](./phase-04-mcp-server-tay-chan.md) | Completed |
 | 5 | [Postiz local và kết nối kênh](./phase-05-postiz-local-va-ket-noi-kenh.md) | In Progress |
 | 6 | [Nối MausBot và chạy trọn một sản phẩm](./phase-06-noi-mausbot-va-chay-tron-mot-san-pham.md) | Pending |
 
@@ -143,6 +143,10 @@ Hai phát hiện Critical đã được tự kiểm lại trong mã nguồn Open
 
 Không còn mâu thuẫn chưa xử lý.
 
+## Quyết định bổ sung — 17/11/2026
+
+Anh duyệt đổi **chỉ tên** hai tool đọc: `liet_ke_nguon` → `list_nguon`, `bang_anh_nguon` → `view_bang_anh_nguon`. Chức năng giữ nguyên; bộ nhận diện tool đọc của MausBot chỉ nhận động từ tiếng Anh nên tên mới đủ điều kiện hiện Always allow. Các tool tạo giữ tên Việt. Đây là quyết định thêm sau review, không sửa lịch sử Red Team hay ngoại lệ bot thử đã chốt ở trên.
+
 ## Tracking
 
 | Phiên | File đang giữ | Trạng thái / bằng chứng |
@@ -150,3 +154,4 @@ Không còn mâu thuẫn chưa xử lý.
 | `/root/verify_settings` | `phase-01-kiem-thiet-lap-that.md`; status/Tracking trong `plan.md` | Readonly local xong 17/11/2026: GET bots/MCP/Postiz/instances HTTP 200; version và auth status không tốn lượt. Chờ tài khoản thử, tư liệu/brief và kiểm engine; Cloud chưa kiểm. Chi tiết ở Kết quả kiểm phase 1. |
 | `/root/render_images` | `phase-02`; `package*`; `mau/`; `fonts/`; `tools/dung-bo-anh*`; `tools/tiktok-anh.sh` (`kiem`, `luoi`); `README.md`; `.gitignore`; `.githooks/` | Xong phần kỹ thuật: bộ 3 ảnh MẪU đã dựng; npm test 7/7, audit 0, syntax/diff đạt. Chờ anh duyệt phong cách nên phase 2 giữ in-progress; không push/deploy. Chi tiết ở Kết quả phase 2. |
 | `/root/prepare_postiz` | `postiz/`; `docs/postiz-local.md`; mục Postiz trong `README.md`; `phase-05`; status/Tracking `plan.md` | Xong chuẩn bị local: Compose 6 dịch vụ ghim digest đã kiểm registry; config env giả exit 0, env trống bị chặn; cloudflared 2026.11.0 checksum đúng; gitleaks 0 leak, ignore/diff đạt. Chờ tài khoản/domain và chốt nhận diện/thời gian giữ ảnh chưa đăng; không up/bật dịch vụ/connect/đăng. Chi tiết Kết quả phase 5; nhả file sau commit. |
+| `/root/mcp_tools` | `mcp/server*`; `tests/mausbot-review.test.mjs`; `package*`; mục MCP `README`; `phase-04`; chỉ 2 tên tool đọc trong `phase-06`; status/decision/Tracking `plan.md` | Phase 4 đủ 3 tiêu chí: `node --test mcp/server.test.mjs tests/mausbot-review.test.mjs` 13/13; Inspector 2.15.0 CLI list/call đạt; `npm audit --omit=dev` 0; fixture thật render→upload loopback, retry không tải lại, bot khác không mount cả 2 server. Không chạy full gate; chờ review độc lập + phiên chính kiểm chung. Commit riêng sau syntax/diff/Gitleaks; chưa push/deploy/live; ảnh/tóm tắt trong `ra/omb-670343/` (ignored). |

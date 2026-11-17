@@ -18,7 +18,7 @@ Nối MCP `review-anh` và **thẻ Postiz có sẵn** vào bot. Kiểm phần n�
 
 - **Cổng duyệt bài là mức duyệt Ask của bot.** Không dựa vào thiết lập "Gửi thay anh".
   - Ở mức Full access, `server/auto-approve.ts:111` duyệt mọi lệnh trước cả bước kiểm lệnh gửi, nên **cấm** Full access cho bot có Postiz.
-  - Chỉ chọn "Always allow" cho các tool chỉ đọc: `liet_ke_nguon`, `bang_anh_nguon`.
+  - Chỉ chọn "Always allow" cho các tool chỉ đọc: `list_nguon`, `view_bang_anh_nguon`.
 - **Chỉ bot được chọn có `postiz` và `review-anh`:**
   - Mọi bot khác phải đặt danh sách MCP server riêng, không có hai server này.
   - Kiểm việc này trước khi nhập API key thật.
