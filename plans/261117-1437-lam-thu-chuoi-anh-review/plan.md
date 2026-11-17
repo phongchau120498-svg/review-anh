@@ -147,6 +147,8 @@ Không còn mâu thuẫn chưa xử lý.
 
 Anh duyệt đổi **chỉ tên** hai tool đọc: `liet_ke_nguon` → `list_nguon`, `bang_anh_nguon` → `view_bang_anh_nguon`. Chức năng giữ nguyên; bộ nhận diện tool đọc của MausBot chỉ nhận động từ tiếng Anh nên tên mới đủ điều kiện hiện Always allow. Các tool tạo giữ tên Việt. Đây là quyết định thêm sau review, không sửa lịch sử Red Team hay ngoại lệ bot thử đã chốt ở trên.
 
+Sau lỗi lớp chia sẻ PC khi thử Thu Trinh (bằng chứng ở Kết quả phase 6), anh chọn **chuẩn bị MCP chạy cùng máy chủ `bot.onehand.space`**. Chưa có thông tin Docker/systemd hay SSH để kiểm chỉ đọc; chưa duyệt deploy/mở cổng/tunnel hoặc thay home của MausBot. Tạm dừng theo yêu cầu anh ngày 17/11; tiếp tục từ `HANDOFF.md`. Ưu tiên dùng lại stdio có sẵn nếu môi trường máy chủ cho phép, chỉ thêm HTTP khi đã xác minh cần. Phạm vi trước mắt vẫn là ba tool làm bản nháp cho riêng Thu Trinh, không Postiz.
+
 ## Tracking
 
 | Phiên | File đang giữ | Trạng thái / bằng chứng |
