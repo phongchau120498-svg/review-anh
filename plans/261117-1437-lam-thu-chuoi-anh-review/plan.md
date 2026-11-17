@@ -1,14 +1,21 @@
 ---
-title: "Làm thử chuỗi ảnh review từ nguồn tới bài Threads"
-description: "Một sản phẩm đi trọn: nguồn và brief → chọn ảnh → dựng ảnh → kiểm → tải lên Postiz → đăng Threads (và TikTok riêng tư), do bot MausBot điều khiển qua MCP"
-status: pending
+title: Làm thử chuỗi ảnh review từ nguồn tới bài Threads
+description: >-
+  Một sản phẩm đi trọn: nguồn và brief → chọn ảnh → dựng ảnh → kiểm → tải lên
+  Postiz → đăng Threads (và TikTok riêng tư), do bot MausBot điều khiển qua MCP
+status: in-progress
 priority: P2
-branch: "main"
-tags: [review-anh, mausbot, postiz, threads, tiktok]
+branch: main
+tags:
+  - review-anh
+  - mausbot
+  - postiz
+  - threads
+  - tiktok
 blockedBy: []
 blocks: []
-created: "2026-11-17T07:38:03.500Z"
-createdBy: "ck:plan"
+created: '2026-11-17T07:38:03.500Z'
+createdBy: 'ck:plan'
 source: skill
 ---
 
@@ -38,7 +45,7 @@ Bản thử đầu tiên theo kiến trúc đã chốt trong [docs/huong-lam.md]
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Kiểm thiết lập thật](./phase-01-kiem-thiet-lap-that.md) | Pending |
+| 1 | [Kiểm thiết lập thật](./phase-01-kiem-thiet-lap-that.md) | In Progress |
 | 2 | [Mẫu HTML và dựng ảnh](./phase-02-mau-html-va-dung-anh.md) | Pending |
 | 3 | [Lọc khung từ video](./phase-03-loc-khung-tu-video.md) | Pending |
 | 4 | [MCP server tay chân](./phase-04-mcp-server-tay-chan.md) | Pending |
@@ -135,3 +142,9 @@ Hai phát hiện Critical đã được tự kiểm lại trong mã nguồn Open
 - **Phase 5:** không đăng hay lên lịch trên tài khoản thật.
 
 Không còn mâu thuẫn chưa xử lý.
+
+## Tracking
+
+| Phiên | File đang giữ | Trạng thái / bằng chứng |
+|---|---|---|
+| `/root/verify_settings` | `phase-01-kiem-thiet-lap-that.md`; status/Tracking trong `plan.md` | Readonly local xong 17/11/2026: GET bots/MCP/Postiz/instances HTTP 200; version và auth status không tốn lượt. Chờ tài khoản thử, tư liệu/brief và kiểm engine; Cloud chưa kiểm. Chi tiết ở Kết quả kiểm phase 1. |
