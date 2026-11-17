@@ -1,7 +1,7 @@
 ---
 phase: 2
-title: "Mẫu HTML và dựng ảnh"
-status: pending
+title: Mẫu HTML và dựng ảnh
+status: in-progress
 priority: P1
 dependencies: []
 ---
@@ -96,8 +96,8 @@ dependencies: []
 
 ## Success Criteria
 
-- [ ] Một lệnh từ JSON ra ảnh trong `ra/<sp>/<run-id>/`, có `manifest.json`. Mọi ảnh qua `kiem`.
-- [ ] Các test trên đều đạt.
+- [x] Một lệnh từ JSON ra ảnh trong `ra/<sp>/<run-id>/`, có `manifest.json`. Mọi ảnh qua `kiem`.
+- [x] Các test trên đều đạt.
 - [ ] Anh duyệt phong cách, hoặc góp ý để sửa một vòng.
 
 ## Risk Assessment
@@ -105,3 +105,20 @@ dependencies: []
 - **Chèn mã vào HTML làm lộ file:** chặn bằng `textContent`, CSP, tắt JavaScript, chặn mạng; có test.
 - **Font thiếu dấu:** đã có test dấu.
 - **Ảnh HEIC:** đổi sang JPEG trước khi dựng.
+
+## Kết quả phase 2 — 17/11/2026
+
+- Giữ `in-progress`: phần kỹ thuật xong, **chờ anh duyệt phong cách/brief thật**, chưa thêm CTA và chưa duyệt thay anh. Anh xác nhận ưu tiên TikTok dọc 9:16; mỗi ảnh là 1080x1920, bảng xem chỉ ghép ngang để duyệt.
+- Đã đọc kết quả kiểm thiết lập phase 1 trước khi code; không sửa OpenMausBot, app thật, model/provider, không gọi AI trả phí, không push/deploy.
+- Đã **copy** ba JPEG `IMG_1861`, `IMG_2240`, `IMG_2297` sang `nguon/san-pham-mau/`, giữ nguyên nguồn gốc. Copy thêm `IMG_1765.heic` chỉ để kiểm decoder. Mọi chữ/brief ghi rõ MẪU; giá `MẪU: 123.000 đ`, link `example.com` không dùng như thông tin sản phẩm thật. Không suy diễn công dụng.
+- Bộ ba ảnh: `ra/san-pham-mau/2026-11-17T08-03-35-793Z-3c5ba15c/`. Bảng gửi anh: `_xem/bang-ket-qua.jpg`; ảnh riêng đầu tiên: `01.jpg`. Manifest chỉ liệt kê `01.jpg`, `02.jpg`, `03.jpg`; bytes lần lượt 488164, 220297, 266063. Đã xem bảng để kiểm chữ không mất/tràn; **không coi đó là duyệt phong cách**.
+- `node tools/dung-bo-anh.mjs nguon/san-pham-mau/bo-anh.json`: dựng đủ ba ảnh, mỗi `kiem.dat=true`. `tools/tiktok-anh.sh kiem ra/san-pham-mau/2026-11-17T08-03-35-793Z-3c5ba15c/*.jpg`: cả ba Đạt.
+- `npm install --ignore-scripts`: ghim Playwright 1.65.1 cùng lock. `npx playwright install chromium`: cài Chromium v1255 đúng phiên bản; lệnh Playwright tự dọn browser cache cũ không còn dùng. Không thay cấu hình app.
+- `npm test`: 7/7 nhóm test đạt; có Chromium thật cho 120 ký tự/dấu Việt/custom font Be Vietnam Pro, iframe hiện nguyên văn, CSP/tắt JS/chặn HTTP và file, chữ quá dài báo lỗi, JPEG/PNG, SVG đội .jpg, path traversal/symlink, giá/link/domain, metadata/8MB/20MB, kiểm tiếp sau lỗi và CLI từ `/tmp`. Test tự tạo/dọn fixture trong `nguon/`/`ra/`.
+- `magick identify ... heic:nguon/IMG_1765.heic`: HEIC 2268x4032. `renderSet` trên bản copy HEIC thật: JPEG 1080x1920 đạt kiểm, 301374 byte tại run `2026-11-17T08-05-58-390Z-6902be08`. Máy chỉ decode HEIC, không encode; test tự động dùng JPEG/PNG và kiểm HEIC bằng tư liệu thật này.
+- `node --check tools/dung-bo-anh.mjs`, `node --check tools/dung-bo-anh.test.mjs`, `bash -n tools/tiktok-anh.sh`, `sh -n .githooks/pre-commit`, `git diff --check`: đạt. `npm audit --omit=dev`: 0 vulnerabilities. Chưa chạy gate toàn plan; parent kiểm chung cuối plan.
+- `.githooks/pre-commit` được version hóa, fail-closed nếu thiếu/sai Gitleaks 8.30.1; `core.hooksPath=.githooks`. `git check-ignore` xác nhận `nguon/`, `ra/`, `node_modules`, `postiz/.env`, `postiz/data/` bị bỏ qua; `.env.example` được cho phép.
+- `ck plan check 2 --start` chạy từ thư mục plan: thành công. CLI đổi nhầm Applied To của Red Team #2; đã khôi phục nguyên `phase 4, 5, 6` ngay sau đó, giữ mọi quyết định Red Team/Ngoại lệ.
+- Contract cho phase 4: `renderSet(data,{browser,timeoutMs})` trả `{san_pham,run_id,thu_muc,manifest,anh:[path],brief,kiem:[{path,dat,bytes,loi}],bang_xem}`. Manifest giữ `anh` là danh sách path tính từ gốc repo; `_xem` tách riêng. Export dùng lại `ROOT`, `normalizeProduct`, `safePath`, `readBrief`, `validateCopy`, `checkImages`, `createPreview`; xem README. Giá trong chữ chỉ hỗ trợ số + đơn vị được ghi rõ, không tự kiểm chứng nội dung review.
+- Caller cũ `chu` cũng smoke-test với font Be Vietnam Pro đã bundle: `TIKTOK_ANH_FONT=... tools/tiktok-anh.sh chu nguon/san-pham-mau/IMG_1861.jpg ra/kiem-chu/1.jpg "MẪU: chữ kiểu cũ" tren`: Đạt; đã dọn riêng thư mục smoke-test. Không đổi logic `chu`/`khung`.
+- Chạy trực tiếp `.githooks/pre-commit` trên 18 file staged: Gitleaks 8.30.1 quét ~45.47 KB, no leaks found; không stage `nguon/`/`ra/` hay file Postiz của phiên khác.

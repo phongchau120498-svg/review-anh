@@ -2,3 +2,6 @@ nguon/
 ra/
 *.env
 .env*
+node_modules/
+postiz/data/
+!postiz/.env.example

@@ -1,0 +1,13 @@
+{
+  "name": "review-anh",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tools/dung-bo-anh.test.mjs",
+    "dung": "node tools/dung-bo-anh.mjs"
+  },
+  "dependencies": {
+    "playwright": "1.65.1"
+  }
+}

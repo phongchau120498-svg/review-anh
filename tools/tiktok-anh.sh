@@ -7,7 +7,7 @@
 #   tiktok-anh.sh bang <thư mục ảnh>
 #       -> bang-nguon.jpg: lưới mọi ảnh trong thư mục, có tên, để chọn ảnh
 #   tiktok-anh.sh luoi <ảnh ra 1> <ảnh ra 2> ...
-#       -> bang-ket-qua.jpg cạnh ảnh đầu, để xem lại cả bộ trong một ảnh
+#       -> _xem/bang-ket-qua.jpg cạnh ảnh đầu, chỉ dùng để xem lại
 set -euo pipefail
 
 GOC="$(cd "$(dirname "$0")/.." && pwd)"
@@ -58,13 +58,9 @@ chu() {
   echo "$ra"
 }
 
-# Luật đăng social: 1080x1920 (9:16), JPEG sRGB, không còn metadata, dưới 20 MB (giới hạn ảnh của TikTok).
+# Kiểm hết bộ rồi trả mã lỗi chung; dùng cùng bộ kiểm với lệnh dựng HTML.
 kiem() {
-  local f="$1" kt meta byte
-  kt="$(magick identify -format '%wx%h %[colorspace]' "$f")"
-  meta="$(magick identify -format '%[EXIF:*]%[IPTC:*]%[XMP:*]' "$f" 2>/dev/null || true)"
-  byte="$(stat -c %s "$f")"
-  [[ "$kt" == "1080x1920 sRGB" && -z "$meta" && "$byte" -lt 20000000 ]] || { echo "Ảnh không đạt chuẩn đăng: $f ($kt, metadata: ${meta:-không}, $byte byte)" >&2; exit 1; }
+  node "$GOC/tools/dung-bo-anh.mjs" --kiem "$@"
 }
 
 bang() {
@@ -80,9 +76,7 @@ bang() {
 }
 
 luoi() {
-  local thu; thu="$(dirname "$1")"
-  magick montage "$@" -geometry 360x640+8+8 -background '#111' -tile "${#}x1" "$thu/bang-ket-qua.jpg"
-  echo "$thu/bang-ket-qua.jpg"
+  node "$GOC/tools/dung-bo-anh.mjs" --luoi "$@"
 }
 
 case "${1:-}" in
@@ -90,6 +84,6 @@ case "${1:-}" in
   chu) shift; chu "$@" ;;
   luoi) shift; luoi "$@" ;;
   bang) shift; bang "$@" ;;
-  kiem) shift; for f in "$@"; do kiem "$f"; done; echo "Đạt" ;;
+  kiem) shift; kiem "$@" ;;
   *) sed -n '2,9p' "$0"; exit 1 ;;
 esac
