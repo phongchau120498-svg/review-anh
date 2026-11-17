@@ -50,7 +50,7 @@ Bản thử đầu tiên theo kiến trúc đã chốt trong [docs/huong-lam.md]
 | 3 | [Lọc khung từ video](./phase-03-loc-khung-tu-video.md) | Pending |
 | 4 | [MCP server tay chân](./phase-04-mcp-server-tay-chan.md) | Completed |
 | 5 | [Postiz local và kết nối kênh](./phase-05-postiz-local-va-ket-noi-kenh.md) | In Progress |
-| 6 | [Nối MausBot và chạy trọn một sản phẩm](./phase-06-noi-mausbot-va-chay-tron-mot-san-pham.md) | Pending |
+| 6 | [Nối MausBot và chạy trọn một sản phẩm](./phase-06-noi-mausbot-va-chay-tron-mot-san-pham.md) | In Progress |
 
 ## Thứ tự và phụ thuộc
 
@@ -155,3 +155,4 @@ Anh duyệt đổi **chỉ tên** hai tool đọc: `liet_ke_nguon` → `list_ngu
 | `/root/render_images` | `phase-02`; `package*`; `mau/`; `fonts/`; `tools/dung-bo-anh*`; `tools/tiktok-anh.sh` (`kiem`, `luoi`); `README.md`; `.gitignore`; `.githooks/` | Xong phần kỹ thuật: bộ 3 ảnh MẪU đã dựng; npm test 7/7, audit 0, syntax/diff đạt. Chờ anh duyệt phong cách nên phase 2 giữ in-progress; không push/deploy. Chi tiết ở Kết quả phase 2. |
 | `/root/prepare_postiz` | `postiz/`; `docs/postiz-local.md`; mục Postiz trong `README.md`; `phase-05`; status/Tracking `plan.md` | Xong chuẩn bị local: Compose 6 dịch vụ ghim digest đã kiểm registry; config env giả exit 0, env trống bị chặn; cloudflared 2026.11.0 checksum đúng; gitleaks 0 leak, ignore/diff đạt. Chờ tài khoản/domain và chốt nhận diện/thời gian giữ ảnh chưa đăng; không up/bật dịch vụ/connect/đăng. Chi tiết Kết quả phase 5; nhả file sau commit. |
 | `/root/mcp_tools` | `mcp/server*`; `tests/mausbot-review.test.mjs`; `package*`; mục MCP `README`; `phase-04`; chỉ 2 tên tool đọc trong `phase-06`; status/decision/Tracking `plan.md` | Phase 4 đủ 3 tiêu chí: `node --test mcp/server.test.mjs tests/mausbot-review.test.mjs` 13/13; Inspector 2.15.0 CLI list/call đạt; `npm audit --omit=dev` 0; fixture thật render→upload loopback, retry không tải lại, bot khác không mount cả 2 server. Không chạy full gate; chờ review độc lập + phiên chính kiểm chung. Commit riêng sau syntax/diff/Gitleaks; chưa push/deploy/live; ảnh/tóm tắt trong `ra/omb-670343/` (ignored). |
+| `/root/verify_approvals` | `docs/huong-dan-bot.md`; `tests/mausbot-approval.test.mjs`; kết quả `phase-06`; status/Tracking `plan.md` | Guide và fixture xong, `node --experimental-strip-types --test tests/mausbot-approval.test.mjs` 5/5. Ask giữ 0 lệnh trước Allow once, 1 lệnh sau; Full không có thẻ chờ và thêm 1 lệnh tới Postiz giả. Kết quả và giới hạn UI/engine ở Phase 6. Commit riêng qua Gitleaks. Chờ review và gate chung, còn lượt bot thử với tài khoản/domain/brief thật. |
