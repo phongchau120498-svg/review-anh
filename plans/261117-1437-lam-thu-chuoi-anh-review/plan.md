@@ -1,6 +1,6 @@
 ---
 title: "Làm thử chuỗi ảnh review từ nguồn tới bài Threads"
-description: "Một sản phẩm đi trọn: nguồn → chọn khung → dựng ảnh → kiểm → Postiz đăng Threads, do bot MausBot điều khiển qua MCP"
+description: "Một sản phẩm đi trọn: nguồn và brief → chọn ảnh → dựng ảnh → kiểm → tải lên Postiz → đăng Threads (và TikTok riêng tư), do bot MausBot điều khiển qua MCP"
 status: pending
 priority: P2
 branch: "main"
@@ -18,17 +18,21 @@ source: skill
 
 Bản thử đầu tiên theo kiến trúc đã chốt trong [docs/huong-lam.md](../../docs/huong-lam.md):
 
-- Repo `review-anh` chỉ làm **tay chân**: lọc khung, dựng ảnh từ mẫu HTML, kiểm chuẩn. Các công cụ này được bọc thành MCP server.
-- Bot MausBot làm **bộ não**: chọn ảnh, viết chữ, soát lại, rồi gọi Postiz qua MCP để đăng.
-- **Postiz** chạy local bằng Docker. Threads làm trước. TikTok chỉ đăng riêng tư (SELF_ONLY) cho tới khi app của mình được TikTok duyệt.
+- **Repo `review-anh`** chỉ làm tay chân: dựng ảnh từ mẫu HTML, kiểm chuẩn, tải ảnh lên Postiz. Các công cụ này được bọc thành MCP server.
+- **Bot MausBot** làm bộ não: chọn ảnh, viết chữ từ brief, soát lại, rồi đăng qua **thẻ Postiz có sẵn của MausBot**.
+- **Postiz** chạy local bằng Docker.
+- **Kênh đăng:**
+  - Threads làm trước.
+  - TikTok đăng lên **một tài khoản thử để riêng tư**. Lý do: app TikTok chưa được duyệt chỉ cho đăng lên tài khoản đang để riêng tư, với chế độ SELF_ONLY.
 
 ## Tiêu chí nghiệm thu cả plan
 
-- [ ] Một sản phẩm đi hết chuỗi: ảnh nguồn → 3–4 ảnh chọn → bộ ảnh 1080x1920 có chữ tiếng Việt → qua bước kiểm → bài Threads thật đăng qua Postiz.
-- [ ] Mọi bước do bot MausBot gọi qua MCP. Không có bước nào người phải chạy lệnh tay.
-- [ ] Bài công khai chỉ được đăng sau khi anh duyệt trong chat. Bot đặt "Gửi thay anh" ở mức **Hỏi mỗi lần**.
-- [ ] TikTok đăng được một bài chế độ SELF_ONLY qua Postiz, có `auto_add_music`.
-- [ ] Không thử thay đổi nào trên MausBot thật trước khi chạy đạt trên bản cô lập. Không có secret, ảnh nguồn hay token nào bị đưa vào Git.
+- [ ] Một sản phẩm có `brief.json` đi hết chuỗi: chọn 3–4 ảnh → bộ ảnh 1080x1920 có chữ tiếng Việt, mọi giá và link khớp brief → qua bước kiểm → tải lên Postiz → bài Threads thật.
+- [ ] Mọi bước do bot gọi qua MCP. Không có bước nào người phải chạy lệnh tay.
+- [ ] **Bot đăng bài chạy ở mức duyệt Ask.** Có bằng chứng trên bản cô lập: lệnh đăng của Postiz làm hiện thẻ duyệt ở mức Ask, còn ở mức Full access thì không, nên Full access bị cấm cho bot này. Thiết lập "Gửi thay anh" **không** chặn được MCP Postiz, nên không dựa vào nó.
+- [ ] Chỉ bot được chọn gắn `postiz` và `review-anh`. Mọi bot khác đã được loại hai server này khỏi danh sách.
+- [ ] TikTok: tài khoản thử để riêng tư nhận được bài SELF_ONLY qua Postiz. Kiểm trên chính app TikTok, không tin trạng thái báo của Postiz.
+- [ ] Không có secret, ảnh nguồn, token hay log thô nào trong Git. Gitleaks chạy trước mỗi commit.
 
 ## Phases
 
@@ -43,28 +47,91 @@ Bản thử đầu tiên theo kiến trúc đã chốt trong [docs/huong-lam.md]
 
 ## Thứ tự và phụ thuộc
 
-- **Phase 1** chạy trước; nó quyết định một phần cách làm phase 4 và 6.
-- **Phase 2, 3, 5** độc lập, chạy song song được:
-  - phase 3 chờ video của anh, chưa có thì làm sau;
-  - phase 5 cần anh tự đăng nhập tài khoản.
-- **Phase 4** cần phase 2 xong. Phase 3 chưa xong thì tool lọc khung để sau.
-- **Phase 6** cần phase 1, 4 và 5.
+- **Phase 1** chạy trước.
+- **Phase 2** chạy độc lập.
+- **Phase 3** chờ video của anh và **không chặn nghiệm thu**, vì bản thử dùng ảnh tĩnh.
+- **Phase 4** cần phase 2.
+- **Phase 5** cần trả lời trước câu hỏi mở 2 và 4 (tài khoản thử, domain).
+- **Phase 6** cần phase 1, 4, 5 và câu hỏi mở 1.
 
 ## Việc anh phải tự làm
 
-Đây là các bước đăng nhập, tạo tài khoản, chấp nhận điều khoản. Em không làm thay được:
+- **Tài khoản và domain:** tạo tài khoản Cloudflare, gắn domain, tạo một tài khoản Threads thử và một tài khoản TikTok thử để riêng tư.
+- **App nhà phát triển:** tạo app Meta (Threads) và app TikTok (Content Posting API); nộp hồ sơ duyệt app TikTok, việc này không có hạn chắc chắn.
+- **Đăng nhập:** đăng nhập các kênh trong Postiz, rồi bấm Connect trên thẻ Postiz của MausBot.
+- **Duyệt:** duyệt bài công khai đầu tiên, và duyệt việc gắn hai server vào bot thật.
 
-- Tạo tài khoản Cloudflare (R2 + Tunnel), tạo app Meta cho Threads, tạo app TikTok nhà phát triển và nộp hồ sơ duyệt.
-- Đăng nhập Threads và TikTok trong Postiz.
-- Duyệt bài công khai đầu tiên.
+## Ngoại lệ đã được anh duyệt (17/11/2026)
+
+Phần chọn ảnh và viết chữ bằng engine thật được thử trên **một bot thử riêng trong app MausBot thật**. Điều kiện:
+
+- bot ở mức Ask;
+- chỉ nối Postiz có tài khoản Threads thử và TikTok thử;
+- không đụng bot hay dữ liệu đang vận hành.
+
+Phần nối dây và thẻ duyệt vẫn kiểm trên bản cô lập.
 
 ## Câu hỏi còn mở
 
-1. Bot nào nhận việc: Tiêu Băng (đang lo Threads), hay một nhân viên mới riêng cho việc này?
-2. Đăng thử lên tài khoản Threads chính hay một tài khoản thử? Threads không có chế độ riêng tư, bài nào đăng ra cũng công khai.
-3. Phong cách và màu thương hiệu cho mẫu ảnh: anh gửi bài mẫu, hay để em đề xuất 2–3 hướng cho anh chọn?
-4. Anh đã có tài khoản Cloudflare và domain chưa? TikTok yêu cầu ảnh nằm trên domain đã xác minh.
+1. Bot đăng thật về sau là bot nào: Tiêu Băng hay một nhân viên mới?
+2. Tên tài khoản Threads thử và TikTok thử là gì? Phase 5 phải chờ câu này.
+3. Phong cách và màu thương hiệu cho mẫu ảnh: anh gửi bài mẫu, hay em đề xuất 2–3 hướng?
+4. Anh đã có tài khoản Cloudflare và domain chưa? Phase 5 phải chờ câu này.
+5. Thông tin cho sản phẩm thử đầu tiên: tên, 3 điểm nổi bật, giá, link.
 
 ## Dependencies
 
 Không có plan khác đang chạy trong repo này.
+
+## Red Team Review
+
+### Session — 2026-11-17
+
+**Findings:** 15 sau khi gộp từ 39 phát hiện của 4 người soi (14 nhận, 1 bác).
+**Severity breakdown:** 2 Critical, 10 High, 3 Medium.
+
+Hai phát hiện Critical đã được tự kiểm lại trong mã nguồn OpenMausBot:
+
+- `server/auto-approve.ts:111`: ở mức Full access, mọi lệnh được duyệt ngay, trước khi tới bước kiểm lệnh gửi ở dòng 113.
+- `docs/verification/postiz.md`: MausBot đã có sẵn thẻ Postiz.
+
+| # | Finding | Severity | Disposition | Applied To |
+|---|---------|----------|-------------|------------|
+| 1 | "Gửi thay anh" không chặn được lệnh đăng của Postiz; ở Full access bot đăng luôn không hỏi | Critical | Accept | plan, phase 6 |
+| 2 | Không có bước đưa ảnh từ `ra/` lên Postiz | Critical | Accept | phase 4, 5, 6 |
+| 3 | Bản cô lập chỉ có engine giả và vẫn nối tới Postiz thật | High | Accept (anh duyệt ngoại lệ bot thử) | plan, phase 1, 4, 6 |
+| 4 | Plan làm lại thẻ Postiz mà MausBot đã có | High | Accept | phase 1, 5, 6 |
+| 5 | Tunnel đưa toàn bộ Postiz ra internet | High | Accept | phase 5 |
+| 6 | MCP gắn vào mọi bot chứ không riêng bot được chọn | High | Accept | plan, phase 6 |
+| 7 | Chèn được mã vào HTML khi dựng ảnh, làm lộ file trên máy | High | Accept | phase 2 |
+| 8 | Đường dẫn, thư mục làm việc, tên sản phẩm, `kiem` dừng ở lỗi đầu, bảng xem lẫn với ảnh đăng | High | Accept | phase 2, 4 |
+| 9 | Chưa có brief nên bot tự bịa giá | High | Accept | phase 2, 4, 6 |
+| 10 | TikTok khi app chưa duyệt bắt tài khoản phải để riêng tư; tên trường thiết lập sai | High | Accept (dùng tài khoản thử riêng tư theo lựa chọn của anh) | plan, phase 5, 6 |
+| 11 | Chạy lại có thể đăng trùng; chưa kiểm giới hạn caption | High | Accept | phase 4, 6 |
+| 12 | Phase 5 lên lịch thử Threads trên tài khoản thật | High | Accept | phase 5 |
+| 13 | Bọc MCP là thừa, cho bot chạy script thẳng | Medium | Reject | — |
+| 14 | Thiếu bước dựng tunnel, domain, tự chạy lại sau restart; chưa ghi phụ thuộc | Medium | Accept | plan, phase 5 |
+| 15 | `.env.example` bị gitignore nuốt; thiếu công cụ quét secret; chưa ghim phiên bản | Medium | Accept | phase 2, 4, 5 |
+
+**Lý do bác #13:**
+- Bot đăng bài phải chạy ở mức Ask (theo #1). Ở mức đó mọi lệnh shell đều bật thẻ hỏi duyệt.
+- MCP cho phép "Always allow" với các tool chỉ đọc (`docs/approval-levels.md`), nên đỡ phiền hơn.
+- Đây cũng là hướng anh đã chốt.
+
+**Đề xuất đã bác:** "Chỉ cho bot tạo nháp, anh tự bấm Publish trong Postiz". Cách này trái với quyết định "không đăng tay" của anh, và cách #1 đã đủ chặn.
+
+### Whole-Plan Consistency Sweep
+
+Đã rà lại plan.md và cả 6 file phase theo danh sách thay đổi bên dưới:
+
+- **Mức duyệt:** thiết lập "Gửi thay anh" không còn được coi là cổng chặn. Cổng chặn là mức duyệt Ask.
+- **Postiz:** "gắn MCP Postiz" được thay bằng "thẻ Postiz có sẵn".
+- **Ảnh lên Postiz:** đã thêm `tai_len_postiz`.
+- **Brief:** ví dụ JSON đổi sang `nguon/<sp>/` và có `brief.json`.
+- **TikTok:**
+  - tài khoản thử để riêng tư;
+  - trường thiết lập của Postiz: `autoAddMusic: "yes"` và `content_posting_method: "DIRECT_POST"`;
+  - bỏ tên trường `auto_add_music` của TikTok.
+- **Phase 5:** không đăng hay lên lịch trên tài khoản thật.
+
+Không còn mâu thuẫn chưa xử lý.

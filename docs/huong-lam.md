@@ -32,7 +32,11 @@ Bước 3 dùng ảnh làm mặc định vì engine nào cũng xem được ản
 
 ## Ràng buộc khi đăng
 
-- **TikTok:** API bài ảnh chỉ kéo ảnh về từ link (PULL_FROM_URL), và link phải thuộc domain đã xác minh với TikTok. App nhà phát triển chưa được TikTok duyệt thì mọi bài chỉ để riêng tư (SELF_ONLY), nên phải nộp hồ sơ duyệt song song. Đăng thẳng (DIRECT_POST) thì dùng được `auto_add_music` để TikTok tự gắn nhạc gợi ý.
+- **TikTok:**
+  - API bài ảnh chỉ kéo ảnh về từ link (PULL_FROM_URL), và link phải thuộc domain đã xác minh với TikTok.
+  - App chưa được TikTok duyệt thì có 3 giới hạn: bài chỉ để riêng tư (SELF_ONLY), **chính tài khoản đăng phải để riêng tư**, và tối đa 5 người đăng trong 24 giờ. Vì vậy bản thử dùng một tài khoản TikTok thử để riêng tư, và nộp hồ sơ duyệt app song song.
+  - Thiết lập trong Postiz phải là `content_posting_method: "DIRECT_POST"` và `autoAddMusic: "yes"`. Nếu chọn `UPLOAD`, Postiz bỏ qua các thiết lập này mà vẫn báo đăng thành công.
+- **Cổng duyệt trong MausBot:** bot có Postiz phải chạy ở mức duyệt **Ask**. Thiết lập "Gửi thay anh" chỉ áp cho các ứng dụng kết nối (Composio), không chặn được MCP Postiz. Ở mức Full access, mọi lệnh được duyệt tự động (`server/auto-approve.ts`). Postiz nối qua thẻ có sẵn **Apps → Social → Postiz**.
 - **Threads:** carousel 2–20 ảnh, giới hạn 250 bài/24 giờ, ảnh phải có link công khai.
 - **Chạy local vẫn cần:**
   - một kho ảnh công khai (Postiz hỗ trợ Cloudflare R2);

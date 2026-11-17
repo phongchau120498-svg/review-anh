@@ -10,47 +10,72 @@ dependencies: []
 
 ## Overview
 
-Chạy Postiz local bằng Docker Compose. Ảnh lưu trên Cloudflare R2 có domain công khai. Dùng Cloudflare Tunnel để có HTTPS cho bước kết nối tài khoản. Kết nối Threads trước, rồi TikTok ở chế độ riêng tư.
+Chạy Postiz local bằng Docker Compose, có HTTPS cố định qua tunnel riêng có tên (named tunnel), ảnh lưu trên R2 gắn domain đã xác minh. Phase này chỉ kết nối **tài khoản Threads thử** và **tài khoản TikTok thử để riêng tư**, không đăng hay lên lịch gì trên tài khoản thật.
+
+**Chặn bởi:** câu hỏi mở 2 (tài khoản thử) và 4 (Cloudflare và domain).
 
 ## Requirements
 
-- Postiz chạy bằng file docker-compose chính thức, ghim phiên bản cụ thể, không dùng `latest`.
-- Ảnh lưu trên R2, gắn domain của anh. Đăng ký domain này trong app TikTok để TikTok kéo ảnh về được (PULL_FROM_URL).
-- Tunnel cấp HTTPS cố định cho Postiz, dùng làm địa chỉ trả về sau khi đăng nhập (OAuth callback) cho Meta và TikTok.
-- Secret (khóa R2, khóa app Meta, khóa app TikTok, JWT secret) chỉ nằm trong `.env` của Postiz, ngoài Git.
-- Bật API công khai và MCP của Postiz, lấy API key để phase 6 dùng.
+- **Chạy Postiz:**
+  - Dùng file docker-compose chính thức, ghim phiên bản cụ thể, đặt `restart: unless-stopped`.
+  - Postgres và Redis không mở cổng ra máy.
+  - Bật Docker khi khởi động máy (`systemctl enable docker`).
+- **Tunnel:**
+  - Tạo named tunnel có route DNS trên domain của anh, cài thành dịch vụ (`cloudflared service install`).
+  - Địa chỉ HTTPS này cố định. Dùng nó cho các biến địa chỉ của Postiz, cho các địa chỉ trả về sau đăng nhập (OAuth redirect) đã đăng ký với Meta và TikTok, và cho thẻ Postiz của MausBot (thẻ không nhận `http`).
+- **Chặn truy cập từ ngoài:**
+  - Đặt Cloudflare Access (chỉ email của anh) trước giao diện Postiz.
+  - Đường API công khai và `/mcp` vẫn yêu cầu API key của Postiz. Kiểm xem thẻ Postiz của MausBot có đi qua được Access không; nếu không, chỉ mở hai đường đó cho API key.
+  - Bật `DISABLE_REGISTRATION=true` ngay sau khi tạo tài khoản đầu tiên.
+- **Ảnh:**
+  - Lưu trên R2, gắn custom domain, xác minh domain này trong app TikTok (vì TikTok chỉ kéo ảnh từ link, PULL_FROM_URL).
+  - Dùng token R2 chỉ có quyền trên đúng bucket này, tách khỏi token của tunnel.
+  - Tên file ngẫu nhiên; đặt quy tắc tự xóa các ảnh chưa đăng.
+- **Secret:**
+  - Chỉ nằm trong `postiz/.env`, đã gitignore.
+  - Commit `postiz/.env.example` chỉ có tên biến; cần thêm `!postiz/.env.example` vào `.gitignore`, vì mẫu `.env*` hiện đang nuốt cả file này.
+  - Thêm `postiz/data/` vào `.gitignore` **trước** lần `docker compose up` đầu tiên.
+- **Quét secret:** cài gitleaks làm pre-commit hook của repo.
 
 ## Related Code Files
 
-- Create: `postiz/docker-compose.yml` (bản ghim phiên bản), `postiz/.env.example` (chỉ tên biến, không có giá trị), một mục trong README.
-- Modify: `.gitignore` thêm `postiz/.env` và `postiz/data/`.
+- Create:
+  - `postiz/docker-compose.yml`
+  - `postiz/.env.example`
+  - `.pre-commit` hoặc hook gitleaks
+  - mục "Chạy Postiz" trong README
+- Modify:
+  - `.gitignore`: thêm `!postiz/.env.example` và `postiz/data/`
 
 ## Implementation Steps
 
-1. Cài Docker và `cloudflared` nếu phase 1 báo máy còn thiếu.
-2. **Anh làm:**
-   - tạo bucket R2 và domain;
-   - tạo Tunnel;
-   - tạo app Meta có quyền Threads publish;
-   - tạo app TikTok có Content Posting API, rồi nộp hồ sơ duyệt.
-   
-   Em viết sẵn từng bước bấm để anh làm theo.
-3. Điền `.env`, chạy `docker compose up -d`, mở Postiz qua địa chỉ HTTPS của tunnel.
-4. **Anh đăng nhập** Threads và TikTok trong Postiz.
-5. Thử TikTok: đăng 3 ảnh mẫu, chế độ SELF_ONLY, bật `auto_add_music`. Kiểm bài hiện riêng tư trong app và đã có nhạc.
-6. Thử Threads: chỉ lên lịch một bài nháp rồi xóa, chưa đăng. Bài đăng thật để dành cho phase 6, sau khi anh duyệt.
-7. Gọi thử API và MCP của Postiz bằng API key: liệt kê kênh, tạo một bài nháp.
+1. Cài `cloudflared` và gitleaks nếu phase 1 báo máy còn thiếu. Sửa `.gitignore` và cài hook.
+2. **Anh làm** (em viết sẵn từng bước bấm):
+   - gắn domain vào Cloudflare;
+   - tạo bucket R2 và custom domain;
+   - tạo named tunnel và chính sách Access;
+   - tạo app Meta có quyền Threads publish, thêm tài khoản Threads thử làm tester;
+   - tạo app TikTok có Content Posting API, xác minh domain R2;
+   - nộp hồ sơ duyệt app TikTok.
+3. Điền `.env`, chạy `docker compose up -d`, tạo tài khoản admin, rồi bật `DISABLE_REGISTRATION`.
+4. **Anh đăng nhập** tài khoản Threads thử và TikTok thử trong Postiz.
+5. Kiểm truy cập: gọi `curl` không đăng nhập vào giao diện phải ra trang đăng nhập của Access, không ra giao diện Postiz.
+6. Thử TikTok trên tài khoản thử để riêng tư:
+   - tải 3 ảnh lên, đăng với `{content_posting_method: "DIRECT_POST", privacy_level: "SELF_ONLY", autoAddMusic: "yes"}`;
+   - kiểm **trên chính app TikTok** rằng bài hiện riêng tư và có nhạc.
+7. Thử Threads trên tài khoản thử: tải 3 ảnh lên rồi đăng một bài nhiều ảnh, kiểm trên app Threads.
+8. Tạo API key của Postiz cho phase 6. Ghi ngày hết hạn của token Threads và TikTok vào mục kết quả.
 
 ## Success Criteria
 
-- [ ] Postiz chạy local qua HTTPS. Restart máy xong vẫn lên lại.
-- [ ] Kênh Threads và TikTok hiện "đã kết nối".
-- [ ] Bài TikTok SELF_ONLY có 3 ảnh và nhạc tự gắn.
-- [ ] MCP của Postiz trả về danh sách kênh khi gọi bằng API key.
+- [ ] Postiz chạy qua HTTPS cố định; restart máy xong vẫn tự lên lại (Docker và tunnel đều là dịch vụ).
+- [ ] Truy cập không đăng nhập bị Access chặn; không đăng ký được tài khoản mới.
+- [ ] `git ls-files postiz/.env.example` có file này; `postiz/.env` và `postiz/data/` không vào Git.
+- [ ] Tài khoản TikTok thử có bài SELF_ONLY gồm 3 ảnh và nhạc; tài khoản Threads thử có bài 3 ảnh.
 
 ## Risk Assessment
 
-- **TikTok từ chối domain hoặc ảnh:** kiểm bước xác minh domain trước khi thử đăng.
-- **Hồ sơ duyệt app TikTok lâu hoặc bị từ chối:** trong lúc chờ, TikTok vẫn chỉ riêng tư. Dự phòng: Postiz Cloud (trả phí, anh quyết).
-- **Lộ secret:** chỉ commit `.env.example`; chạy kiểm secret trước mỗi commit.
-- **Máy tắt lúc đến giờ đăng:** chấp nhận được trong giai đoạn thử. Khi đăng đều thì chuyển lên Dokploy.
+- **TikTok từ chối domain hoặc tài khoản không để riêng tư:** kiểm trước khi đăng. Hồ sơ duyệt app không có hạn chắc chắn.
+- **Đổi địa chỉ tunnel làm hỏng đăng nhập:** đã dùng named tunnel có địa chỉ cố định.
+- **Lộ Postiz ra ngoài:** Access, tắt đăng ký, không mở cổng cơ sở dữ liệu.
+- **Máy tắt làm token hết hạn hoặc lỡ giờ đăng:** chấp nhận trong lúc thử; đăng đều thì chuyển lên Dokploy.

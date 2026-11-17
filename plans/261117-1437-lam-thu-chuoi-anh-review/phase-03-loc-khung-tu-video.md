@@ -10,7 +10,7 @@ dependencies: []
 
 ## Overview
 
-Nâng lệnh `khung` từ chia đều theo thời lượng lên: đổi video HDR sang SDR, lấy khung theo chuyển cảnh, bỏ khung mờ, rồi ghép bảng để bot chọn. **Phase này chờ video của anh**; chưa có video thì làm phase khác trước.
+Nâng lệnh `khung` từ chia đều theo thời lượng lên: đổi video HDR sang SDR, lấy khung theo chuyển cảnh, bỏ khung mờ, rồi ghép bảng để bot chọn. **Phase này chờ video của anh và không chặn nghiệm thu của plan**, vì bản thử dùng ảnh tĩnh. Đường dẫn và tên thư mục dùng chung quy tắc với phase 2: tính theo gốc repo, qua `realpath`, tên được chuẩn hóa.
 
 ## Requirements
 
