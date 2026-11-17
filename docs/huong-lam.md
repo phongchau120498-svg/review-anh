@@ -4,34 +4,57 @@ Cập nhật: 17/11/2026.
 
 ## Đầu vào và đầu ra
 
-- Vào: kho ảnh/video sản phẩm quay sẵn; mỗi sản phẩm một thư mục kèm brief ngắn (tên, 3 điểm nổi bật, giá, link).
-- Ra: bộ 3–4 ảnh 1080x1920 có chữ, kèm caption, chủ kênh duyệt rồi mới đăng TikTok hoặc Threads.
+- **Vào:** kho ảnh/video sản phẩm quay sẵn. Mỗi sản phẩm một thư mục, kèm brief ngắn: tên, 3 điểm nổi bật, giá, link.
+- **Ra:** bộ 3–4 ảnh 1080x1920 có chữ, kèm caption, **tự động** đăng lên TikTok (bài dạng ảnh) và Threads (bài nhiều ảnh).
+
+## Quyết định đã chốt
+
+| Việc | Chốt | Lý do |
+|---|---|---|
+| Bộ não | **Không dựng não riêng.** MausBot là não: bot chạy engine Claude, Codex hoặc Antigravity bằng tài khoản đã đăng nhập. | MausBot đã có sẵn các engine này. Đăng nhập, hạn mức, luật viết và trí nhớ nằm chung một chỗ. |
+| Repo này | **Chỉ làm tay chân:** công cụ chạy theo lệnh, không tự gọi AI. Về sau bọc thành MCP server để MausBot gọi. | Ít code, dễ kiểm, đổi model mà không phải sửa repo. |
+| Đăng bài | **Tự động hoàn toàn qua Postiz**, không đăng tay. | Postiz có API công khai, có MCP server, hỗ trợ TikTok và Threads. |
+| Nơi chạy Postiz | **Bước đầu chạy local bằng Docker**, khi ổn thì chuyển lên Dokploy. | Thử nghiệm không tốn tiền thuê server. Đăng đều hằng ngày thì cần server luôn bật và có HTTPS. |
+| Thiết kế chữ | Mẫu HTML/CSS cố định, chụp ra ảnh bằng Playwright. Tham khảo mẫu trong [repo mẫu thiết kế](tham-khao-mau-thiet-ke.md). | Tự động hoàn toàn, MausBot gọi được. ImageMagick vẽ chữ dài dễ tràn. |
 
 ## Chuỗi xử lý
 
-1. **Lọc khung (rẻ):** video HDR của iPhone chuyển sang SDR trước, rồi FFmpeg lấy 15–20 khung theo chuyển cảnh, bỏ khung mờ. Hiện `khung` mới chia đều theo thời lượng.
-2. **Chọn ảnh:** model có thị giác chọn 3–4 khung theo tiêu chí: nét, thấy rõ sản phẩm, mỗi ảnh một góc (tổng thể / cận chi tiết / đang dùng / kết quả). Cách khác: cho AI xem cả video (đã nén 720p) và trả về mốc giây của các khung đẹp nhất. Chi tiết và các ý mượn được nằm trong [tham khảo Agent Edit](tham-khao-agent-edit.md).
-3. **Chữ và thiết kế:** dùng 3–4 mẫu HTML/CSS cố định (bìa có câu móc, chi tiết, ưu/nhược, kêu gọi), chụp ra ảnh bằng Playwright. Mẫu cố định giữ phong cách đồng nhất; CSS tự xuống dòng và co chữ nên không tràn. Hiện `chu` dùng ImageMagick, từng bị tràn với dòng dài.
-4. **Duyệt:** gửi bảng lưới (`luoi`) cùng caption để chủ kênh duyệt.
-5. **Đăng:**
-   - Threads: API chính thức cho carousel 2–20 ảnh, 250 bài/24h, ảnh phải có URL công khai.
-   - TikTok: Content Posting API có photo post, nhưng app chưa qua audit thì mọi bài đều riêng tư. Giai đoạn đầu đẩy vào nháp (`post_mode` MEDIA_UPLOAD) để thêm nhạc trên app rồi đăng tay; **cần xác minh** chế độ này có dùng được khi app chưa audit không.
-   - Không tự động hóa đăng TikTok qua trình duyệt: dễ bị phát hiện bot, có thể mất kênh.
+| Bước | Ai làm | Công cụ | Kết quả |
+|---|---|---|---|
+| 1. Kho nguồn | Anh | Thư mục `nguon/<sản phẩm>/` | Video, ảnh, brief |
+| 2. Lọc khung | Tay chân | FFmpeg; video HDR của iPhone đổi sang SDR trước | 15–20 khung ứng viên, đã bỏ khung mờ |
+| 3. Chọn ảnh | Bot MausBot | Xem bảng khung (ảnh); nếu engine mở được video thì xem cả video | 3–4 khung kèm lý do: nét, thấy rõ sản phẩm, mỗi khung một góc |
+| 4. Viết chữ, dựng ảnh | Bot viết chữ, tay chân dựng | Mẫu HTML + Playwright | Bộ ảnh 1080x1920 kèm caption |
+| 5. Kiểm chuẩn | Tay chân kiểm máy, bot soát chữ | ImageMagick: 1080x1920, sRGB, không metadata, dưới 20 MB | Đạt, hoặc quay lại bước 4 |
+| 6. Đăng | Bot gọi Postiz | Postiz qua API/MCP | Bài TikTok và Threads theo lịch |
 
-## Giai đoạn
+Bước 3 dùng ảnh làm mặc định vì engine nào cũng xem được ảnh. Muốn bot xem cả video thì phải kiểm engine Antigravity trong MausBot có mở được file video không. Nếu không được, thêm một công cụ "xem video" gọi `agy` (công cụ này vẫn do bot gọi).
 
-1. Tự động bước 1–3, đăng Threads qua API sau khi duyệt, TikTok qua nháp. Chạy vài tuần để chốt chất lượng.
-2. Chọn giữa xin TikTok audit app và dịch vụ đã audit (Ayrshare, Publer, upload-post…, có trả phí). Cân nhắc tự host Postiz (gitroomhq/postiz-app) trên Dokploy làm lớp lịch đăng.
-3. Bọc thành MCP server (các tool kiểu `chon_khung`, `dung_bo_anh`, `dang_bai`) để MausBot gọi. Làm sau khi bước 1–3 ổn định, để không phải đổi contract nhiều lần.
+## Ràng buộc khi đăng
+
+- **TikTok:** API bài ảnh chỉ kéo ảnh về từ link (PULL_FROM_URL), và link phải thuộc domain đã xác minh với TikTok. App nhà phát triển chưa được TikTok duyệt thì mọi bài chỉ để riêng tư (SELF_ONLY), nên phải nộp hồ sơ duyệt song song. Đăng thẳng (DIRECT_POST) thì dùng được `auto_add_music` để TikTok tự gắn nhạc gợi ý.
+- **Threads:** carousel 2–20 ảnh, giới hạn 250 bài/24 giờ, ảnh phải có link công khai.
+- **Chạy local vẫn cần:**
+  - một kho ảnh công khai (Postiz hỗ trợ Cloudflare R2);
+  - HTTPS cho bước kết nối tài khoản (Cloudflare Tunnel);
+  - máy phải bật đúng giờ đăng.
+- **Phương án dự phòng:** Postiz Cloud. App TikTok của họ đã được duyệt nên đăng công khai được ngay, nhưng phải trả phí tháng.
+- **Không tự động hóa đăng TikTok qua trình duyệt:** dễ bị phát hiện là bot, có thể mất kênh.
+
+## Mở rộng sau
+
+- **OneHand:** các module KocBooking (video review của KOC thành bộ ảnh), Offering (brief sản phẩm), PagePosts/Meta (Facebook Page), Zalo (gửi khách, qua cổng kiểm duyệt). Agent Hub của OneHand cũng là một hub CLI; chỉ chọn một trong hai làm não, không dựng cái thứ ba.
+- **Các ý mượn được từ Agent Edit:** xem [tham khảo Agent Edit](tham-khao-agent-edit.md).
 
 ## Trạng thái
 
-- Script đã thử trích khung, chèn chữ tiếng Việt, ghép bảng. Ảnh thử cũ nằm trong `ra/thu`, `ra/thu-body-oil`.
-- Chưa kiểm được metadata bằng ảnh có EXIF thật. Chưa có phần chọn ảnh tự động, mẫu HTML hay phần đăng.
-- Bên OpenMausBot: lần trước tạo nhân viên Tuyết Nhi cho Tiêu Băng gặp lỗi 403 Cloudflare/API, chưa rõ đã tạo được chưa; kiểm cấu hình thật trước, không tạo trùng.
+- Script `tools/tiktok-anh.sh` đã thử trích khung, chèn chữ tiếng Việt, ghép bảng. Ảnh thử cũ nằm trong `ra/thu` và `ra/thu-body-oil`.
+- Chưa có mẫu HTML, MCP server, Postiz hay phần đăng. Video nguồn anh sẽ gửi sau.
+- Bên OpenMausBot: lần trước tạo nhân viên Tuyết Nhi cho Tiêu Băng gặp lỗi 403 Cloudflare/API, chưa rõ đã tạo được chưa. Phải kiểm cấu hình thật trước, không tạo trùng.
 
 ## Nguồn
 
 - TikTok photo post: https://developers.tiktok.com/doc/content-posting-api-reference-photo-post
 - TikTok audit: https://developers.tiktok.com/doc/content-posting-api-get-started
 - Threads posts: https://developers.facebook.com/docs/threads/posts/
+- Postiz TikTok: https://docs.postiz.com/public-api/providers/tiktok.md
