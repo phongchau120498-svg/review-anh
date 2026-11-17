@@ -12,7 +12,7 @@ Cập nhật: 17/11/2026.
 | Việc | Chốt | Lý do |
 |---|---|---|
 | Bộ não | **Không dựng não riêng.** MausBot là não: bot chạy engine Claude, Codex hoặc Antigravity bằng tài khoản đã đăng nhập. | MausBot đã có sẵn các engine này. Đăng nhập, hạn mức, luật viết và trí nhớ nằm chung một chỗ. |
-| Repo này | **Chỉ làm tay chân:** công cụ chạy theo lệnh, không tự gọi AI. Về sau bọc thành MCP server để MausBot gọi. | Ít code, dễ kiểm, đổi model mà không phải sửa repo. |
+| Repo này | **Chỉ làm tay chân:** dựng, kiểm và tải ảnh qua MCP cho MausBot gọi. | Ít code, dễ kiểm, đổi model mà không phải sửa repo. |
 | Đăng bài | **Tự động hoàn toàn qua Postiz**, không đăng tay. | Postiz có API công khai, có MCP server, hỗ trợ TikTok và Threads. |
 | Nơi chạy Postiz | **Bước đầu chạy local bằng Docker**, khi ổn thì chuyển lên Dokploy. | Thử nghiệm không tốn tiền thuê server. Đăng đều hằng ngày thì cần server luôn bật và có HTTPS. |
 | Thiết kế chữ | Mẫu HTML/CSS cố định, chụp ra ảnh bằng Playwright. Tham khảo mẫu trong [repo mẫu thiết kế](tham-khao-mau-thiet-ke.md). | Tự động hoàn toàn, MausBot gọi được. ImageMagick vẽ chữ dài dễ tràn. |
@@ -53,7 +53,8 @@ Bước 3 dùng ảnh làm mặc định vì engine nào cũng xem được ản
 ## Trạng thái
 
 - Script `tools/tiktok-anh.sh` đã thử trích khung, chèn chữ tiếng Việt, ghép bảng. Ảnh thử cũ nằm trong `ra/thu` và `ra/thu-body-oil`.
-- Chưa có mẫu HTML, MCP server, Postiz hay phần đăng. Video nguồn anh sẽ gửi sau.
+- Có mẫu HTML dọc 9:16 và MCP dựng, kiểm và tải ảnh. Đã kiểm luồng với MausBot cô lập và Postiz giả. Bộ ảnh MẪU đang chờ anh duyệt phong cách.
+- Có cấu hình Postiz local, chờ tài khoản thử và domain để bắt đầu thiết lập thật. Lọc khung HDR chờ video nguồn.
 - Bên OpenMausBot: lần trước tạo nhân viên Tuyết Nhi cho Tiêu Băng gặp lỗi 403 Cloudflare/API, chưa rõ đã tạo được chưa. Phải kiểm cấu hình thật trước, không tạo trùng.
 
 ## Nguồn

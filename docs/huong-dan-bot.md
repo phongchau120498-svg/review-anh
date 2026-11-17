@@ -50,7 +50,7 @@ Bạn là bộ não chọn ảnh và viết chữ; repo này chỉ làm tay châ
 6. Với **một kênh mỗi lần**, gọi `tai_len_postiz({san_pham, run_id, kenh, caption, tieu_de?})`. Dùng `kenh: "threads"` hoặc `"tiktok"`; TikTok có `tieu_de`. Tool kiểm chữ với brief, chỉ upload ảnh trong manifest, trả danh sách `{id, path}` và lưu `dang.json`. Giữ đúng thứ tự link; không upload bảng xem. Gọi lại cùng run dùng kết quả đã lưu, không tải lại để lấy link mới.
 7. Gửi **gói duyệt cuối trong chính chat của bot** gồm: sản phẩm, `run_id`, kênh và tài khoản thử, bảng ảnh đã dựng, **toàn văn caption** (và tiêu đề TikTok), danh sách đầy đủ link ảnh từ `tai_len_postiz`, chế độ/thời điểm đăng. Chờ anh duyệt rõ gói này. Không coi duyệt upload hoặc duyệt kiểu ảnh là duyệt bài đăng.
 8. Sau duyệt, **không dựng lại ảnh**, không đổi caption, link, thứ tự ảnh, tài khoản hay lịch. Nếu cần đổi bất kỳ phần nào, hủy ý định đăng hiện tại và trình lại gói mới. Giữ effective Ask; để anh bấm **Allow once** trên thẻ của đúng lệnh đăng. Không tự trả lời thẻ của mình.
-9. Thực hiện quy tắc chống trùng bên dưới, rồi gọi `schedulePostTool` theo schema thực tế với **một integration/một kênh**. Dùng đúng `{id, path}` đã duyệt, không biến link trang sản phẩm thành link ảnh. Ghi kết quả bằng `ghi_dang` trước khi chuyển kênh.
+9. Thực hiện quy tắc chống trùng bên dưới, rồi gọi `schedulePostTool` theo schema thực tế với **một integration/một kênh**. Dùng đúng `{id, path}` của ảnh đã duyệt và đặt `shortLink: false` để giữ link trong caption. Ghi kết quả bằng `ghi_dang` trước khi chuyển kênh.
 10. Báo anh kết quả từng kênh: Postiz id, trạng thái, link bài nếu có và việc còn chờ. Chỉ báo đã đăng khi có bằng chứng; phản hồi “accepted/scheduled” không chứng minh bài đã xuất hiện.
 
 ## Chống đăng trùng và lỗi không rõ kết quả
@@ -70,6 +70,8 @@ Chỉ đăng khi anh đã xác nhận tài khoản **thử đang để riêng t�
 ```json
 {"__type": "tiktok", "content_posting_method": "DIRECT_POST", "privacy_level": "SELF_ONLY", "autoAddMusic": "yes"}
 ```
+
+Chép nguyên `tieu_de` đã duyệt vào `settings.title`. Postiz v2.26.0 cắt tiêu đề ảnh ở 90 đơn vị UTF-16, nên emoji có thể tính hai đơn vị. [Mã xử lý tiêu đề của Postiz](https://github.com/gitroomhq/postiz-app/blob/v2.26.0/libraries/nestjs-libraries/src/integrations/social/tiktok.provider.ts#L526-L565)
 
 Không dùng `UPLOAD`: luồng đó có thể bỏ qua thiết lập dù Postiz báo thành công. Không tự đổi công khai, bỏ nhạc, đổi domain hay tự động hóa đăng qua trình duyệt khi API từ chối. Sau khi Postiz nhận bài, chờ anh kiểm trên **chính app TikTok**: đúng tài khoản, đúng bộ ảnh/thứ tự, riêng tư và có nhạc. Chưa kiểm thì ghi “Postiz đã nhận, chờ kiểm app TikTok”. Với Threads cũng cần kiểm bài thật trên đúng tài khoản thử.
 

@@ -39,7 +39,7 @@ Bản thử đầu tiên theo kiến trúc đã chốt trong [docs/huong-lam.md]
 - [ ] **Bot đăng bài chạy ở mức duyệt Ask.** Có bằng chứng trên bản cô lập: lệnh đăng của Postiz làm hiện thẻ duyệt ở mức Ask, còn ở mức Full access thì không, nên Full access bị cấm cho bot này. Thiết lập "Gửi thay anh" **không** chặn được MCP Postiz, nên không dựa vào nó.
 - [ ] Chỉ bot được chọn gắn `postiz` và `review-anh`. Mọi bot khác đã được loại hai server này khỏi danh sách.
 - [ ] TikTok: tài khoản thử để riêng tư nhận được bài SELF_ONLY qua Postiz. Kiểm trên chính app TikTok, không tin trạng thái báo của Postiz.
-- [ ] Không có secret, ảnh nguồn, token hay log thô nào trong Git. Gitleaks chạy trước mỗi commit.
+- [x] Không có secret, ảnh nguồn, token hay log thô nào trong Git. Hook Gitleaks chạy trước mọi commit của lượt này.
 
 ## Phases
 
@@ -156,3 +156,11 @@ Anh duyệt đổi **chỉ tên** hai tool đọc: `liet_ke_nguon` → `list_ngu
 | `/root/prepare_postiz` | `postiz/`; `docs/postiz-local.md`; mục Postiz trong `README.md`; `phase-05`; status/Tracking `plan.md` | Xong chuẩn bị local: Compose 6 dịch vụ ghim digest đã kiểm registry; config env giả exit 0, env trống bị chặn; cloudflared 2026.11.0 checksum đúng; gitleaks 0 leak, ignore/diff đạt. Chờ tài khoản/domain và chốt nhận diện/thời gian giữ ảnh chưa đăng; không up/bật dịch vụ/connect/đăng. Chi tiết Kết quả phase 5; nhả file sau commit. |
 | `/root/mcp_tools` | `mcp/server*`; `tests/mausbot-review.test.mjs`; `package*`; mục MCP `README`; `phase-04`; chỉ 2 tên tool đọc trong `phase-06`; status/decision/Tracking `plan.md` | Phase 4 đủ 3 tiêu chí: `node --test mcp/server.test.mjs tests/mausbot-review.test.mjs` 13/13; Inspector 2.15.0 CLI list/call đạt; `npm audit --omit=dev` 0; fixture thật render→upload loopback, retry không tải lại, bot khác không mount cả 2 server. Không chạy full gate; chờ review độc lập + phiên chính kiểm chung. Commit riêng sau syntax/diff/Gitleaks; chưa push/deploy/live; ảnh/tóm tắt trong `ra/omb-670343/` (ignored). |
 | `/root/verify_approvals` | `docs/huong-dan-bot.md`; `tests/mausbot-approval.test.mjs`; kết quả `phase-06`; status/Tracking `plan.md` | Guide và fixture xong, `node --experimental-strip-types --test tests/mausbot-approval.test.mjs` 5/5. Ask giữ 0 lệnh trước Allow once, 1 lệnh sau; Full không có thẻ chờ và thêm 1 lệnh tới Postiz giả. Kết quả và giới hạn UI/engine ở Phase 6. Commit riêng qua Gitleaks. Chờ review và gate chung, còn lượt bot thử với tài khoản/domain/brief thật. |
+
+### Kiểm chung ngày 17/11/2026
+
+- Review độc lập diff `906a324..d3a79f4` đối chiếu cả sáu phase và xem ảnh/thẻ duyệt thật từ fixture. Đã sửa sai lệch ảnh trước upload, giá/link trong chữ, giới hạn tiêu đề TikTok, JPEG cắt và stdout của `chu` trong `cb089fe`. Đã kiểm lại diff thay đổi hợp đồng manifest. Không còn lỗi Critical/High mở trong phần đã triển khai.
+- `npm test` trên code `cb089fe`: **27/27 đạt**, exit 0, khoảng 7,2 giây. Gồm renderer, MCP/Inspector, MausBot cô lập dựng và upload lặp, thành phần thẻ Ask/Full và phạm vi MCP theo bot. `npm audit --omit=dev`: **0 vulnerabilities**. `ck plan validate`: **0 lỗi, 0 cảnh báo**. Kiểm cú pháp JS/shell và `git diff --check` đạt.
+- `gitleaks git --log-opts='origin/main..HEAD' --redact --no-banner .`: quét 11 commit đến `cb089fe`, **không phát hiện secret**. Git chỉ track `postiz/.env.example`, không có `.env`, `postiz/data/`, `nguon/`, `ra/` hay log thô. Commit tài liệu chốt lượt đi qua cùng hook. Red Team Review và Ngoại lệ giữ nguyên nội dung.
+- Commit theo phần: `2df5917` kiểm local, `9862c7e` dựng ảnh, `399abae` chuẩn bị Postiz, `9912a97` sửa thứ tự kiểm trước Connect, `ec71aa1` MCP, `d3a79f4` kiểm thẻ duyệt, `cb089fe` sửa theo review. Các phase đã nhả file. Chỉ cập nhật tài liệu sau lượt kiểm chung.
+- **Phase 4 hoàn tất.** Phase 1 chờ kiểm engine trên bot thử. Phase 2 chờ duyệt phong cách dọc 9:16 và brief thật. Phase 3 chờ video, không chặn thử ảnh tĩnh. Phase 5 chờ tài khoản thử, Cloudflare/domain và quyết định dọn ảnh chưa đăng. Phase 6 đã kiểm cô lập, còn chờ lượt thử thật và duyệt trước khi gắn vào bot thật hoặc đăng công khai.
