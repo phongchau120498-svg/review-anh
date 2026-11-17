@@ -53,7 +53,7 @@ Bước 3 dùng ảnh làm mặc định vì engine nào cũng xem được ản
 ## Trạng thái
 
 - Script `tools/tiktok-anh.sh` đã thử trích khung, chèn chữ tiếng Việt, ghép bảng. Ảnh thử cũ nằm trong `ra/thu` và `ra/thu-body-oil`.
-- Có mẫu HTML dọc 9:16 và MCP dựng, kiểm và tải ảnh. Đã kiểm luồng với MausBot cô lập và Postiz giả. Bộ ảnh MẪU đang chờ anh duyệt phong cách.
+- Có mẫu HTML dọc 9:16 và MCP dựng, kiểm và tải ảnh. Đã kiểm luồng với MausBot cô lập và Postiz giả. Mẫu đã sửa theo góp ý của anh và sẽ dùng cho lượt thử với brief thật.
 - Có cấu hình Postiz local, chờ tài khoản thử và domain để bắt đầu thiết lập thật. Lọc khung HDR chờ video nguồn.
 - Bên OpenMausBot: lần trước tạo nhân viên Tuyết Nhi cho Tiêu Băng gặp lỗi 403 Cloudflare/API, chưa rõ đã tạo được chưa. Phải kiểm cấu hình thật trước, không tạo trùng.
 

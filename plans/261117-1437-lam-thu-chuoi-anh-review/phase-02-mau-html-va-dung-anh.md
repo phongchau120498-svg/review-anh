@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: Mẫu HTML và dựng ảnh
-status: in-progress
+status: completed
 priority: P1
 dependencies: []
 ---
@@ -98,7 +98,7 @@ dependencies: []
 
 - [x] Một lệnh từ JSON ra ảnh trong `ra/<sp>/<run-id>/`, có `manifest.json`. Mọi ảnh qua `kiem`.
 - [x] Các test trên đều đạt.
-- [ ] Anh duyệt phong cách, hoặc góp ý để sửa một vòng.
+- [x] Anh đã góp ý và xem bản sửa phong cách.
 
 ## Risk Assessment
 
@@ -130,3 +130,5 @@ Anh góp ý hai ảnh chi tiết cần phủ kín khung dọc. Đã thay nền g
 Đã xem năm album anh gửi. Hai bài Camioré dùng ảnh cận và chữ trắng viền tối trực tiếp trên ảnh. Thư tóc dài dùng bìa dạng giấy ghi chú, còn Julyee và Vienn dùng bìa ghép nhiều góc, sau đó chấm điểm trên ảnh từng sản phẩm. Mẫu body oil lấy cách mở bài từ ảnh da rồi mới đưa chai vào. Cả ba ảnh vẫn tràn viền 9:16, chữ có viền tối và ảnh giữ màu gốc. Nội dung MẪU chỉ mô tả tư liệu. [Camioré 1](https://www.tiktok.com/@camiore.com/photo/7687080871613992199), [Thư tóc dài](https://www.tiktok.com/@maimail26/photo/7663441456870345991), [Camioré 2](https://www.tiktok.com/@camiore.com/photo/7693920839409978631), [Julyee](https://www.tiktok.com/@julyee.ngo/photo/7662357683835669781), [Vienn](https://www.tiktok.com/@vieen23_iuu/photo/7637872972815977736).
 
 Đã sao chép `IMG_2424.jpg` từ kho local vào sản phẩm mẫu. `node tools/dung-bo-anh.mjs nguon/san-pham-mau/bo-anh.json` dựng đủ 3 ảnh và cả ba đạt `kiem`. Đã xem bảng `ra/san-pham-mau/2026-11-17T09-27-44-852Z-6c1dc4aa/_xem/bang-ket-qua.jpg`. `node --test tools/dung-bo-anh.test.mjs` đạt 8/8. `git diff --check` đạt. Chờ anh duyệt bản này.
+
+Anh phản hồi “ừ được hơn rồi đó” sau khi xem bản `717e093`. Dùng hướng ảnh tràn viền, màu gốc và chữ trắng viền đen cho lượt thử sản phẩm. `ck plan check 2` hoàn tất phase và đã khôi phục ô Applied To của Red Team do CLI sửa nhầm. Brief thật và duyệt bài thuộc lượt thử tiếp theo.

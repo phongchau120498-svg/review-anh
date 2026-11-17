@@ -7,7 +7,7 @@ Làm series review dạng ảnh từ kho tư liệu sản phẩm, ưu tiên TikT
 - `tools/dung-bo-anh.mjs`: dựng ảnh từ JSON và mẫu HTML; xuất manifest và bảng xem.
 - `tools/tiktok-anh.sh`: trích khung, chèn chữ kiểu cũ, dựng bảng và kiểm ảnh.
 - `mcp/server.mjs`: server stdio gồm 5 tool nguồn/dựng/upload/trạng thái, không tự gọi AI hay đăng bài.
-- `mau/`: bìa và chi tiết; chưa thêm mẫu giá/CTA vì còn chờ duyệt phong cách.
+- `mau/`: bìa và chi tiết, ảnh tràn viền với chữ trắng viền đen.
 - `fonts/`: Be Vietnam Pro Regular/Bold, kèm giấy phép OFL 1.1; nguồn [Google Fonts](https://github.com/google/fonts/tree/main/ofl/bevietnampro).
 - `nguon/<san-pham>/`: `brief.json`, ảnh/video và JSON bộ ảnh; **không vào Git**.
 - `ra/<san-pham>/<run-id>/`: JPEG, `manifest.json`, `_xem/bang-ket-qua.jpg`; **không vào Git**. Chỉ ảnh trong manifest dùng để đăng.
@@ -50,7 +50,7 @@ Giá trong chữ hỗ trợ số có dấu phân cách `.`/`,`/khoảng trắng 
 
 `kiem` báo đủ từng ảnh rồi trả mã lỗi chung. Tiêu chí gồm JPEG giải mã được toàn bộ, 1080x1920, sRGB, không profile/comment/metadata, dưới 20.000.000 byte TikTok và tối đa 8.000.000 byte Threads. Manifest giữ `anh` là danh sách đường dẫn ảnh đăng và ghi `kiem[].sha256` cho bytes đã kiểm lúc dựng. Bảng xem nằm riêng trong `_xem/`.
 
-Bộ hiện có gắn rõ **MẪU**, giá/link `example.com` chỉ để kiểm kỹ thuật. Phong cách còn chờ anh duyệt; chưa dùng làm bài đăng.
+Bộ hiện có gắn rõ **MẪU**, giá/link `example.com` chỉ để kiểm kỹ thuật. Dùng brief thật cho lượt thử sản phẩm.
 
 ## Các lệnh thử cũ
 
