@@ -4,13 +4,34 @@ Cập nhật: 18/11/2026. Dùng khi anh cho Thu Trinh mượn máy Linux. Chưa 
 
 Anh bàn content với Thu Trinh. Thu Trinh tự chạy lệnh trên máy để xem ảnh, dựng và kiểm. **Chỉ làm bản nháp. Không tải lên đâu và không đăng bài.**
 
+## Thu Trinh dùng máy anh bằng cách nào
+
+Đã kiểm ngày 18/11, đối chiếu mã nguồn OpenMausBot với cấu hình thật trên PC.
+
+- **Máy đã cho mượn sẵn.** App OpenMausBot trên PC đang cho `bot.onehand.space` dùng:
+  - thư mục `/home/thanh-phong/CTP DESKTOP`, có quyền sửa;
+  - terminal và màn hình.
+
+  Nhật ký **Computer access** ghi lúc 14:51 ngày 18/11 có lệnh `hostname` và một lệnh thử ghi file chạy thành công từ server. Anh **không cần bật thêm gì**, chỉ cần giữ app mở trên PC.
+- **Bot dùng máy qua hai tool của server:** `list_shared_computers` và `shared_computer`.
+  - Lấy `computer_id` và `folder_id` từ `list_shared_computers`.
+  - Gọi `shared_computer` với `action: "run_command"` để chạy lệnh.
+  - Đọc file thì dùng `action: "read_file"`, đường dẫn tương đối trong thư mục `CTP DESKTOP`, ví dụ `review-anh/docs/huong-dan-thu-trinh-may-linux.md`. Mỗi file tối đa 2 MiB.
+- **Không dùng hai cách sau:**
+  - **Bot's screen → "This computer".** Trên trang của server, lựa chọn này nói về chính máy chủ, và code ẩn nó đi. Bot gợi ý anh bấm vào đó là gợi ý sai.
+  - **MCP `review-anh-pc`.** MausBot chỉ chạy MCP mượn từ PC cho Cloud riêng của anh (`lentMcpRefusal`), nên lần nào gọi cũng lỗi. Anh nên gỡ `review-anh-pc` khỏi Access của Thu Trinh để bot khỏi gọi thử.
+- Giữ Thu Trinh ở mức **Ask**. Terminal không bị giới hạn trong thư mục cho mượn, nên thẻ duyệt từng lệnh là chốt chặn chính: lệnh nào ngoài các lệnh trong file này thì không bấm duyệt.
+- Chỉ cuộc chat do **chính anh mở** trên server mới dùng được máy. Routine, webhook hay người khác thì không.
+- **Chưa kiểm:** `read_file` một ảnh có hiện thành ảnh cho bot xem hay chỉ ra chuỗi base64.
+  - Nếu không xem được, bot mở ảnh trên màn hình PC bằng lệnh `xdg-open <file>` rồi chụp màn hình qua `computer_tools`/`computer_call`.
+  - Hoặc anh tự mở file trên PC và nói cho bot biết.
+
 ## Lời nhắn mở đầu phiên
 
 Anh dán cho Thu Trinh đầu mỗi phiên:
 
 ```text
-Em đang mượn máy Linux của anh để làm bộ ảnh review. Đọc kỹ file này trước khi làm:
-/home/thanh-phong/CTP DESKTOP/review-anh/docs/huong-dan-thu-trinh-may-linux.md
+Em dùng máy Linux anh đã chia sẻ để làm bộ ảnh review: gọi list_shared_computers, rồi shared_computer (read_file trong thư mục "CTP DESKTOP") đọc kỹ file review-anh/docs/huong-dan-thu-trinh-may-linux.md trước khi làm. Không dùng MCP review-anh-pc, không cần anh chọn This computer.
 Hôm nay làm: <tên sản phẩm, ý tưởng>
 ```
 

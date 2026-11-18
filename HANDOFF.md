@@ -8,6 +8,7 @@ Cập nhật lần cuối: 2026-11-18 — Claude Code
 - Chờ anh: điền `brief.nhap.json` (giá, link, domain, 3 điểm nổi bật) rồi đổi tên `brief.json`; xác nhận tên bộ chai nhỏ (Sunkissed?). Không tự bịa giá/công dụng.
 - Chưa làm: phân loại ~800 video thô `ACTION SP`/`SHOW/CHẠM DA` (lấy khung theo `drive_id` bằng `tools/drive-kho.sh khung` khi cần); tuýp sữa gạo/gel AHA-BHA chỉ 3 ảnh nên chưa có thư mục.
 - Cách làm tạm (anh chốt 18/11): mỗi lần làm, anh cho Thu Trinh mượn máy Linux và làm theo [ghi chú này](docs/huong-dan-thu-trinh-may-linux.md); chỉ bản nháp, chưa upload/đăng. Đưa tool lên máy chủ tính sau.
+- 18/11 15:05: đã dừng user service `review-anh-mcp-local` (MCP HTTP loopback 127.0.0.1:19643 của entry `review-anh-pc`) theo yêu cầu anh; Thu Trinh dùng máy qua `shared_computer` thay cho MCP. Chạy lại khi cần: `systemd-run --user --unit review-anh-mcp-local --working-directory="/home/thanh-phong/CTP DESKTOP/review-anh" -E PATH=/home/thanh-phong/.local/bin:/usr/local/bin:/usr/bin:/bin -E PLAYWRIGHT_BROWSERS_PATH=/home/thanh-phong/.cache/ms-playwright /home/thanh-phong/.local/bin/node "/home/thanh-phong/CTP DESKTOP/review-anh/ra/.thu-trinh-mcp/serve.mjs"`. Entry `review-anh-pc` trên server còn chờ anh tắt trong app; khi lên cloud sẽ thay bằng entry mới trỏ MCP chạy trên server.
 - Lưu ý: bảng xem 40 ảnh HEIC tốn ~2,5 GB RAM cho magick; cân nhắc trước khi chạy trên máy chủ nhỏ.
 
 ## MCP cho Thu Trinh trên máy chủ riêng · phụ trách: phiên tiếp theo · nhánh: `main` · cập nhật: 2026-11-17
