@@ -1,15 +1,30 @@
 # HANDOFF
 
-Cập nhật lần cuối: 2026-11-18 — Claude Code
+Cập nhật lần cuối: 2026-11-18 16:47 — Codex
 
-## Kho nguồn Moaw Moaws trên PC · nhánh: `main` · cập nhật: 2026-11-18
+## Thu Trinh làm bộ ảnh Moaw Moaws qua máy Linux mượn · phụ trách: anh và phiên tiếp theo · nhánh: `main` · cập nhật: 2026-11-18
 
-- Đã xếp kho Drive `[G] VIDEO` vào `nguon/` theo [kho nguồn](docs/kho-nguon.md): 8 thư mục sản phẩm (hardlink từ `nguon/_kho/`), mục lục `nguon/_kho/muc-luc.tsv` đủ 1.424 file Drive. `view_bang_anh_nguon` thêm `trang` (40 ảnh/trang).
-- Chờ anh: điền `brief.nhap.json` (giá, link, domain, 3 điểm nổi bật) rồi đổi tên `brief.json`; xác nhận tên bộ chai nhỏ (Sunkissed?). Không tự bịa giá/công dụng.
-- Chưa làm: phân loại ~800 video thô `ACTION SP`/`SHOW/CHẠM DA` (lấy khung theo `drive_id` bằng `tools/drive-kho.sh khung` khi cần); tuýp sữa gạo/gel AHA-BHA chỉ 3 ảnh nên chưa có thư mục.
-- Cách làm tạm (anh chốt 18/11): mỗi lần làm, anh cho Thu Trinh mượn máy Linux và làm theo [ghi chú này](docs/huong-dan-thu-trinh-may-linux.md); chỉ bản nháp, chưa upload/đăng. Đưa tool lên máy chủ tính sau.
-- 18/11 15:05: đã dừng user service `review-anh-mcp-local` (MCP HTTP loopback 127.0.0.1:19643 của entry `review-anh-pc`) theo yêu cầu anh; Thu Trinh dùng máy qua `shared_computer` thay cho MCP. Chạy lại khi cần: `systemd-run --user --unit review-anh-mcp-local --working-directory="/home/thanh-phong/CTP DESKTOP/review-anh" -E PATH=/home/thanh-phong/.local/bin:/usr/local/bin:/usr/bin:/bin -E PLAYWRIGHT_BROWSERS_PATH=/home/thanh-phong/.cache/ms-playwright /home/thanh-phong/.local/bin/node "/home/thanh-phong/CTP DESKTOP/review-anh/ra/.thu-trinh-mcp/serve.mjs"`. Entry `review-anh-pc` trên server còn chờ anh tắt trong app; khi lên cloud sẽ thay bằng entry mới trỏ MCP chạy trên server.
-- Lưu ý: bảng xem 40 ảnh HEIC tốn ~2,5 GB RAM cho magick; cân nhắc trước khi chạy trên máy chủ nhỏ.
+- Mục tiêu: anh bàn content với Thu Trinh (bot trên `bot.onehand.space`). Thu Trinh chỉ **điều phối**: giao việc cho Claude Code headless trên PC Linux qua `shared_computer run_command`, rồi gửi ảnh thành phẩm vào chat bằng `attach_file`. Chỉ bản nháp. Upload/đăng và đưa tool lên máy chủ: anh chốt **tính sau**.
+- Chặng hiện tại: chờ lượt Body Oil thật qua chat. Xem [hướng dẫn Thu Trinh](docs/huong-dan-thu-trinh-may-linux.md) và [Tracking trong plan](plans/261118-1610-thu-trinh-giao-viec-claude-code/plan.md#tracking).
+- Dở dang chưa commit: không. `nguon/` và `ra/` ở trên PC Linux được mượn. Khi tiếp tục từ máy khác, giữ OpenMausBot trên PC đó mở để Thu Trinh dùng kho ảnh.
+- Tiếp theo:
+  1. *(Chờ anh)* Đưa **giá + link HTTPS Body Oil**, cùng Thu Trinh chốt đúng 3 điểm nổi bật, rồi gửi lời nhắn mở đầu trong hướng dẫn. Thử ảnh về chat và góp ý một lượt theo [phase 3](plans/261118-1610-thu-trinh-giao-viec-claude-code/phase-03-ch-y-th-body-oil.md).
+  2. *(Chờ anh)* Tắt entry MCP `review-anh-pc` trên server: Apps → MCP servers → Manage → Turn off.
+  3. *(Chờ anh)* Xác nhận tên bộ chai nhỏ (Sunkissed?) và hũ hồng (Radiant White Booster = scrub muối hồng?).
+  4. Sau này: phân loại khoảng 800 video thô. Tuýp sữa gạo và gel AHA-BHA mới có 3 ảnh, chưa có thư mục. Xem [kho nguồn](docs/kho-nguon.md).
+- Ràng buộc/không được đụng:
+  - Máy đã cho `bot.onehand.space` mượn sẵn: thư mục `/home/thanh-phong/CTP DESKTOP` có quyền ghi, terminal và màn hình. Grant `own` nằm trong `~/.config/openmausbot/computer-sharing.json`, nhật ký ở `lending-activity.jsonl`. Không đọc hay in trường `secret` của file đó.
+  - Claude Code headless chỉ được gọi qua `tools/giao-viec.sh`, quyền khóa theo phase 1. Không cho nó git, mạng, xóa file hay ghi ngoài `ra/` và `nguon/<sp>/bo-anh.json`. Codex không sửa `tools/dung-bo-anh.mjs` hay nới kiểm brief.
+  - Bot dùng máy qua tool server `list_shared_computers` và `shared_computer` (`run_command`, `read_file`…). Không dùng "Bot's screen → This computer": trên trang server, UI ẩn lựa chọn này (`WorksOnGrid.tsx`). Không dùng MCP mượn từ PC: `lentMcpRefusal` chỉ cho Cloud riêng.
+  - Thu Trinh giữ mức Ask, model anh chọn. Không đăng, không upload, không tunnel/deploy, không sửa OpenMausBot hay production `onhand-bot` (Dokploy ghi là project của bạn anh).
+  - Kho `nguon/` và `ra/` bị Git ignore. Thư mục sản phẩm là hardlink từ `nguon/_kho/`. 218 file đuôi sai đã đổi theo nội dung thật, nên tên file ở `.HEIC`/`.heic` phân biệt hoa/thường.
+- Đã thử, thất bại:
+  - `read_file` ảnh qua `shared_computer` → bot chỉ thấy base64 thô, không tự nhìn được (`agents-call.ts` chỉ passthrough `content[]`). Muốn **anh** xem thì ghi file ra workspace rồi `attach_file` (chạy được). Muốn **bot** chọn ảnh thì giao Claude Code trên PC.
+  - Computer control → `cua-connection.json`: `linux-wayland-seat-safety-blocked`. GNOME 50 không còn phiên Xorg. Anh đã cài Xfce (có phiên X11) và vào thử, nhưng chưa thử bot trên đó và thấy giao diện xấu. Luồng giao việc không cần X11, đừng đẩy anh sang Xfce.
+  - MCP `review-anh-pc` từ server → "MCP servers run here only for the person's own Clouds" (21 lần trong nhật ký). Service `review-anh-mcp-local` đã dừng 15:05. Lệnh chạy lại nằm trong commit `5e5d844` (mục cũ của khối này) nếu cần chẩn đoán.
+  - Phiên Claude Code trước đã in `secret` của grant mượn máy ra transcript. Đã báo anh; anh có thể tắt rồi bật lại Share this computer. Chưa xác minh làm vậy có đổi secret không.
+- Kiểm tra: bằng chứng cục bộ ở [Tracking trong plan](plans/261118-1610-thu-trinh-giao-viec-claude-code/plan.md#tracking). Đường `read_file` → ghi workspace → `attach_file` đã thử riêng với `ra/_bang-nguon/body-oil/trang-1.jpg`. Lượt Body Oil từ chat và vòng góp ý chờ phase 3.
+- Task: backlog trong khối này. Plan gốc: [plan](plans/261117-1437-lam-thu-chuoi-anh-review/plan.md).
 
 ## MCP cho Thu Trinh trên máy chủ riêng · phụ trách: phiên tiếp theo · nhánh: `main` · cập nhật: 2026-11-17
 
