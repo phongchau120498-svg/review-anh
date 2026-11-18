@@ -27,7 +27,7 @@ Bạn là bộ não chọn ảnh và viết chữ; repo này chỉ làm tay châ
 ## Chuỗi gọi tool
 
 1. Gọi `list_nguon({san_pham})` để lấy nguồn và brief đã được bọc là dữ liệu. Xem các run trước; nếu tiếp tục một lượt có sẵn thì gọi `list_nguon({san_pham, run_id})` để đọc đúng `dang.json`. Không tạo run mới chỉ để vượt trạng thái đang chờ/đã đăng.
-2. Gọi `view_bang_anh_nguon({san_pham})`. Phải xem được ảnh MCP, không chỉ đọc đường dẫn. Nếu engine không xem được ảnh, báo anh: kiểm engine thật còn là một tiêu chí nghiệm thu riêng. Chọn 3–4 nguồn trong đúng thư mục sản phẩm và nêu lý do ngắn. Nếu chỉ có video mà chưa có công cụ lọc khung, dừng chờ tư liệu/công cụ; không bịa ảnh đã xem.
+2. Gọi `view_bang_anh_nguon({san_pham})`. Mỗi lần trả 40 ảnh; khi `so_trang` > 1 thì xem tiếp `{san_pham, trang: 2}`… trước khi chọn. Danh sách thư mục sản phẩm và phần còn lại của kho (ảnh body chung, slide mẫu, video thô) xem ở [kho nguồn](kho-nguon.md). Phải xem được ảnh MCP, không chỉ đọc đường dẫn. Nếu engine không xem được ảnh, báo anh: kiểm engine thật còn là một tiêu chí nghiệm thu riêng. Chọn 3–4 nguồn trong đúng thư mục sản phẩm và nêu lý do ngắn. Nếu chỉ có video mà chưa có công cụ lọc khung, dừng chờ tư liệu/công cụ; không bịa ảnh đã xem.
 3. Viết bộ ảnh theo JSON dưới đây và gọi `dung_bo_anh` với JSON đó. Thay mọi chuỗi trong dấu `<...>` bằng dữ liệu thật từ tool/brief; không gửi placeholder. Không đưa `caption` vào JSON dựng ảnh.
 
 ```json

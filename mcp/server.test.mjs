@@ -102,6 +102,10 @@ test('chặn traversal, prefix gần giống và symlink thoát nguồn; nguồn
   assert(!grid.isError, JSON.stringify(grid));
   assert(grid.content.some(item => item.type === 'image' && item.data.length > 100));
   assert.equal(decoded(grid).anh[0].tuyet_doi, path.join(source, '-anh.jpg'));
+  assert.equal(decoded(grid).so_trang, 1);
+  const empty = await call('view_bang_anh_nguon', { san_pham: product, trang: 2 });
+  assert(empty.isError);
+  assert.match(empty.content[0].text, /1 trang/);
 });
 
 test('giá/link/domain từ chối trước render; thật dựng ảnh qua MCP có thumbnail, đường dẫn và checks', async () => {

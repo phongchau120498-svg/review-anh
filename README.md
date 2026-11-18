@@ -12,6 +12,7 @@ Làm series review dạng ảnh từ kho tư liệu sản phẩm, ưu tiên TikT
 - `nguon/<san-pham>/`: `brief.json`, ảnh/video và JSON bộ ảnh; **không vào Git**.
 - `ra/<san-pham>/<run-id>/`: JPEG, `manifest.json`, `_xem/bang-ket-qua.jpg`; **không vào Git**. Chỉ ảnh trong manifest dùng để đăng.
 - `docs/huong-lam.md`: kiến trúc và điều kiện đăng.
+- `docs/kho-nguon.md` và `tools/drive-kho.sh`: cách xếp kho Drive Moaw Moaws vào `nguon/`, lấy thêm ảnh/khung video theo `drive_id`.
 
 ## Cài trên máy
 
@@ -90,7 +91,7 @@ Thay các đường dẫn khi chuyển máy; cài browser vào đúng `PLAYWRIGH
 | Tool | Dữ liệu vào chính | Kết quả |
 |---|---|---|
 | `list_nguon` | `{san_pham? ,run_id?}`; muốn đọc run phải có sản phẩm | Nguồn (tối đa 100), brief bọc dữ liệu/cắt rõ ở 2000 codepoint, 50 run gần nhất; thêm `dang` khi chỉ định run |
-| `view_bang_anh_nguon` | `{san_pham}` | Bảng tối đa 40 ảnh, thu nhỏ ≤1280px mỗi chiều dạng ảnh MCP; đường dẫn tuyệt đối và tên từng nguồn |
+| `view_bang_anh_nguon` | `{san_pham, trang?}` | Bảng 40 ảnh mỗi trang (`trang` 1–10, kết quả có `so_trang`), thu nhỏ ≤1280px mỗi chiều dạng ảnh MCP; đường dẫn tuyệt đối và tên từng nguồn |
 | `dung_bo_anh` | JSON bộ ảnh ở trên, trực tiếp `{san_pham,anh,gia?,link?}` | Manifest/checks và bảng xem MCP, đường dẫn tuyệt đối; dùng lại renderer |
 | `tai_len_postiz` | `{san_pham,run_id,kenh,caption,tieu_de?}` | `{anh:[{id,path}],dang,...}`. `kenh` là `threads`/`tiktok`. TikTok cần `tieu_de` ≤90 đơn vị UTF-16 để Postiz không cắt. Threads caption ≤500 code point. |
 | `ghi_dang` | Các trường đăng ở trên + `trang_thai`, `postiz_id?` | Ghi `dang_dang` **trước** gọi Postiz, `da_dang` + ID khi rõ thành công, hoặc `khong_ro`/`that_bai` |

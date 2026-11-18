@@ -196,14 +196,18 @@ export function createReviewServer({ env = process.env, launchBrowser = () => ch
         runs, ...(state ? { dang: state } : {}) });
     }), true);
 
-  register('view_bang_anh_nguon', 'Dùng để xem ảnh nguồn trước khi chọn. Trả bảng thu nhỏ dạng ảnh MCP và đường dẫn tuyệt đối từng ảnh, tối đa 40 ảnh; không đọc video. Ví dụ {san_pham:"kem-mau"}.',
-    z.object({ san_pham: productSchema }).strict(), guarded(async ({ san_pham }) => {
+  register('view_bang_anh_nguon', 'Dùng để xem ảnh nguồn trước khi chọn. Trả bảng thu nhỏ dạng ảnh MCP và đường dẫn tuyệt đối từng ảnh, 40 ảnh mỗi trang; không đọc video. Thư mục nhiều hơn 40 ảnh thì xem tiếp bằng trang 2, 3... theo so_trang. Ví dụ {san_pham:"kem-mau"} hoặc {san_pham:"kem-mau",trang:2}.',
+    z.object({ san_pham: productSchema, trang: z.number().int().min(1).max(10).optional() }).strict(), guarded(async ({ san_pham, trang = 1 }) => {
       const product = normalizeProduct(san_pham);
       await readBrief(product);
       const { directory, files } = await sourceFiles(product);
       const images = files.filter(file => file.loai === 'anh');
       if (!images.length) throw new Error('Không có ảnh nguồn');
-      const inputs = images.slice(0, 40).map(file => `${{ '.jpg': 'jpeg', '.jpeg': 'jpeg', '.png': 'png', '.heic': 'heic', '.webp': 'webp' }[path.extname(file.path).toLowerCase()]}:${file.tuyet_doi}`);
+      const start = (trang - 1) * 40;
+      const shown = images.slice(start, start + 40);
+      const pages = Math.ceil(images.length / 40);
+      if (!shown.length) throw new Error(`Trang ${trang} không có ảnh; thư mục có ${pages} trang`);
+      const inputs = shown.map(file => `${{ '.jpg': 'jpeg', '.jpeg': 'jpeg', '.png': 'png', '.heic': 'heic', '.webp': 'webp' }[path.extname(file.path).toLowerCase()]}:${file.tuyet_doi}`);
       const { stdout } = await exec('magick', ['montage', '--', ...inputs, '-auto-orient', '-font', path.join(ROOT, 'fonts/BeVietnamPro-Regular.ttf'), '-set', 'label', '%f', '-pointsize', '14', '-geometry', '160x284+5+5', '-tile', '5x', '-background', '#eee8df', '-strip', '-quality', '75', 'jpeg:-'], {
         cwd: ROOT, encoding: 'buffer', timeout: 30000, maxBuffer: 4 * 1024 * 1024,
       });
@@ -212,7 +216,7 @@ export function createReviewServer({ env = process.env, launchBrowser = () => ch
       });
       pending.child.stdin.end(stdout);
       const { stdout: thumbnail } = await pending;
-      return { content: [...textResult({ san_pham: product, duong_dan: directory, anh: images.slice(0, 40), tong: images.length, cat_bot: images.length > 40 }).content,
+      return { content: [...textResult({ san_pham: product, duong_dan: directory, anh: shown, tong: images.length, trang, so_trang: pages, cat_bot: images.length > start + 40 }).content,
         { type: 'image', mimeType: 'image/jpeg', data: thumbnail.toString('base64') }] };
     }), true);
 

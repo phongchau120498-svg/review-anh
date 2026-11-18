@@ -1,6 +1,13 @@
 # HANDOFF
 
-Cập nhật lần cuối: 2026-11-17 17:38 +07 — Codex
+Cập nhật lần cuối: 2026-11-18 — Claude Code
+
+## Kho nguồn Moaw Moaws trên PC · nhánh: `main` · cập nhật: 2026-11-18
+
+- Đã xếp kho Drive `[G] VIDEO` vào `nguon/` theo [kho nguồn](docs/kho-nguon.md): 8 thư mục sản phẩm (hardlink từ `nguon/_kho/`), mục lục `nguon/_kho/muc-luc.tsv` đủ 1.424 file Drive. `view_bang_anh_nguon` thêm `trang` (40 ảnh/trang).
+- Chờ anh: điền `brief.nhap.json` (giá, link, domain, 3 điểm nổi bật) rồi đổi tên `brief.json`; xác nhận tên bộ chai nhỏ (Sunkissed?). Không tự bịa giá/công dụng.
+- Chưa làm: phân loại ~800 video thô `ACTION SP`/`SHOW/CHẠM DA` (lấy khung theo `drive_id` bằng `tools/drive-kho.sh khung` khi cần); tuýp sữa gạo/gel AHA-BHA chỉ 3 ảnh nên chưa có thư mục.
+- Lưu ý: bảng xem 40 ảnh HEIC tốn ~2,5 GB RAM cho magick; cân nhắc trước khi chạy trên máy chủ nhỏ.
 
 ## MCP cho Thu Trinh trên máy chủ riêng · phụ trách: phiên tiếp theo · nhánh: `main` · cập nhật: 2026-11-17
 
@@ -8,7 +15,7 @@ Cập nhật lần cuối: 2026-11-17 17:38 +07 — Codex
 - Chặng hiện tại: chưa triển khai gói chạy trên máy chủ. Đọc quyết định bổ sung trong [plan](plans/261117-1437-lam-thu-chuoi-anh-review/plan.md) và bằng chứng kết nối trong [Kết quả phase 6](plans/261117-1437-lam-thu-chuoi-anh-review/phase-06-noi-mausbot-va-chay-tron-mot-san-pham.md), mốc `81ca046`. Không tạo thêm bot hay cố định lại quyền sáu bot cũ.
 - Dở dang chưa commit: không còn code hoặc thay đổi dở chưa commit. Code triển khai MCP trên host chưa bắt đầu. Scaffold phase thử tạo đã dọn, không để stub rỗng.
 - Tiếp theo:
-  1. Kiểm tra thiết lập thật trước khi thiết kế: hỏi lại câu chưa được trả lời — máy chủ dùng Docker hay systemd, SSH alias/kết nối chỉ đọc là gì. Không yêu cầu gửi mật khẩu hoặc private key trong chat. `~/.ssh/config` trên PC hiện không có entry khớp chính xác `bot.onehand.space`.
+  1. Đã kiểm chỉ đọc qua MCP `lowbit-dokploy` (18/11): `bot.onehand.space` là **Docker Compose trên Dokploy**, project `onhand-bot`, compose `mausbot` (2 service `omb` + `caddy`; domain trỏ `caddy`). Service `omb` mount volume `onhand-mausbot_data` vào `/data` và `..._edge` vào `/run/openmausbot`. Mô tả project trên Dokploy ghi "owner: project owner friend; do not edit other projects" — xác nhận với anh ai sở hữu trước khi ghi gì vào compose/volume. Chưa kiểm image `omb` có Node/Chromium/ImageMagick/FFmpeg không. Không cần SSH để kiểm tiếp; không yêu cầu mật khẩu/private key trong chat.
   2. Ưu tiên tái sử dụng `mcp/server.mjs` qua stdio ngay trong môi trường MausBot nếu khả thi; cần chế độ chỉ có `list_nguon`, `view_bang_anh_nguon`, `dung_bo_anh`. Nếu khác container thì kiểm mount/network thực tế trước khi chọn HTTP loopback. Không mặc định viết thêm HTTP, reverse proxy hay tunnel.
   3. Chuẩn bị cấu hình chạy, thư mục nguồn/đầu ra, quy trình đưa ảnh/brief lên host và rollback; khóa/ảnh/log nằm ngoài Git. Không chép đăng nhập engine. Không mặc định coi `nguon/` trên PC đã có trên host.
   4. Khi cần code, cập nhật plan hiện có; mỗi phase một agent mới ngữ cảnh sạch, writer test hẹp và ghi lệnh/kết quả, một review độc lập + gate chung khi xong. Tái sử dụng dependencies exact và lockfile, không sửa code OpenMausBot. Trình gói cụ thể trước bước deploy; chưa có quyền deploy từ câu chọn phương án.
