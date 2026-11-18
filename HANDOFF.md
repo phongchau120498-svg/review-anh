@@ -7,6 +7,7 @@ Cập nhật lần cuối: 2026-11-18 — Claude Code
 - Đã xếp kho Drive `[G] VIDEO` vào `nguon/` theo [kho nguồn](docs/kho-nguon.md): 8 thư mục sản phẩm (hardlink từ `nguon/_kho/`), mục lục `nguon/_kho/muc-luc.tsv` đủ 1.424 file Drive. `view_bang_anh_nguon` thêm `trang` (40 ảnh/trang).
 - Chờ anh: điền `brief.nhap.json` (giá, link, domain, 3 điểm nổi bật) rồi đổi tên `brief.json`; xác nhận tên bộ chai nhỏ (Sunkissed?). Không tự bịa giá/công dụng.
 - Chưa làm: phân loại ~800 video thô `ACTION SP`/`SHOW/CHẠM DA` (lấy khung theo `drive_id` bằng `tools/drive-kho.sh khung` khi cần); tuýp sữa gạo/gel AHA-BHA chỉ 3 ảnh nên chưa có thư mục.
+- Cách làm tạm (anh chốt 18/11): mỗi lần làm, anh cho Thu Trinh mượn máy Linux và làm theo [ghi chú này](docs/huong-dan-thu-trinh-may-linux.md); chỉ bản nháp, chưa upload/đăng. Đưa tool lên máy chủ tính sau.
 - Lưu ý: bảng xem 40 ảnh HEIC tốn ~2,5 GB RAM cho magick; cân nhắc trước khi chạy trên máy chủ nhỏ.
 
 ## MCP cho Thu Trinh trên máy chủ riêng · phụ trách: phiên tiếp theo · nhánh: `main` · cập nhật: 2026-11-17

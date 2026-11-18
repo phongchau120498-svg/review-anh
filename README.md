@@ -12,6 +12,7 @@ Làm series review dạng ảnh từ kho tư liệu sản phẩm, ưu tiên TikT
 - `nguon/<san-pham>/`: `brief.json`, ảnh/video và JSON bộ ảnh; **không vào Git**.
 - `ra/<san-pham>/<run-id>/`: JPEG, `manifest.json`, `_xem/bang-ket-qua.jpg`; **không vào Git**. Chỉ ảnh trong manifest dùng để đăng.
 - `docs/huong-lam.md`: kiến trúc và điều kiện đăng.
+- `docs/huong-dan-thu-trinh-may-linux.md` và `tools/bang-nguon.sh`: quy trình Thu Trinh tự làm bản nháp khi mượn máy Linux (xem bảng nguồn theo trang, dựng, kiểm).
 - `docs/kho-nguon.md` và `tools/drive-kho.sh`: cách xếp kho Drive Moaw Moaws vào `nguon/`, lấy thêm ảnh/khung video theo `drive_id`.
 
 ## Cài trên máy
