@@ -2,7 +2,7 @@
 set -u
 
 # Keep the caller's process group so revoking computer access also kills this job.
-result=$(timeout --foreground -k 4 870 unshare --user --map-current-user --pid --fork --mount-proc --kill-child \
+result=$(timeout --foreground -k 4 870 \
   node "$(dirname -- "$0")/giao-viec.mjs" --giao "$@" 2>/dev/null)
 status=$?
 case "$status" in
@@ -12,7 +12,7 @@ case "$status" in
     if [[ -n $result ]]; then
       printf '%s\n' "$result"
     else
-      printf '%s\n' '{"ok":false,"loi":"Không khởi động được cách ly tiến trình"}'
+      printf '%s\n' '{"ok":false,"loi":"Không khởi động được trình giao việc"}'
       status=1
     fi
     ;;

@@ -67,6 +67,10 @@ test('brief và copy bắt buộc đúng giá/link/domain, cả giá được gh
   assert.throws(() => validateCopy(set('Mua ở evil.example/mau'), brief), /Link trong chữ/);
   assert.throws(() => validateCopy(set('Mua ở evil.example.'), brief), /Link trong chữ/);
   assert.doesNotThrow(() => validateCopy(set(`MẪU ${brief.gia} ${brief.link}`), brief));
+  assert.doesNotThrow(() => validateCopy(set('Chai màu vàng')));
+  assert.throws(() => validateCopy(set(`Giá ${brief.gia}`)), /Giá trong chữ/);
+  assert.throws(() => validateCopy(set(`Xem ${brief.link}`)), /Link trong chữ/);
+  await assert.rejects(renderSet({ ...set('MẪU'), gia: brief.gia }, { browser, traiNghiem: true }), /gia không khớp/);
   assert.doesNotThrow(() => validateCopy(set(`Mua ngay: (${brief.link}). Xem anh.jpg và phẩm.mẫu`), brief));
   const punctuatedLink = 'https://example.com/mau_(a)?ma=999k.';
   assert.doesNotThrow(() => validateCopy(set(`“${punctuatedLink}”`), { ...brief, link: punctuatedLink }));

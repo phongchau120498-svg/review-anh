@@ -54,7 +54,7 @@ const bash = command => {
   return spawnSync('/bin/bash', ['-c', updated.command], {encoding:'utf8'});
 };
 const draft = source + '/bo-anh.json';
-const render = 'node tools/dung-bo-anh.mjs ' + draft;
+const render = 'node tools/dung-bo-anh.mjs --trai-nghiem ' + draft;
 const page = 'tools/bang-nguon.sh ' + product + ' 1';
 if (process.env.CLAUDE_STUB_CASE === 'timeout') process.exit(124);
 if (process.env.CLAUDE_STUB_CASE === 'cancel') {
@@ -145,15 +145,9 @@ test('giao-viec khóa quyền, xác minh ảnh và luôn trả một JSON', asyn
     assert.equal(result.stderr, '');
     return { status: result.status, value: JSON.parse(result.stdout) };
   }
-  for (const target of [product, 'body-oil']) {
-    assert.deepEqual(run('missing', target), { status: 1, value: { ok: false, loi: `Thiếu nguon/${target}/brief.json` } });
-  }
+  assert.deepEqual(run('missing', 'body-oil'), { status: 1, value: { ok: false, loi: 'Thiếu thư mục ảnh nguon/body-oil/' } });
   assert.deepEqual(run('invalid', '../sp'), { status: 1, value: { ok: false, loi: 'Dùng: tools/giao-viec.sh <sp> [ghi-chu]' } });
   await assert.rejects(access(marker), { code: 'ENOENT' });
-  await writeFile(file(`${source}/brief.json`), JSON.stringify({
-    ten: 'Mẫu', gia: '123.000 đ', link: 'https://example.com/mau',
-    domains_thuong_hieu: ['example.com'], diem_noi_bat: ['Một', 'Hai', 'Ba'],
-  }));
   await link(file('private.txt'), file(`${source}/bo-anh.json`));
   assert.match(run('hard-link').value.loi, /File không an toàn.*bo-anh\.json/);
   await assert.rejects(access(marker), { code: 'ENOENT' });
@@ -177,6 +171,7 @@ test('giao-viec khóa quyền, xác minh ảnh và luôn trả một JSON', asyn
   assert.deepEqual(caption, { threads: 'Bản nháp', tiktok: 'Bộ ảnh nháp' });
   assert.equal(ly_do.length, 3);
   const base = `ra/${product}/${run_id}`;
+  assert.deepEqual(JSON.parse(await readFile(file(`${base}/manifest.json`), 'utf8')).brief, {});
   assert.equal(bang_xem, `${base}/_xem/bang-ket-qua-nen.jpg`);
   assert.deepEqual(anh, ['01', '02', '03'].map(num => `${base}/${num}.jpg`));
   for (const image of [bang_xem, ...anh]) {

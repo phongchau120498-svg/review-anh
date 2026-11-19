@@ -100,7 +100,7 @@ export async function readBrief(product) {
   return brief;
 }
 
-export function validateCopy(data, brief) {
+export function validateCopy(data, brief = {}) {
   for (const key of ['gia', 'link']) {
     if (data[key] !== undefined && data[key] !== brief[key]) throw new Error(`${key} không khớp nguyên văn brief`);
   }
@@ -109,12 +109,12 @@ export function validateCopy(data, brief) {
   const links = /(?<![\p{L}\p{M}\p{N}_-])(?:https?:\/\/[^\s<>"]+|(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,63}(?![\p{L}\p{M}\p{N}_-])(?::\d+)?(?:[/?#][^\s<>"]*)?)/giu;
   const withoutLinks = copy.replace(links, url => {
     if (!/^www\./i.test(url) && /^(?:[^:/?#]+)\.(?:jpe?g|png|heic|webp)$/i.test(url)) return url;
-    if (url.startsWith(brief.link) && /^[.,!?;:…'’”»\)\]}]*$/u.test(url.slice(brief.link.length))) return ' ';
+    if (brief.link && url.startsWith(brief.link) && /^[.,!?;:…'’”»\)\]}]*$/u.test(url.slice(brief.link.length))) return ' ';
     throw new Error('Link trong chữ không khớp nguyên văn brief');
   });
   // shortcut: chỉ nhận giá có đơn vị, mở rộng khi brief thật cần cách ghi khác.
   const money = /\b\d+(?:[., \u00a0\u202f]\d+)*[ \t\u00a0\u202f]*(?:đồng|₫|đ|vnđ|vnd|k|nghìn|triệu)(?![\p{L}\p{M}\p{N}])/giu;
-  const allowed = brief.gia.match(money) ?? [];
+  const allowed = brief.gia?.match(money) ?? [];
   for (const price of withoutLinks.match(money) ?? []) {
     if (!allowed.includes(price)) throw new Error('Giá trong chữ không khớp nguyên văn brief');
   }
@@ -231,12 +231,12 @@ export async function fillPage(page, slide, imageData) {
   }, { slide, imageData });
 }
 
-export async function renderSet(data, { browser, timeoutMs = 60000 } = {}) {
+export async function renderSet(data, { browser, timeoutMs = 60000, traiNghiem = false } = {}) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Bộ ảnh phải là object');
   if (Object.keys(data).some(key => !['san_pham', 'anh', 'gia', 'link'].includes(key))) throw new Error('Trường bộ ảnh không được hỗ trợ');
   const product = normalizeProduct(data.san_pham);
   if (!Array.isArray(data.anh) || data.anh.length < 1 || data.anh.length > 20) throw new Error('Cần 1–20 ảnh');
-  const brief = await readBrief(product);
+  const brief = traiNghiem ? {} : await readBrief(product);
   const sourceFolder = await safePath(`nguon/${product}`, 'nguon');
   const slides = [];
   for (const slide of data.anh) {
@@ -309,10 +309,12 @@ async function main(args) {
     process.exitCode = results.some(result => !result.dat) ? 1 : 0;
   } else if (mode === '--luoi') console.log(path.join(ROOT, await createPreview(files)));
   else {
-    if (!mode || files.length) throw new Error('Dùng: node tools/dung-bo-anh.mjs nguon/<sp>/bo-anh.json');
-    const input = await mediaPath(mode);
+    const traiNghiem = mode === '--trai-nghiem';
+    const [draft, ...extra] = traiNghiem ? files : args;
+    if (!draft || extra.length) throw new Error('Dùng: node tools/dung-bo-anh.mjs [--trai-nghiem] nguon/<sp>/bo-anh.json');
+    const input = await mediaPath(draft);
     if ((await stat(input)).size > 100000) throw new Error('JSON bộ ảnh tối đa 100 KB');
-    console.log(JSON.stringify(await renderSet(JSON.parse(await readFile(input, 'utf8'))), null, 2));
+    console.log(JSON.stringify(await renderSet(JSON.parse(await readFile(input, 'utf8')), { traiNghiem }), null, 2));
   }
 }
 

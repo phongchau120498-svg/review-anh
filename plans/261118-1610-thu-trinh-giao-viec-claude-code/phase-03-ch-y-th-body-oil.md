@@ -15,15 +15,14 @@ Chạy trọn vòng thật từ chat của anh: Thu Trinh → `giao-viec.sh` →
 
 ## Requirements
 
-- Anh đưa giá và link HTTPS của Body Oil. Thu Trinh soạn cùng anh đúng 3 điểm nổi bật, rồi ghi `nguon/body-oil/brief.json`.
-- Anh gửi Thu Trinh lời nhắn mở đầu, yêu cầu đọc lại `docs/huong-dan-thu-trinh-may-linux.md`, rồi giao "làm bộ Body Oil".
+- Anh chốt ngày 19/11 đây là review trải nghiệm. Dùng ý anh đã kể trong chat và ảnh Body Oil, bỏ giá và link mua hàng. Nếu anh chưa kể cảm nhận, bám chi tiết quan sát được trong ảnh.
+- Anh yêu cầu Thu Trinh đọc lại `docs/huong-dan-thu-trinh-may-linux.md` và giao "làm bộ ảnh review trải nghiệm Body Oil".
 
 ## Implementation Steps
 
-1. Ghi brief (anh xác nhận).
-2. Anh giao việc trong chat. Theo dõi `lending-activity.jsonl` (chỉ đọc tên tool và kết quả, không in `secret`).
-3. Xác nhận ảnh hiện trong chat, rồi anh góp ý một lần để thử vòng sửa.
-4. Ghi lỗi thật phát sinh vào hướng dẫn. Cập nhật HANDOFF.
+1. Anh giao việc trong chat. Theo dõi `lending-activity.jsonl` (chỉ đọc tên tool và kết quả, không in `secret`).
+2. Xác nhận ảnh hiện trong chat, rồi anh góp ý một lần để thử vòng sửa.
+3. Ghi lỗi thật phát sinh vào hướng dẫn. Cập nhật HANDOFF.
 
 ## Success Criteria
 

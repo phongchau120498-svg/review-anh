@@ -1,6 +1,6 @@
 # Thu Trinh làm bộ ảnh trên máy Linux của anh
 
-Cập nhật: 18/11/2026. Dùng khi anh cho Thu Trinh mượn máy Linux. Chưa có bản chạy trên máy chủ.
+Cập nhật 19/11/2026. Dùng khi anh cho Thu Trinh mượn máy Linux.
 
 Anh bàn nội dung với Thu Trinh. Thu Trinh giao Claude Code trên PC xem ảnh nguồn, chọn ảnh, dựng và kiểm bộ ảnh, rồi gửi bản nháp vào chat để anh duyệt. Mỗi lượt dùng hạn mức gói Claude của anh. Ảnh nguồn Claude Code xem được gửi tới Anthropic để xử lý.
 
@@ -55,21 +55,17 @@ Phần còn lại của kho xem trong [kho nguồn](kho-nguon.md).
 
 ## Quy trình một bộ ảnh
 
-**1. Brief.** Mở `nguon/<sp>/brief.json`.
+**1. Chốt góc review.** Lấy cảm nhận hoặc ý anh đã kể trong chat làm ghi chú cho Claude Code. Có thể dựng ngay với ảnh nguồn nếu anh chỉ yêu cầu review sản phẩm. Khi chưa có cảm nhận từ người dùng, mô tả những gì thấy được trong ảnh và tránh tự nhận đã sử dụng sản phẩm. Bản review trải nghiệm bỏ giá, link mua hàng và lời kêu gọi mua. File `brief.json` chỉ là nguồn tham khảo khi đã có.
 
-- Nếu chưa có file này, soạn brief cùng anh trong chat theo mẫu `brief.nhap.json`. Brief cần tên, đúng 3 điểm nổi bật, giá, link HTTPS và hostname của link.
-- **Anh xác nhận giá và link xong** mới dùng `shared_computer` với `action: "write_file"`, `computer_id`, `folder_id`, `path: "review-anh/nguon/<sp>/brief.json"` và JSON brief trong `content`.
-- Không đoán giá, link hay công dụng.
-
-**2. Giao việc.** Chỉ chạy lệnh dưới đây khi chính anh yêu cầu dựng hoặc sửa bộ ảnh trong cuộc chat này và đã có brief. Yêu cầu đó cho phép Thu Trinh chạy lệnh ngay. Gọi `shared_computer` với `computer_id`, `action: "run_command"`, `timeout_seconds: 900` và `command` theo mẫu sau. Chọn mã sản phẩm từ bảng trên, ví dụ `body-oil`.
+**2. Giao việc.** Khi chính anh yêu cầu dựng hoặc sửa, gọi `shared_computer` với `computer_id`, `action: "run_command"`, `timeout_seconds: 900` và `command` theo mẫu sau. Chọn mã sản phẩm từ bảng trên, ví dụ `body-oil`. Claude Code tự xem và chọn ảnh trên PC.
 
 ```bash
-cd "/home/thanh-phong/CTP DESKTOP/review-anh" && tools/giao-viec.sh 'body-oil' 'Đổi câu mở đầu'
+cd "/home/thanh-phong/CTP DESKTOP/review-anh" && tools/giao-viec.sh 'body-oil' 'Review trải nghiệm Body Oil Moaw Moaws, chai vàng'
 ```
 
 Truyền ghi chú từ chat như một đối số shell. Thay mỗi dấu nháy đơn `'` trong ghi chú bằng `'\''`, rồi bọc cả chuỗi bằng nháy đơn. Ghi chú gốc tối đa 4.000 ký tự và toàn bộ `command` sau khi bọc nháy tối đa 8.000 ký tự. Rút gọn ghi chú nếu vượt một trong hai giới hạn, hoặc bỏ đối số này khi anh chưa có ghi chú.
 
-**3. Đọc kết quả.** Lấy `exitCode` và đọc JSON từ trường `output` của `run_command`. Khi `exitCode` là `0` và `ok` là `true`, dùng `run_id`, `bang_xem`, `anh`, `ly_do` và `caption` từ lượt này. Khi `ok` là `false`, xử lý theo `loi` và báo anh nếu cần bổ sung brief hoặc nếu hết giờ. Nếu tool lỗi trước khi trả JSON, báo lỗi của tool.
+**3. Đọc kết quả.** Lấy `exitCode` và đọc JSON từ trường `output` của `run_command`. Khi `exitCode` là `0` và `ok` là `true`, dùng `run_id`, `bang_xem`, `anh`, `ly_do` và `caption` từ lượt này. Khi `ok` là `false`, xử lý theo `loi`. Nếu tool lỗi trước khi trả JSON, báo lỗi của tool.
 
 **4. Trình anh duyệt.** Đính kèm `bang_xem` (bảng `bang-ket-qua.jpg`) trước, rồi từng mục trong `anh` theo thứ tự.
 

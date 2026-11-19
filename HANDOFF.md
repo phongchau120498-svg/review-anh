@@ -1,20 +1,20 @@
 # HANDOFF
 
-Cập nhật lần cuối: 2026-11-18 16:47 — Codex
+Cập nhật lần cuối: 2026-11-19 10:07 — Codex
 
-## Thu Trinh làm bộ ảnh Moaw Moaws qua máy Linux mượn · phụ trách: anh và phiên tiếp theo · nhánh: `main` · cập nhật: 2026-11-18
+## Thu Trinh làm bộ ảnh Moaw Moaws qua máy Linux mượn · phụ trách: anh và phiên tiếp theo · nhánh: `main` · cập nhật: 2026-11-19
 
 - Mục tiêu: anh bàn content với Thu Trinh (bot trên `bot.onehand.space`). Thu Trinh chỉ **điều phối**: giao việc cho Claude Code headless trên PC Linux qua `shared_computer run_command`, rồi gửi ảnh thành phẩm vào chat bằng `attach_file`. Chỉ bản nháp. Upload/đăng và đưa tool lên máy chủ: anh chốt **tính sau**.
 - Chặng hiện tại: chờ lượt Body Oil thật qua chat. Xem [hướng dẫn Thu Trinh](docs/huong-dan-thu-trinh-may-linux.md) và [Tracking trong plan](plans/261118-1610-thu-trinh-giao-viec-claude-code/plan.md#tracking).
-- Dở dang chưa commit: không. `nguon/` và `ra/` ở trên PC Linux được mượn. Khi tiếp tục từ máy khác, giữ OpenMausBot trên PC đó mở để Thu Trinh dùng kho ảnh.
+- Dở dang chưa commit: bản sửa lỗi AppArmor và luồng review trải nghiệm ngày 19/11. `nguon/` và `ra/` ở trên PC Linux được mượn. Khi tiếp tục từ máy khác, giữ OpenMausBot trên PC đó mở để Thu Trinh dùng kho ảnh.
 - Tiếp theo:
-  1. *(Chờ anh)* Đưa **giá + link HTTPS Body Oil**, cùng Thu Trinh chốt đúng 3 điểm nổi bật, rồi gửi lời nhắn mở đầu trong hướng dẫn. Thử ảnh về chat và góp ý một lượt theo [phase 3](plans/261118-1610-thu-trinh-giao-viec-claude-code/phase-03-ch-y-th-body-oil.md).
+  1. Gửi lời nhắn mở đầu trong hướng dẫn, giao Thu Trinh dựng Body Oil theo kiểu review trải nghiệm. Dùng ghi chú từ chat nếu có. Thử ảnh về chat và góp ý một lượt theo [phase 3](plans/261118-1610-thu-trinh-giao-viec-claude-code/phase-03-ch-y-th-body-oil.md).
   2. *(Chờ anh)* Tắt entry MCP `review-anh-pc` trên server: Apps → MCP servers → Manage → Turn off.
   3. *(Chờ anh)* Xác nhận tên bộ chai nhỏ (Sunkissed?) và hũ hồng (Radiant White Booster = scrub muối hồng?).
   4. Sau này: phân loại khoảng 800 video thô. Tuýp sữa gạo và gel AHA-BHA mới có 3 ảnh, chưa có thư mục. Xem [kho nguồn](docs/kho-nguon.md).
 - Ràng buộc/không được đụng:
   - Máy đã cho `bot.onehand.space` mượn sẵn: thư mục `/home/thanh-phong/CTP DESKTOP` có quyền ghi, terminal và màn hình. Grant `own` nằm trong `~/.config/openmausbot/computer-sharing.json`, nhật ký ở `lending-activity.jsonl`. Không đọc hay in trường `secret` của file đó.
-  - Claude Code headless chỉ được gọi qua `tools/giao-viec.sh`, quyền khóa theo phase 1. Không cho nó git, mạng, xóa file hay ghi ngoài `ra/` và `nguon/<sp>/bo-anh.json`. Codex không sửa `tools/dung-bo-anh.mjs` hay nới kiểm brief.
+  - Claude Code headless chỉ được gọi qua `tools/giao-viec.sh`, quyền khóa theo phase 1. Không cho nó git, mạng, xóa file hay ghi ngoài `ra/` và `nguon/<sp>/bo-anh.json`. Chế độ review trải nghiệm chỉ dùng cho bản nháp. Các đường đăng vẫn kiểm brief đầy đủ.
   - Bot dùng máy qua tool server `list_shared_computers` và `shared_computer` (`run_command`, `read_file`…). Không dùng "Bot's screen → This computer": trên trang server, UI ẩn lựa chọn này (`WorksOnGrid.tsx`). Không dùng MCP mượn từ PC: `lentMcpRefusal` chỉ cho Cloud riêng.
   - Thu Trinh giữ mức Ask, model anh chọn. Không đăng, không upload, không tunnel/deploy, không sửa OpenMausBot hay production `onhand-bot` (Dokploy ghi là project của bạn anh).
   - Kho `nguon/` và `ra/` bị Git ignore. Thư mục sản phẩm là hardlink từ `nguon/_kho/`. 218 file đuôi sai đã đổi theo nội dung thật, nên tên file ở `.HEIC`/`.heic` phân biệt hoa/thường.
