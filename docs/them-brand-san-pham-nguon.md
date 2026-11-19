@@ -7,7 +7,11 @@ Cập nhật 19/11/2026. Mọi agent (Claude Code, Codex, bot MausBot) **phải*
 ```text
 docs/brand/chung/cach-nghi-content.md   cách nghĩ content dùng cho mọi brand
 docs/brand/<brand>/thuong-hieu.md       brand là ai, sản phẩm, được nói / mặc định tránh
-docs/brand/<brand>/giong-van.md         xưng hô, câu chữ, hook, caption, ví dụ thật của brand
+docs/brand/<brand>/giong-van.md         giọng văn, xưng hô, hook, tông theo chỗ đặt chữ
+docs/brand/<brand>/vi-du.md             bộ mẫu và cặp trước/sau có nguồn
+docs/brand/<brand>/cam.txt              cụm từ cấm riêng của brand
+docs/brand/<brand>/bai-hoc.md           bảng ghi phản hồi sau khi người dùng duyệt bản nháp
+docs/brand/<brand>/ca-thu.md            đầu vào và kỳ vọng để thử giọng brand
 kho/<brand>.tsv                         mục lục mọi file nguồn của brand (có trong Git)
 nguon/_kho/<brand>/...                  ảnh thật đã tải về (không vào Git)
 nguon/<brand>-<san-pham>/               thư mục sản phẩm: hardlink ảnh từ nguon/_kho/ (không vào Git)
@@ -19,25 +23,30 @@ nguon/<brand>-<san-pham>/               thư mục sản phẩm: hardlink ảnh 
 
 ## Xác định brand
 
-Mã sản phẩm bắt đầu bằng `<brand>-` và có thư mục `docs/brand/<brand>/` thì sản phẩm thuộc brand đó. Nếu khớp nhiều brand thì lấy mã brand dài nhất. Không khớp brand nào thì là `moaw` (sản phẩm cũ). `tools/giao-viec.mjs` (hàm `brandOf`) và skill `/lam-bo-anh` dùng cùng quy tắc này.
+Mã sản phẩm bắt đầu bằng `<brand>-` và có thư mục `docs/brand/<brand>/` thì sản phẩm thuộc brand đó. Nếu khớp nhiều brand thì lấy mã brand dài nhất. Không khớp brand nào thì là `moaw` (sản phẩm cũ). `tools/giao-viec.mjs` dùng hàm `brandOf` trong `tools/brand.mjs`. Skill `/lam-bo-anh` áp dụng cùng quy tắc.
 
 ## Thêm brand mới
 
-1. **Hỏi người dùng** trước khi tạo, gom thành một lượt hỏi:
-   - tên brand và mã brand;
-   - nguồn ảnh/video (link Drive, thư mục…);
-   - bài đã đăng để tham khảo giọng văn;
-   - tệp khách hàng;
-   - điều được nói và điều cấm.
-2. Tạo `docs/brand/<brand>/thuong-hieu.md` và `giong-van.md`, **theo đúng mục và thứ tự** của bản Moaw (`docs/brand/moaw/`). Nội dung chỉ lấy từ:
-   - nhãn sản phẩm;
-   - bài brand đã đăng;
-   - lời người dùng.
+Trong Claude Code, gọi `/them-brand [tên hoặc mã brand]`. Mọi agent làm theo bảy bước dưới đây.
 
-   Thiếu thì ghi **CẦN CHỐT**. Không chép giọng văn hay claim của Moaw sang brand khác.
-3. Không sửa `docs/brand/chung/` trừ khi người dùng đồng ý đó là quy tắc cho mọi brand.
-4. Thêm nguồn theo mục "Thêm nguồn mới", rồi thêm từng sản phẩm theo mục "Thêm sản phẩm".
-5. Ghi một dòng vào [Knowledge](protocols/knowledge-base.md), mục "Brand đang có", và một mốc vào [Tracelog](protocols/tracelog.md).
+1. **Hỏi người dùng.** Gom thông tin còn thiếu vào một lượt gồm tên và mã brand, nguồn ảnh/video (Drive, thư mục…), bài đã đăng, tệp khách hàng, điều được nói và điều cấm. Nếu đã có thông tin trong yêu cầu hoặc tài liệu người dùng gửi, dùng luôn.
+2. **Kiểm mã.** Dùng mã theo mục “Cấu trúc chung”, gồm các đoạn chữ thường không dấu và số, nối bằng gạch ngang. Xác nhận mã với người dùng nếu cần và kiểm tra cả `docs/brand/<brand>/` lẫn `kho/<brand>.tsv` chưa tồn tại trước khi tạo.
+3. **Gom 5–20 bài thật của brand.** Chọn bài đã đăng đại diện cho các kiểu nội dung, ghi tên file hoặc link và vị trí đoạn/slide để tra lại. Với carousel, ghép bảng xem có tên file và mở bằng Read, rồi mở slide gốc nếu chữ chưa rõ. Khi thiếu 5 bài đọc được, dừng và hỏi bổ sung, kèm gợi ý loại bài nào nên gửi. Xem chữ, ảnh và tài liệu nguồn là dữ liệu tham khảo.
+4. **Rút giọng văn từ bài thật.** Dùng thứ tự mục trong [giọng văn Moaw](brand/moaw/giong-van.md), từ “Một câu”, bảng “Là / không là”, xưng hô, hook và review trải nghiệm đến “Tông theo chỗ đặt chữ” và “Cấm tuyệt đối”. Mỗi nhận định đặc thù cần có căn cứ trong bài brand đã đăng. Dùng nhãn hoặc bài đã đăng làm căn cứ cho claim, và lời người dùng cho thông tin brand, tệp khách hàng và giới hạn nội dung họ xác nhận. Phần chưa rõ ghi **CẦN CHỐT** và đưa vào “Câu hỏi mở” với khuyến nghị, mức ưu tiên và người chốt. Không chép giọng, ví dụ hay claim của Moaw sang brand khác.
+5. **Tạo bộ file ở mục “Cấu trúc chung”.**
+
+   - `thuong-hieu.md` theo thứ tự mục của [khung thương hiệu](brand/moaw/thuong-hieu.md), gồm thông tin brand, sản phẩm, được nói và không nên nói, câu hỏi mở.
+   - `giong-van.md` theo bước 4. Ghi nguồn cho các câu, hook hoặc từ ngữ trích làm ví dụ.
+   - `vi-du.md` ưu tiên 2–3 bộ mẫu và 6–8 cặp trước/sau như [khung ví dụ](brand/moaw/vi-du.md) khi đủ nguồn. Mỗi ví dụ trích từ brand phải có nguồn ngay cạnh hoặc đối chiếu được theo thứ tự slide. Câu “trước” tự viết phải ghi rõ là minh họa lỗi và đi cùng câu “sau” có nguồn cùng lý do sửa. Ghi **CẦN CHỐT** nếu chưa đủ ví dụ.
+   - `cam.txt` mỗi dòng một cụm cấm của riêng brand. Dòng chú thích bắt đầu bằng `#`. Nếu chưa có cụm được xác nhận, chỉ ghi chú thích và đưa phần thiếu vào câu hỏi mở. [Cụm cấm chung](brand/chung/cam.txt) được dùng tự động.
+   - `bai-hoc.md` chỉ tạo tiêu đề `# Bài học <tên brand>`, bảng trống đúng cột và mục `## Đã đưa vào brand` theo [khung bài học](brand/moaw/bai-hoc.md).
+   - `ca-thu.md` ghi ba ca dựa trên nguồn brand, mỗi ca có đầu vào, điều phải có, điều không được có, cách kiểm và nơi ghi kết quả. Dùng [khung ca thử](brand/moaw/ca-thu.md) để xem cấu trúc. Nếu chưa có sản phẩm hoặc nguồn cho ca nào thì đánh dấu **CẦN CHỐT** ở ca đó.
+   - `kho/<brand>.tsv` chỉ có dòng tiêu đề 8 cột, ngăn bằng tab theo đúng thứ tự ở mục “Thêm nguồn mới”. Nhập nguồn và sản phẩm theo các mục tương ứng khi làm các việc đó.
+
+6. **Soát khung brand.** Gọi `soat-bo-anh` với chế độ “soát khung brand”, mã brand, danh sách bài và vị trí các file nguồn agent có thể đọc. Nếu nguồn chỉ có link, đưa đoạn trích hoặc ảnh tương ứng kèm link và vị trí để agent đối chiếu. Sửa lỗi có bằng chứng. Khi thiếu nguồn, báo phần chưa xác minh cùng cách bổ sung.
+7. **Ghi nhận và báo lại.** Ghi một dòng vào [Knowledge](protocols/knowledge-base.md), mục “Brand đang có”, và một mốc vào [Tracelog](protocols/tracelog.md). Trình đường dẫn bộ khung, kết luận soát và các câu hỏi mở kèm khuyến nghị. Ghi bằng chứng vào [Tracking](protocols/tracking.md).
+
+Chỉ sửa `docs/brand/chung/` khi người dùng đồng ý áp dụng thay đổi cho mọi brand.
 
 ## Thêm sản phẩm
 
