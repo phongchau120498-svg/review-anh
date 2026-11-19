@@ -51,7 +51,7 @@ Phần còn lại của kho xem trong [kho nguồn](kho-nguon.md).
 
 - `nguon/_kho/body-chung/` chứa ảnh body không có sản phẩm.
 - `nguon/_kho/anh-cuon/` chứa slide đã đăng để tham khảo giọng văn.
-- `nguon/_kho/muc-luc.tsv` là mục lục cả kho Drive.
+- `kho/moaw.tsv` là mục lục cả kho Drive.
 
 ## Quy trình một bộ ảnh
 
@@ -79,7 +79,7 @@ Chỉ gửi ảnh kết quả dưới `ra/`. Ảnh gốc trong `nguon/` là hard
 
 ## Cần thêm ảnh hoặc khung từ video
 
-Video thô chưa tải về. Khi anh yêu cầu hoặc đồng ý lấy khung, tra `drive_id` trong `nguon/_kho/muc-luc.tsv` và thay `<drive_id>` bằng ID đó. Chạy lệnh dưới đây từ thư mục repo để lấy 2 khung mà không tải nguyên video.
+Video thô chưa tải về. Khi anh yêu cầu hoặc đồng ý lấy khung, tra `drive_id` trong `kho/moaw.tsv` và thay `<drive_id>` bằng ID đó. Chạy lệnh dưới đây từ thư mục repo để lấy 2 khung mà không tải nguyên video.
 
 ```bash
 tools/drive-kho.sh khung nguon/_kho/khung-tho '<drive_id>'

@@ -35,7 +35,7 @@ Mỗi sản phẩm một thư mục phẳng (tool chỉ đọc ảnh nằm ngay 
 - `body-chung/`: 93 ảnh body không thấy sản phẩm. Muốn dùng cho một sản phẩm thì hardlink ảnh đã chọn vào thư mục sản phẩm đó.
 - `anh-cuon/`: slide đã đăng. Chỉ tham khảo bố cục và giọng văn, không dùng làm ảnh nguồn.
 - `khung-edit/<drive_id>-a.jpg`, `-b.jpg`: khung từ video EDIT, có chữ in sẵn. Chỉ tham khảo hook và kịch bản.
-- `muc-luc.tsv`: mỗi file Drive một dòng: `nhom_drive`, `san_pham`, `loai`, `tai_ve` (đường dẫn trong `_kho/`, trống nếu chưa tải), `drive_id`, `ngay`, `ten_goc`, `dung_lam`.
+- Mục lục nằm ở `kho/moaw.tsv` (có trong Git, để máy mới tải lại bằng `tools/drive-kho.sh dong-bo`): mỗi file Drive một dòng: `nhom_drive`, `san_pham`, `loai`, `tai_ve` (đường dẫn trong `_kho/`, trống nếu chưa tải), `drive_id`, `ngay`, `ten_goc`, `dung_lam`.
 
 Phân loại làm bằng mắt trên ảnh thu nhỏ, có thể sai vài ảnh. Bot vẫn phải xem bảng ảnh trước khi chọn.
 
@@ -51,7 +51,7 @@ Mỗi thư mục có `brief.nhap.json`, đã điền tên. Giá, link, domain v�
 
 ## Lấy thêm từ Drive
 
-Tra `drive_id` trong `muc-luc.tsv`, rồi:
+Tra `drive_id` trong `kho/moaw.tsv`, rồi:
 
 ```bash
 tools/drive-kho.sh khung nguon/_kho/khung-tho <drive_id>

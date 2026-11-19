@@ -23,8 +23,11 @@ Cần Node.js 22+, FFmpeg/ffprobe, ImageMagick 7 (`magick`) có decoder HEIC, ut
 npm ci
 npx playwright install chromium
 git config core.hooksPath .githooks
+tools/drive-kho.sh dong-bo   # tải ~485 ảnh (~750 MB) từ Drive về nguon/ theo kho/moaw.tsv
 npm test
 ```
+
+Làm content: đọc [AGENTS.md](AGENTS.md); trong Claude Code gõ `/lam-bo-anh <san-pham> "<ý tưởng>"`. Giọng văn và quy tắc thương hiệu nằm ở `docs/brand/`.
 
 Playwright ghim phiên bản trong `package.json`/lock. Hook từ chối commit nếu thiếu/sai phiên bản Gitleaks hoặc quét staged phát hiện secret. Sau clone cần đặt `core.hooksPath` như trên; không commit token, `.env`, tư liệu hay ảnh xuất.
 

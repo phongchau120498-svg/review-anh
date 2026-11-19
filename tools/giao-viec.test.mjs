@@ -69,6 +69,10 @@ for (const command of ['ls ' + source, 'tools/bang-nguon.sh other 1', page + ' &
   'tools/tiktok-anh.sh kiem /etc/passwd']) deny('Bash', {command});
 deny('Read', {file_path:'private.txt'});
 deny('Read', {file_path:source + '/symlink.jpg'});
+deny('Read', {file_path:'docs/khac.md'});
+assert.equal(allow('Read', {file_path:'docs/brand/moaw/giong-van.md'}).file_path, path.join(cwd,'docs/brand/moaw/giong-van.md'));
+allow('Read', {file_path:'docs/brand/chung/cach-nghi-content.md'});
+deny('Read', {file_path:'docs/brand/khac/giong-van.md'});
 deny('Write', {file_path:'private.txt', content:'bad'});
 deny('Edit', {file_path:source + '/brief.json', old_string:'a', new_string:'b'});
 deny('Glob', {pattern:'../private.txt'});
@@ -123,7 +127,10 @@ test('giao-viec khóa quyền, xác minh ảnh và luôn trả một JSON', asyn
   for (const name of ['giao-viec.sh', 'giao-viec.mjs', 'bang-nguon.sh', 'dung-bo-anh.mjs', 'tiktok-anh.sh']) {
     await cp(path.join(repo, 'tools', name), file(`tools/${name}`));
   }
-  for (const name of ['fonts', 'mau']) await cp(path.join(repo, name), file(name), { recursive: true });
+  for (const name of ['fonts', 'mau', 'docs/brand']) await cp(path.join(repo, name), file(name), { recursive: true });
+  await writeFile(file('docs/khac.md'), 'khac');
+  await mkdir(file('docs/brand/khac'));
+  await writeFile(file('docs/brand/khac/giong-van.md'), 'khac');
   await symlink(path.join(repo, 'node_modules'), file('node_modules'), 'dir');
   await writeFile(file('bin/claude'), claudeStub, { mode: 0o755 });
   await writeFile(file('private.txt'), 'private');

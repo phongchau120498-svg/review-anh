@@ -1,12 +1,22 @@
 # HANDOFF
 
-Cập nhật lần cuối: 2026-11-19 10:07 — Codex
+Cập nhật lần cuối: 2026-11-19 15:40 — Claude Code
+
+## Bộ brand dùng chung, đa brand và bộ protocol · phụ trách: phiên tiếp theo · nhánh: `main` · cập nhật: 2026-11-19
+
+- Mục tiêu: mọi agent (Claude Code của anh/sếp, Codex, bot) đọc chung một bộ quy tắc brand rồi mới làm; thêm brand, sản phẩm, nguồn mới không phải sửa code. Task T-10 trong [Tracking](docs/protocols/tracking.md).
+- Chặng hiện tại: đã viết xong `docs/brand/` (chung + moaw), `AGENTS.md`, `CLAUDE.md`, skill `/lam-bo-anh`, `tools/drive-kho.sh dong-bo`, [hướng dẫn thêm brand](docs/them-brand-san-pham-nguon.md), Blueprint và sáu protocol trong `docs/protocols/`.
+- Dở dang chưa commit: **toàn bộ** phần trên, cùng các sửa trong `tools/giao-viec.mjs` (hàm `brandOf`, quyền đọc `docs/brand/chung` và brand của sản phẩm), `tools/giao-viec.test.mjs`, README, `docs/kho-nguon.md`, `docs/huong-dan-thu-trinh-may-linux.md`. Mục lục chuyển từ `nguon/_kho/muc-luc.tsv` sang `kho/moaw.tsv` (vào Git, có `drive_id`). Không đưa `.claude/agent-memory/` vào commit.
+- Tiếp theo: 1. Anh duyệt rồi commit. 2. Chạy `/lam-bo-anh body-oil "..."` trong một phiên Claude Code mới để kiểm skill. 3. *(Chờ anh)* T-02 điền ô CẦN CHỐT, T-06 có đổi tên sản phẩm cũ sang `moaw-` không.
+- Ràng buộc: brand là tiền tố mã sản phẩm, sản phẩm cũ không có tiền tố là `moaw`. Không lồng `nguon/<brand>/<sp>/` (phải sửa code kiểm đường dẫn).
+- Đã thử, thất bại: `read` với IFS=tab gộp cột trống, làm `dong-bo` bỏ sót 66 slide; đã đổi sang ký tự ngăn `\037`.
+- Kiểm tra: `node --test tools/*.test.mjs mcp/server.test.mjs` 22/22; `dong-bo` 485 có sẵn / 0 lỗi; giả lập máy mới tải 3 ảnh đúng. Chưa kiểm: `/lam-bo-anh` chạy thật, `npm test` toàn repo, `brandOf` với brand có tiền tố.
 
 ## Thu Trinh làm bộ ảnh Moaw Moaws qua máy Linux mượn · phụ trách: anh và phiên tiếp theo · nhánh: `main` · cập nhật: 2026-11-19
 
 - Mục tiêu: anh bàn content với Thu Trinh (bot trên `bot.onehand.space`). Thu Trinh chỉ **điều phối**: giao việc cho Claude Code headless trên PC Linux qua `shared_computer run_command`, rồi gửi ảnh thành phẩm vào chat bằng `attach_file`. Chỉ bản nháp. Upload/đăng và đưa tool lên máy chủ: anh chốt **tính sau**.
 - Chặng hiện tại: chờ lượt Body Oil thật qua chat. Xem [hướng dẫn Thu Trinh](docs/huong-dan-thu-trinh-may-linux.md) và [Tracking trong plan](plans/261118-1610-thu-trinh-giao-viec-claude-code/plan.md#tracking).
-- Dở dang chưa commit: bản sửa lỗi AppArmor và luồng review trải nghiệm ngày 19/11. `nguon/` và `ra/` ở trên PC Linux được mượn. Khi tiếp tục từ máy khác, giữ OpenMausBot trên PC đó mở để Thu Trinh dùng kho ảnh.
+- Dở dang chưa commit: không (sửa AppArmor và review trải nghiệm đã commit `162cbfc`). `nguon/` và `ra/` ở trên PC Linux được mượn. Khi tiếp tục từ máy khác, giữ OpenMausBot trên PC đó mở để Thu Trinh dùng kho ảnh.
 - Tiếp theo:
   1. Gửi lời nhắn mở đầu trong hướng dẫn, giao Thu Trinh dựng Body Oil theo kiểu review trải nghiệm. Dùng ghi chú từ chat nếu có. Thử ảnh về chat và góp ý một lượt theo [phase 3](plans/261118-1610-thu-trinh-giao-viec-claude-code/phase-03-ch-y-th-body-oil.md).
   2. *(Chờ anh)* Tắt entry MCP `review-anh-pc` trên server: Apps → MCP servers → Manage → Turn off.

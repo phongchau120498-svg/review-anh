@@ -1,6 +1,6 @@
 import { execFile, spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
-import { constants, createWriteStream } from 'node:fs';
+import { constants, createWriteStream, readdirSync } from 'node:fs';
 import { appendFile, lstat, mkdir, mkdtemp, open, readFile, realpath, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,6 +18,14 @@ const source = product => `nguon/${product}`;
 const output = product => `ra/${product}`;
 const sheet = product => `ra/_bang-nguon/${product}`;
 const draft = product => `${source(product)}/bo-anh.json`;
+// Brand of a product: the docs/brand/<brand>/ whose name is the product's prefix ("<brand>-..."); legacy products without a prefix are Moaw Moaws.
+function brandOf(product) {
+  const brands = readdirSync(path.join(root, 'docs/brand'), { withFileTypes: true })
+    .filter(entry => entry.isDirectory() && entry.name !== 'chung' && product.startsWith(`${entry.name}-`))
+    .map(entry => entry.name).sort((a, b) => b.length - a.length);
+  return brands[0] ?? 'moaw';
+}
+const brandDocs = product => ['docs/brand/chung/cach-nghi-content.md', `docs/brand/${brandOf(product)}/thuong-hieu.md`, `docs/brand/${brandOf(product)}/giong-van.md`];
 const renderArgs = product => ['node', 'tools/dung-bo-anh.mjs', '--trai-nghiem', draft(product)];
 const toJson = value => JSON.stringify(value);
 const quote = value => "'" + value.replaceAll("'", "'\\''") + "'";
@@ -97,7 +105,8 @@ async function guard(product, work) {
       const name = path.posix.basename(file);
       const isSource = folder === source(product) && /\.(?:jpe?g|png|heic|webp)$/i.test(name);
       const isSheet = folder === sheet(product) && /^trang-[1-9]\d{0,5}\.jpg$/.test(name);
-      if (!isSource && !isSheet && file !== `${source(product)}/brief.json` && file !== draft(product)) {
+      const isBrand = (folder === 'docs/brand/chung' || folder === `docs/brand/${brandOf(product)}`) && /^[a-z0-9-]+\.md$/.test(name);
+      if (!isSource && !isSheet && !isBrand && file !== `${source(product)}/brief.json` && file !== draft(product)) {
         const data = await manifest(product, work, file.split('/')[2]);
         requireThat([data.manifest, data.bang_xem, ...data.anh].includes(file), 'File nằm ngoài lượt dựng');
       }
@@ -174,6 +183,7 @@ const schema = { type: 'object', additionalProperties: false, required: ['run_id
 
 function prompt(product, note) {
   return `Dựng một bộ ảnh review trải nghiệm cho sản phẩm ${product}. Đây là bản nháp. Chỉ dùng các file và lệnh sau.
+0. Dùng Read đọc đủ ${brandDocs(product).join(', ')}. Chọn một góc, chọn ảnh, viết chữ và caption theo đúng ba file này; khi ghi chú của anh khác file brand thì theo ghi chú.
 1. Xem bảng nguồn bằng Bash: tools/bang-nguon.sh ${product} 1 (thay số trang; lệnh in tổng số trang). Dùng Read xem mỗi JPG bảng và ảnh gốc khi cần. Chọn 3–4 ảnh nét, rõ sản phẩm, khác góc; ưu tiên ảnh sản phẩm lệch khỏi giữa khung để chữ không đè lên.
 2. Dùng Write hoặc Edit lưu ${draft(product)}. JSON có san_pham là "${product}", anh là mảng. Mỗi ảnh có nguon là đường dẫn tương đối dưới ${source(product)} với tên và đuôi đúng chữ hoa/thường; tieu_de ngắn. Ảnh đầu có mau "bia", có thể thêm phu; ảnh sau có mau "chi-tiet", y là 2–3 ý ngắn. Viết tự nhiên, bám ghi chú của anh và chi tiết quan sát được. Có thể tham khảo tên và điểm nổi bật trong ${source(product)}/brief.json nếu đã có. Nếu chưa có ghi chú trải nghiệm, viết về ảnh thấy được, không tự nhận đã dùng sản phẩm hay bịa cảm giác, công dụng, hiệu quả. Bỏ giá, link mua hàng và lời kêu gọi mua trong ảnh lẫn caption. Caption không ghi vào file.
 3. Chạy Bash: ${renderArgs(product).join(' ')}. Dùng Read xem bang_xem trong JSON trả về để rà chính tả, chữ tràn/đè sản phẩm và thứ tự ảnh. Sửa rồi dựng lại nếu cần. Chạy Bash: tools/tiktok-anh.sh kiem ra/${product}/<run_id>/*.jpg với run_id thật.
