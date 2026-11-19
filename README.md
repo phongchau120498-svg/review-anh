@@ -37,10 +37,11 @@ Playwright ghim phiên bản trong `package.json`/lock. Hook từ chối commit 
 tools/bang-nguon.sh <sp>
 tools/bang-nguon.sh <sp> 1
 tools/bang-nguon.sh <sp> --tat-ca
+tools/bang-nguon.sh <sp> --uu-tien
 node tools/loc-anh.mjs <sp> --diem
 ```
 
-`bang-nguon` tạo mọi trang theo mặc định, hoặc chỉ trang được chỉ định. Mỗi trang có tối đa 40 ảnh. Lệnh lọc ảnh mờ, tối và gần trùng, giữ ảnh nét nhất trong nhóm gần trùng. Dùng `--tat-ca` để xem toàn bộ nguồn qua các file `trang-tat-ca-N.jpg`. `loc-anh` in tên ảnh được giữ và có thể trả điểm cùng lý do loại qua `--diem`. Điểm được lưu theo thời gian sửa và kích thước file trong `nguon/<sp>/.cham-anh.json`, hoặc trong thư mục bảng xem khi chạy headless.
+`bang-nguon` tạo mọi trang theo mặc định, hoặc chỉ trang được chỉ định. Mỗi trang có tối đa 40 ảnh đã cắt theo khung thật 9:16. Vạch vàng đứt đánh dấu vùng chữ bìa và vạch xanh liền đánh dấu vùng chữ chi tiết. Lệnh lọc ảnh mờ, tối và gần trùng, giữ ảnh nét nhất trong nhóm gần trùng. Dùng `--uu-tien` để mở một trang tối đa 16 ảnh từ `kho/<sp>-uu-tien.txt` khi sản phẩm có danh sách chọn sẵn. Hiện Body Oil có danh sách này. Dùng `--tat-ca` để xem toàn bộ nguồn qua các file `trang-tat-ca-N.jpg`. `loc-anh` in tên ảnh được giữ và có thể trả điểm cùng lý do loại qua `--diem`. Điểm được lưu theo thời gian sửa và kích thước file trong `nguon/<sp>/.cham-anh.json`, hoặc trong thư mục bảng xem khi chạy headless.
 
 `dong-bo` dùng `tools/sua-duoi.sh <thư-mục-tạm>` để sửa đuôi theo định dạng thật của ảnh **vừa tải**. Nếu tên thay đổi, `dong-bo` cập nhật cột `tai_ve` trước khi tạo hardlink sản phẩm. Dùng lệnh sửa đuôi với ảnh mới trong thư mục tạm.
 
@@ -83,6 +84,8 @@ node tools/ghi-bai-hoc.mjs --da-dua-vao-brand <sp> <ma1,ma2> <file> "<mục>"
 Dùng `run_id` thật và lý do một dòng tối đa 300 ký tự. Loại gồm `giong-van`, `cau-cam`, `claim`, `chon-anh`, `chinh-ta`, `bo-cuc` và `khac`. Bỏ dữ liệu cá nhân theo [Security](docs/protocols/security.md). Dùng lệnh thứ hai để ghi mốc sau khi người dùng duyệt và quy tắc đã được cập nhật.
 
 Lượt `tools/giao-viec.sh <sp> [ghi-chu]` trả `canh_bao` về độ dài chữ và caption khi dựng thành công. Lệnh trả `do_luong` khi có số đo từ Claude Code và ghi `ra/_do-luong.tsv`. Các cột gồm model, số vòng, giây, token vào/ra, cache ghi/đọc và chi phí quy ra giá API. Với lượt lỗi có số đo nhưng chưa xác nhận lượt dựng, `run_id` có thể trống. Model mặc định lấy từ cấu hình Claude Code. Chỉ đặt `GIAO_VIEC_MODEL` khi người dùng chọn model cho lượt đó.
+
+Trường `buoc` và dòng “Số đếm theo bước” trong log ghi số yêu cầu đọc, tìm và sửa nháp được hook cho phép, số lần tạo bảng và thử dựng, số thành công và thời gian từng nhóm. `tu_choi_hook` là số lần hook từ chối, `tu_choi_cli` là số Claude CLI báo nếu có. Hai số này có thể trùng nhau. Bộ đếm giữ số lần và thời gian, không lưu đầu vào của công cụ.
 
 ## Các lệnh thử cũ
 

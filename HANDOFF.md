@@ -1,12 +1,13 @@
 # HANDOFF
 
-Cập nhật lần cuối: 2026-11-19 — Codex
+Cập nhật lần cuối: 2026-11-19 17:34 — Codex
 
 ## Tối ưu bộ brand và quy trình · phụ trách: phiên 19/11 · nhánh: `main`
 
-- Điều kiện còn thiếu và bằng chứng ở [Tracking T-12](docs/protocols/tracking.md#t-12--tối-ưu-brand-và-quy-trình). Trung vị đo lại là 37 vòng so với 32,5 ban đầu. Bộ ảnh vẫn có lỗi bố cục dù qua kiểm máy. Ca Love Oil đã dừng hỏi đúng kỳ vọng.
-- Đã soát lại phần sửa contract sau review. Gate chung đạt 44/44. Máy cục bộ chặn Bubblewrap khi gọi trực tiếp, kể cả qua `aa-exec -p unconfined` do thiếu `cap net_admin`. Dùng dịch vụ systemd của user như lệnh trong [Tracking](docs/protocols/tracking.md).
-- Dở dang chưa commit: không có đầu việc triển khai để lại. T-12 còn nghiệm thu chất lượng và số vòng, yêu cầu làm nhanh và vòng góp ý thật chưa chạy qua Claude Code CLI hoặc chat Thu Trinh.
+- T-12 còn nghiệm thu số vòng và bố cục. Xem [ba lượt Body Oil và số đếm theo bước](docs/protocols/tracking.md#đo-lại-với-bảng-916). Bằng chứng ảnh và log ở `ra/_kiem-t12/` trên máy này.
+- Tiếp theo nếu anh giao: dùng lại các ảnh từng che nhãn, nhất là `IMG_8008.jpg`, để kiểm cục bộ cách chặn chọn ảnh vướng chữ và lý do quay về bảng đầy đủ. Giữ mẫu và model mặc định. Lượt này đã dùng đúng ba lượt Claude được giao. Yêu cầu làm nhanh và vòng góp ý thật còn chờ kiểm.
+- Đã thử, thất bại: gate fixture gặp `EMFILE` khi dùng watcher mặc định, kể cả tăng giới hạn file. Chạy bằng dịch vụ systemd của user với polling chỉ dành cho test đã đạt. Cú pháp và bằng chứng ở [Tracking](docs/protocols/tracking.md#đo-lại-với-bảng-916).
+- Dở dang chưa commit: không.
 - T-10 còn kiểm `dong-bo` trên máy thứ hai. T-02 và T-06 chờ anh chốt.
 
 ## Thu Trinh làm bộ ảnh Moaw Moaws qua máy Linux mượn · phụ trách: anh và phiên tiếp theo · nhánh: `main` · cập nhật: 2026-11-19

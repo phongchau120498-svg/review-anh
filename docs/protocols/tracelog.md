@@ -4,6 +4,8 @@ Nhật ký mốc, quyết định và sự cố, mới nhất ở trên. Chi ti�
 
 ## 2026-11-19
 
+- **Duyệt thử bảng chọn ảnh 9:16 và đo theo bước.** Anh chọn giữ mẫu slide và model mặc định. Bảng nguồn cắt giữa giống khung dựng rồi kẻ vạch cho chữ bìa và chi tiết. Body Oil có trang ưu tiên để thử giảm lượt mở bảng, kèm đường xem toàn kho. Bộ đếm phân biệt thao tác được phép, lần dựng thành công và lần bị từ chối, vì tổng `num_turns` trong log cũ chưa đủ để phân tích nguyên nhân. Xem [bằng chứng T-12](tracking.md#đo-lại-với-bảng-916).
+
 - **Tối ưu bộ brand và quy trình.** Sáu phase triển khai từ `73f4a62` đến `7002deb`. [Tracking T-12](tracking.md#t-12--tối-ưu-brand-và-quy-trình) giữ kết quả từng ca và số đo.
   - Mượn khung giọng cố định, tông theo chỗ đặt chữ, cặp ví dụ và agent chỉ đọc từ [Anthropic brand-voice](https://github.com/anthropics/knowledge-work-plugins/tree/main/partner-built/brand-voice). Khung giúp người viết và người soát dùng cùng tiêu chí. Chữ Moaw vẫn lấy từ bài đã đăng và thông tin anh xác nhận.
   - Mượn danh sách cụm sáo cấm từ [ECC](https://github.com/affaan-m/ecc) để soát được bằng máy. Tách cụm dùng chung và cụm riêng để mỗi brand chỉnh đúng phạm vi.

@@ -10,7 +10,7 @@ Dựng bộ ảnh review dọc 9:16 có chữ tiếng Việt từ kho ảnh sả
 
 - Node.js (máy anh dùng v26), ImageMagick 7 có HEIC, FFmpeg, Playwright Chromium, util-linux `flock`, Gitleaks 8.30.1. Cài theo README, mục "Cài trên máy".
 - Lệnh chính:
-  - `tools/bang-nguon.sh <sp> [trang|--tat-ca]`: bảng xem nguồn, 40 ảnh/trang.
+  - `tools/bang-nguon.sh <sp> [trang|--tat-ca|--uu-tien]`: bảng xem nguồn cắt 9:16 và có vạch vùng chữ. Bảng thường có tối đa 40 ảnh mỗi trang. Xem [cách dùng bảng ưu tiên](../../README.md#xem-và-lọc-ảnh-nguồn).
   - `node tools/dung-bo-anh.mjs [--trai-nghiem] nguon/<sp>/bo-anh.json`: dựng bộ ảnh.
   - `node tools/soat-chu.mjs [--ban-hang] nguon/<sp>/bo-anh.json`: kiểm chữ trên slide, có tùy chọn kiểm caption của lượt dựng. Xem [cú pháp trong README](../../README.md#dựng-bộ-ảnh).
   - `tools/drive-kho.sh dong-bo|tai|khung`: lấy nguồn từ Drive.
@@ -28,7 +28,7 @@ Dựng bộ ảnh review dọc 9:16 có chữ tiếng Việt từ kho ảnh sả
   - **không** tự xem ảnh qua `read_file` (trả base64);
   - không dùng được Computer control vì PC chạy Wayland.
 - **Thu Trinh** gửi được ảnh trong `ra/` vào chat bằng cách `read_file` → ghi workspace → `attach_file`. Ảnh hardlink trong `nguon/` thì `read_file` từ chối.
-- **Claude Code headless** do `giao-viec` gọi chạy trong dịch vụ systemd của user (AppArmor chặn `unshare`). Lệnh dựng chạy trong Bubblewrap không mạng. Một lượt thật mất khoảng 40 giây.
+- **Claude Code headless** do `giao-viec` gọi chạy trong dịch vụ systemd của user (AppArmor chặn `unshare`). Lệnh dựng chạy trong Bubblewrap không mạng. Số vòng, thời gian và số đếm theo bước của các lượt Body Oil nằm ở [Tracking T-12](tracking.md#t-12--tối-ưu-brand-và-quy-trình).
 - **Claude Code trong repo** đã chạy `/lam-bo-anh` trên ba ca Moaw và gọi agent Haiku chỉ đọc khi có bản dựng. `/them-brand` đã tạo đủ khung cho một brand thử và gọi soát. Kết quả chất lượng từng ca và số đo lượt headless nằm ở [Tracking T-12](tracking.md#t-12--tối-ưu-brand-và-quy-trình).
 
 ## Giả định (chưa kiểm)
