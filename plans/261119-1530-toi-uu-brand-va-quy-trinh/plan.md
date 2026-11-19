@@ -49,6 +49,7 @@ Bộ brand (`docs/brand/`) và skill `/lam-bo-anh` đã có khung đúng, nhưng
 | 4 | [Vòng học từ duyệt](./phase-04-vong-hoc-tu-duyet.md) | Pending |
 | 5 | [Skill thêm brand](./phase-05-skill-them-brand.md) | Pending |
 | 6 | [Tài liệu và kiểm chung](./phase-06-tai-lieu-kiem-chung.md) | Pending |
+| 7 | [Giảm vòng gọi và đo lường](./phase-07-giam-vong-goi-do-luong.md) | Pending |
 
 ## Thứ tự và phụ thuộc
 
@@ -56,7 +57,8 @@ Bộ brand (`docs/brand/`) và skill `/lam-bo-anh` đã có khung đúng, nhưng
 - Phase 2 tạo `tools/brand.mjs`, mà phase 3 và 4 dùng.
 - Phase 3 và 4 chạy song song được: phase 3 sửa `.claude/agents/` và `ca-thu.md`, phase 4 sửa `tools/ghi-bai-hoc.*` và `bai-hoc.md`. Cả hai đều sửa `.claude/skills/lam-bo-anh/SKILL.md`, nên **phase 4 sửa skill sau phase 3**.
 - Phase 5 cần phase 1 (khung file brand) và phase 4 (`bai-hoc.md`).
-- Phase 6 chạy cuối.
+- Phase 7 cần phase 2 (`soat-chu`) và phase 4 (bài học để ghép vào prompt); sửa `.claude/skills/lam-bo-anh/SKILL.md` và `tools/giao-viec.mjs` **sau** phase 3 và 4.
+- **Thứ tự chạy:** 1 → 2 → 3 và 4 → 5 → **7 → 6**. Phase 6 (tài liệu và kiểm chung) luôn chạy cuối, dù mang số 6.
 
 ## Ngoài phạm vi
 
@@ -77,6 +79,7 @@ Bộ brand (`docs/brand/`) và skill `/lam-bo-anh` đã có khung đúng, nhưng
 - [ ] `node tools/ghi-bai-hoc.mjs` ghi được một dòng có kiểm hợp lệ vào `docs/brand/<brand>/bai-hoc.md`. `/lam-bo-anh` và `giao-viec` đọc bài học trước khi viết. Đề xuất sửa brand cần người dùng duyệt.
 - [ ] `/them-brand` dẫn đủ quy trình thêm brand và tạo đủ bộ file brand.
 - [ ] 3 ca thử Moaw chạy qua `/lam-bo-anh`: `soat-chu` đạt, agent soát đạt, kết quả ghi trong Tracking.
+- [ ] Lượt `giao-viec` trả `do_luong` và ghi `ra/_do-luong.tsv`. Sau 3 lượt đo lại, trung vị số vòng giảm ≥ 30% so với đường cơ sở 32,5 vòng (phase 7), chất lượng vẫn đạt.
 - [ ] `npm test` đạt toàn bộ. Có một lượt review độc lập cuối plan. Tài liệu và protocol khớp với code.
 
 ## Câu hỏi mở (có khuyến nghị)
@@ -87,3 +90,4 @@ Bộ brand (`docs/brand/`) và skill `/lam-bo-anh` đã có khung đúng, nhưng
 | 2 | Bước soát độc lập bật mặc định hay tùy chọn? | Bật mặc định. Người dùng nói "nhanh" thì bỏ qua bước này, nhưng `soat-chu` vẫn chạy | Trung |
 | 3 | Cảnh báo độ dài có chặn dựng không? | Không. Chỉ cảnh báo; lỗi tràn chữ đã có renderer chặn | Thấp |
 | 4 | Cụm "mặc định tránh" của Moaw (x2 trắng, trị viêm…) có chặn cứng không? | Có, trong `docs/brand/moaw/cam.txt`, tới khi anh chốt T-02. Chốt cho dùng thì xóa dòng tương ứng | Cao |
+| 5 | Có cho `giao-viec` chạy model khác (ví dụ Sonnet) để rẻ hơn không? | Phase 7 chỉ thêm tùy chọn `GIAO_VIEC_MODEL`, **mặc định giữ model hiện tại**. Anh quyết sau khi so 3 ca thử trên hai model | Trung |

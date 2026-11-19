@@ -3,7 +3,7 @@ phase: 6
 title: "Tài liệu và kiểm chung"
 status: pending
 priority: P1
-dependencies: [1, 2, 3, 4, 5]
+dependencies: [1, 2, 3, 4, 5, 7]
 ---
 
 # Phase 6: Tài liệu và kiểm chung
@@ -18,7 +18,7 @@ Cập nhật tài liệu cho khớp với phần đã làm, review độc lập 
   - `AGENTS.md`: mục "Làm content" thêm `soat-chu`, `bai-hoc.md`, `vi-du.md`; bản đồ tài liệu thêm `cam.txt` và `ca-thu.md`; nhắc `/them-brand`.
   - `docs/BLUEPRINT.md`: kiến trúc thêm bước soát máy, agent soát và vòng học.
   - `docs/protocols/ground-truth.md`, `knowledge-base.md` (thuật ngữ: cụm cấm, bài học, agent soát, ca thử), `tracking.md` (T-12 cho plan này với bằng chứng; cập nhật T-10), `tracelog.md` (mốc 19–20/11 và lý do chọn từng nguồn tham khảo), `security.md` (`bai-hoc.md` không chứa dữ liệu cá nhân).
-  - `README.md`: thêm `soat-chu`, `ghi-bai-hoc`.
+  - `README.md`: thêm `soat-chu`, `ghi-bai-hoc`, `loc-anh`, `sua-duoi`, cú pháp mới của `bang-nguon`, `ra/_do-luong.tsv` và `GIAO_VIEC_MODEL`.
   - `HANDOFF.md`: khối của dòng việc này.
 
 ## Implementation Steps
