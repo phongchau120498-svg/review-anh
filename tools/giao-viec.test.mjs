@@ -55,7 +55,9 @@ const bash = command => {
 };
 const draft = source + '/bo-anh.json';
 const render = 'node tools/dung-bo-anh.mjs --trai-nghiem ' + draft;
+const review = 'node tools/soat-chu.mjs ' + draft;
 const page = 'tools/bang-nguon.sh ' + product + ' 1';
+const scenario = process.env.CLAUDE_STUB_CASE;
 if (process.env.CLAUDE_STUB_CASE === 'timeout') process.exit(124);
 if (process.env.CLAUDE_STUB_CASE === 'cancel') {
   spawn('flock', [process.env.CLAUDE_STUB_MARKER + '.lock', '/bin/sh', '-c', 'touch "$1"; sleep 6',
@@ -66,7 +68,8 @@ if (process.env.CLAUDE_STUB_CASE === 'cancel') {
 for (const command of ['ls ' + source, 'tools/bang-nguon.sh other 1', page + ' && touch outside',
   page + ' > outside', page + '\\nwhoami', page + '$(whoami)', 'TOOLS=1 ' + page,
   'node tools/dung-bo-anh.mjs nguon/other/bo-anh.json', 'tools/tiktok-anh.sh chu a b c',
-  'tools/tiktok-anh.sh kiem /etc/passwd']) deny('Bash', {command});
+  'tools/tiktok-anh.sh kiem /etc/passwd', 'node tools/soat-chu.mjs nguon/other/bo-anh.json',
+  'node tools/soat-chu.mjs --ban-hang ' + draft, review + ' && cat private.txt']) deny('Bash', {command});
 deny('Read', {file_path:'private.txt'});
 deny('Read', {file_path:source + '/symlink.jpg'});
 deny('Read', {file_path:'docs/khac.md'});
@@ -98,22 +101,33 @@ assert.equal(sheet.status, 0, sheet.stderr);
 allow('Read', {file_path:'ra/_bang-nguon/' + product + '/trang-1.jpg'});
 const slides = [1,2,3].map((i) => ({mau:i === 1 ? 'bia' : 'chi-tiet', nguon:source + '/mau-' + i + '.jpg',
   tieu_de:'Mẫu', ...(i === 1 ? {} : {y:['Ảnh mẫu','Bản nháp']})}));
-writeFileSync(write.file_path, JSON.stringify({san_pham:product,anh:slides}));
+const save = () => writeFileSync(write.file_path, JSON.stringify({san_pham:product,anh:slides}));
+const forbiddenImage = scenario === 'forbidden-image';
+if (forbiddenImage) slides[0].tieu_de = 'Trị viê.m';
+save();
+const reviewResult = bash(review);
+assert.equal(reviewResult.status, forbiddenImage ? 1 : 0, reviewResult.stderr);
+assert.equal(JSON.parse(reviewResult.stdout).dat, !forbiddenImage);
 const run = bash(render);
 assert.equal(run.status, 0, run.stderr);
 const data = JSON.parse(run.stdout);
+slides[0].tieu_de = forbiddenImage ? 'Mẫu' : 'Trị viê.m';
+save();
 allow('Read', {file_path:data.bang_xem});
 const check = bash('tools/tiktok-anh.sh kiem ' + data.thu_muc + '/*.jpg');
 assert.equal(check.status, 0, check.stderr);
-const oversize = spawnSync('magick', ['-size','2400x2400','xc:gray','+noise','Random','-strip','-quality','100','jpeg:-'],
-  {maxBuffer:20 * 1024 * 1024});
-assert.equal(oversize.status,0,oversize.stderr.toString());
-assert(oversize.stdout.length > 2*1024*1024);
-writeFileSync(data.bang_xem, oversize.stdout);
+if (scenario === 'success') {
+  const oversize = spawnSync('magick', ['-size','2400x2400','xc:gray','+noise','Random','-strip','-quality','100','jpeg:-'],
+    {maxBuffer:20 * 1024 * 1024});
+  assert.equal(oversize.status,0,oversize.stderr.toString());
+  assert(oversize.stdout.length > 2*1024*1024);
+  writeFileSync(data.bang_xem, oversize.stdout);
+}
 console.error('chỉ có trong log');
+const caption = {threads: scenario === 'forbidden-caption' ? 'Hoàn hảo' : '🍑'.repeat(501), tiktok:'Bộ ảnh nháp'};
 console.log(JSON.stringify({type:'result',subtype:'success',is_error:false,structured_output:{
   run_id:data.run_id, bang_xem:'private.txt', anh:['private.txt'],
-  ly_do:['Bìa','Chi tiết 1','Chi tiết 2'],caption:{threads:'Bản nháp',tiktok:'Bộ ảnh nháp'},
+  ly_do:['Bìa','Chi tiết 1','Chi tiết 2'],caption,
 }}));`;
 
 test('giao-viec khóa quyền, xác minh ảnh và luôn trả một JSON', async t => {
@@ -124,7 +138,7 @@ test('giao-viec khóa quyền, xác minh ảnh và luôn trả một JSON', asyn
   await mkdir(file('bin'));
   await mkdir(file('tools'));
   await mkdir(file(source), { recursive: true });
-  for (const name of ['giao-viec.sh', 'giao-viec.mjs', 'bang-nguon.sh', 'dung-bo-anh.mjs', 'tiktok-anh.sh']) {
+  for (const name of ['giao-viec.sh', 'giao-viec.mjs', 'bang-nguon.sh', 'dung-bo-anh.mjs', 'tiktok-anh.sh', 'brand.mjs', 'soat-chu.mjs']) {
     await cp(path.join(repo, 'tools', name), file(`tools/${name}`));
   }
   for (const name of ['fonts', 'mau', 'docs/brand']) await cp(path.join(repo, name), file(name), { recursive: true });
@@ -175,7 +189,7 @@ test('giao-viec khóa quyền, xác minh ảnh và luôn trả một JSON', asyn
   assert.equal(result.status, 0, result.value.loi);
   const { ok, run_id, bang_xem, anh, ly_do, caption } = result.value;
   assert.equal(ok, true);
-  assert.deepEqual(caption, { threads: 'Bản nháp', tiktok: 'Bộ ảnh nháp' });
+  assert.deepEqual(caption, { threads: '🍑'.repeat(501), tiktok: 'Bộ ảnh nháp' });
   assert.equal(ly_do.length, 3);
   const base = `ra/${product}/${run_id}`;
   assert.deepEqual(JSON.parse(await readFile(file(`${base}/manifest.json`), 'utf8')).brief, {});
@@ -186,6 +200,14 @@ test('giao-viec khóa quyền, xác minh ảnh và luôn trả một JSON', asyn
     assert(info.isFile() && info.nlink === 1 && info.size <= 2 * 1024 * 1024);
   }
   assert.match(await readFile(file(`${base}/_xem/giao-viec.log`), 'utf8'), /chỉ có trong log/);
+
+  for (const [scenario, message] of [['forbidden-caption', 'caption.threads (hoàn hảo)'],
+    ['forbidden-image', 'anh[0].tieu_de (trị viêm)']]) {
+    const failed = run(scenario);
+    assert.equal(failed.status, 1);
+    assert.equal(failed.value.ok, false);
+    assert(failed.value.loi.startsWith(`Chữ vi phạm: ${message}`), failed.value.loi);
+  }
 
   // Match the detached /bin/sh and group-wide SIGKILL used by sharedCommand.
   const request = spawn('/bin/sh', ['-c', 'exec "$1" "$2"', 'sh', file('tools/giao-viec.sh'), product], {
