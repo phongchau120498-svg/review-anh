@@ -8,7 +8,7 @@ Cập nhật 19/11/2026. Kiến thức đã xác nhận. Chi tiết nằm ở t�
 |---|---|---|---|---|
 | `moaw` | Moaw Moaws | [docs/brand/moaw/](../brand/moaw/thuong-hieu.md) | `kho/moaw.tsv` | Sản phẩm cũ không có tiền tố (`body-oil`…), xem T-06 |
 
-Thêm brand: [hướng dẫn](../them-brand-san-pham-nguon.md).
+Thêm brand bằng `/them-brand` trong Claude Code hoặc theo [hướng dẫn chung](../them-brand-san-pham-nguon.md).
 
 ## Thuật ngữ
 
@@ -19,7 +19,11 @@ Thêm brand: [hướng dẫn](../them-brand-san-pham-nguon.md).
 | `run_id`, `ra/<sp>/<run_id>/` | Một lần dựng: JPEG, `manifest.json`, `_xem/bang-ket-qua.jpg`. Không ghi đè lần dựng cũ |
 | Brief | `nguon/<sp>/brief.json`: tên, 3 điểm nổi bật, giá, link, domain. Bắt buộc với bài bán hàng; `brief.nhap.json` là bản chờ điền |
 | Review trải nghiệm | Chế độ `--trai-nghiem`: không cần brief, cấm giá và link |
-| Bảng nguồn | `ra/_bang-nguon/<sp>/trang-N.jpg`, 40 ảnh/trang có tên file |
+| Bảng nguồn | `ra/_bang-nguon/<sp>/`, 40 ảnh/trang có tên file. CLI lọc mặc định ra `trang-N.jpg`, dùng `--tat-ca` để tạo `trang-tat-ca-N.jpg` |
+| Cụm cấm | Nội dung bị soát lỗi, mỗi dòng một cụm trong [danh sách chung](../brand/chung/cam.txt) và `cam.txt` của brand, như [Moaw](../brand/moaw/cam.txt) |
+| Bài học | Phản hồi về một bản dựng, có mã và `run_id` trong `bai-hoc.md` của brand. Xem [bảng Moaw](../brand/moaw/bai-hoc.md) |
+| Agent soát | [`soat-bo-anh`](../../.claude/agents/soat-bo-anh.md) dùng Haiku với quyền chỉ đọc, ghi bằng chứng theo slide, caption hoặc mục của khung brand mới |
+| Ca thử | Đầu vào, kết quả phải có và cách kiểm khi đổi bộ brand. Xem [ba ca Moaw](../brand/moaw/ca-thu.md) |
 | Mục lục kho | `kho/<brand>.tsv`, mỗi file nguồn một dòng. Cột xem [hướng dẫn thêm nguồn](../them-brand-san-pham-nguon.md) |
 | `shared_computer` | Tool của server MausBot để bot dùng thư mục và terminal của máy được cho mượn |
 | Giao việc | `tools/giao-viec.sh`: bot gọi để Claude Code headless trên PC dựng bản nháp, trả một JSON |

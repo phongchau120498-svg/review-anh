@@ -12,20 +12,23 @@ Repo dựng **bộ ảnh review dọc 9:16 (1080×1920)** có chữ tiếng Vi�
 
 Đọc bộ brand trước khi viết bất kỳ chữ nào:
 
-- [Cách nghĩ content](docs/brand/chung/cach-nghi-content.md), dùng chung mọi brand;
-- `docs/brand/<brand>/thuong-hieu.md` và `giong-van.md` của brand sản phẩm. Ví dụ Moaw: [thương hiệu](docs/brand/moaw/thuong-hieu.md), [giọng văn](docs/brand/moaw/giong-van.md).
+- [Cách nghĩ content](docs/brand/chung/cach-nghi-content.md), dùng chung mọi brand.
+- `thuong-hieu.md`, `giong-van.md` và `vi-du.md` trong `docs/brand/<brand>/`. Với Moaw, xem [thương hiệu](docs/brand/moaw/thuong-hieu.md), [giọng văn](docs/brand/moaw/giong-van.md) và [ví dụ có nguồn](docs/brand/moaw/vi-du.md).
+- 10 dòng mới nhất của `bai-hoc.md` nếu có, ưu tiên góp ý sửa hoặc bỏ. Xem [bài học Moaw](docs/brand/moaw/bai-hoc.md).
 
 Mã sản phẩm thuộc brand nào: xem mục "Xác định brand" trong [hướng dẫn thêm brand, sản phẩm, nguồn](docs/them-brand-san-pham-nguon.md).
 
 Trong Claude Code, gõ `/lam-bo-anh <san-pham> "<ý tưởng>"`. Agent khác chạy:
 
 ```bash
-tools/bang-nguon.sh <sp> 1                                        # bảng ảnh nguồn, 40 ảnh/trang
+tools/bang-nguon.sh <sp>                                        # mọi trang bảng ảnh nguồn, 40 ảnh/trang
 node tools/dung-bo-anh.mjs --trai-nghiem nguon/<sp>/bo-anh.json   # dựng bản nháp review trải nghiệm
-tools/tiktok-anh.sh kiem ra/<sp>/<run_id>/*.jpg                   # kiểm chuẩn ảnh
+node tools/soat-chu.mjs nguon/<sp>/bo-anh.json                   # soát riêng chữ trên ảnh khi cần
 ```
 
-**Thêm brand, sản phẩm hoặc nguồn mới: bắt buộc làm theo [hướng dẫn này](docs/them-brand-san-pham-nguon.md)**, không tự đặt cấu trúc khác.
+Dùng `kiem` và `soat_chu` trong kết quả dựng, mở bảng xem và soát caption trước khi trình. Xem [cách kiểm caption bằng máy](README.md#dựng-bộ-ảnh). Trong `/lam-bo-anh`, gọi agent soát độc lập trừ khi anh yêu cầu làm nhanh.
+
+**Thêm brand, sản phẩm hoặc nguồn mới phải theo [hướng dẫn chung](docs/them-brand-san-pham-nguon.md).** Trong Claude Code, dùng `/them-brand` để thêm brand.
 
 ## Luật cứng
 
@@ -57,6 +60,8 @@ tools/tiktok-anh.sh kiem ra/<sp>/<run_id>/*.jpg                   # kiểm chu�
 | Bàn giao phiên | [HANDOFF.md](HANDOFF.md) |
 | Kho Moaw, Drive | [kho-nguon.md](docs/kho-nguon.md) |
 | Bot trên máy chủ dùng PC | [huong-dan-thu-trinh-may-linux.md](docs/huong-dan-thu-trinh-may-linux.md) |
+| Cụm từ soát máy | [cam.txt chung](docs/brand/chung/cam.txt), [cam.txt Moaw](docs/brand/moaw/cam.txt) |
+| Kiểm giọng khi đổi bộ brand | [ca-thu.md của Moaw](docs/brand/moaw/ca-thu.md) |
 
 ## Duy trì tài liệu
 

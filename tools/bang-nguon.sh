@@ -13,8 +13,11 @@ sp=${1:-}; mode=${2:-}
 ra="ra/_bang-nguon/$sp"; mkdir -p "$ra"
 tam=$(mktemp -d "$ra/.bang-XXXXXXXX")
 trap 'rm -rf -- "$tam"' EXIT
-opts=()
-if [[ $mode == --tat-ca ]]; then opts+=(--tat-ca); fi
+opts=(); tien_to=trang
+if [[ $mode == --tat-ca ]]; then
+  opts+=(--tat-ca)
+  tien_to=trang-tat-ca
+fi
 node tools/loc-anh.mjs "$sp" "${opts[@]}" --nul > "$tam/anh"
 mapfile -d '' -t anh < "$tam/anh"
 tong=${#anh[@]}; so_trang=$(( (tong + 39) / 40 ))
@@ -25,6 +28,7 @@ if [[ $mode =~ ^[1-9][0-9]*$ ]]; then
   dau=$mode; cuoi=$mode
 fi
 for ((trang=dau; trang<=cuoi; trang++)); do
+  ten="$tien_to-$trang.jpg"
   args=()
   for f in "${anh[@]:$(( (trang - 1) * 40 )):40}"; do
     e=${f##*.}; e=${e,,}
@@ -32,7 +36,7 @@ for ((trang=dau; trang<=cuoi; trang++)); do
     args+=("$e:nguon/$sp/$f")
   done
   magick montage -- "${args[@]}" -auto-orient -font fonts/BeVietnamPro-Regular.ttf -set label '%f' -pointsize 16 \
-    -geometry 200x356+6+6 -tile 6x -background '#eee8df' -strip -quality 80 "$tam/trang-$trang.jpg"
-  mv -fT -- "$tam/trang-$trang.jpg" "$ra/trang-$trang.jpg"
-  echo "$PWD/$ra/trang-$trang.jpg (trang $trang/$so_trang, $tong ảnh)"
+    -geometry 200x356+6+6 -tile 6x -background '#eee8df' -strip -quality 80 "$tam/$ten"
+  mv -fT -- "$tam/$ten" "$ra/$ten"
+  echo "$PWD/$ra/$ten (trang $trang/$so_trang, $tong ảnh)"
 done

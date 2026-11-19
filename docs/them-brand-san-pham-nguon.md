@@ -59,7 +59,7 @@ Chỉ sửa `docs/brand/chung/` khi người dùng đồng ý áp dụng thay đ
 
    Phần chưa có nguồn thì ghi **CẦN CHỐT**.
 3. Trong `kho/<brand>.tsv`, ghi mã sản phẩm vào cột `san_pham` của các ảnh thuộc sản phẩm này, rồi chạy `tools/drive-kho.sh dong-bo` để tạo thư mục và hardlink.
-4. Kiểm tra bằng `tools/bang-nguon.sh <brand>-<san-pham> 1`: lệnh in đủ số ảnh, bảng không lẫn sản phẩm khác.
+4. Chạy `tools/bang-nguon.sh <brand>-<san-pham> --tat-ca` để kiểm tổng số ảnh và xem từng trang có lẫn sản phẩm khác hay không.
 5. Chỉ tạo `nguon/<sp>/brief.json` (giá, link, domain, 3 điểm nổi bật) khi người dùng **xác nhận** giá và link. Bản review trải nghiệm không cần brief.
 
 ## Thêm nguồn mới

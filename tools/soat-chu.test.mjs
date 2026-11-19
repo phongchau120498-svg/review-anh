@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cp, mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
+import { cp, link, mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { ROOT } from './dung-bo-anh.mjs';
@@ -124,4 +124,47 @@ test('CLI trả JSON và exit 0, 1, 2; chế độ bán hàng kiểm đúng brie
   assert.deepEqual(run('--ban-hang', input), [0, { dat: true, loi: [], canh_bao: [] }]);
   await write('129.000 đồng, https://example.com/khac');
   assert.equal(run('--ban-hang', input)[0], 1);
+
+  await write('Ảnh ví dụ');
+  const runId = '2026-11-19T12-00-00-000Z-abcdef01';
+  const output = 'ra/body-oil/' + runId;
+  const preview = output + '/_xem/bang-ket-qua.jpg';
+  const captionPath = output + '/_xem/caption.json';
+  const check = (...args) => run(...args, input, '--caption', captionPath);
+  const writeCaption = caption => writeFile(file(captionPath), JSON.stringify(caption));
+  await mkdir(file(output + '/_xem'), { recursive: true });
+  await writeCaption({ threads: 'Trị viê.m với giá: 199.000', tiktok: '₫199.000' });
+  assert.equal(check()[0], 2);
+  const manifestPath = file(output + '/manifest.json');
+  const manifest = { san_pham: 'body-oil', run_id: runId, bang_xem: preview, anh: [output + '/01.jpg'] };
+  await writeFile(manifestPath, JSON.stringify({ ...manifest, san_pham: 'other' }));
+  await writeFile(file(preview), 'Ảnh xem thử');
+  assert.equal(check()[0], 2);
+  await writeFile(manifestPath, JSON.stringify(manifest));
+  const [status, report] = check();
+  assert.equal(status, 1);
+  assert.deepEqual(report.loi.map(({ cho, loai }) => [cho, loai]), [
+    ['caption.threads', 'cum-cam'], ['caption.threads', 'gia-link'], ['caption.tiktok', 'gia-link'],
+  ]);
+  await writeCaption({ threads: 'Giá: 129.000 đồng, https://example.com/mau', tiktok: 'Ảnh mẫu' });
+  assert.equal(check()[0], 1);
+  assert.equal(check('--ban-hang')[0], 0);
+  assert.equal(run(input, '--caption', captionPath.replace('/body-oil/', '/other/'))[0], 2);
+  assert.equal(run(input, '--caption')[0], 2);
+  await writeCaption({ threads: 'Ảnh mẫu', tiktok: '🍑'.repeat(46) });
+  assert.deepEqual(check(), [0, { dat: true, loi: [],
+    canh_bao: [{ loai: 'do-dai', cho: 'caption.tiktok', gioi_han: 90, thuc_te: 92 }] }]);
+  for (const caption of [{ threads: 'Ảnh mẫu' }, { threads: 'Ảnh mẫu', tiktok: 7 },
+    { threads: 'Ảnh mẫu', tiktok: 'Ảnh mẫu', extra: true }, { threads: 'x'.repeat(100001), tiktok: 'Ảnh mẫu' }]) {
+    await writeCaption(caption);
+    assert.equal(check()[0], 2);
+  }
+  await rm(file(captionPath));
+  const elsewhere = output + '/_xem/elsewhere.json';
+  await writeFile(file(elsewhere), JSON.stringify({ threads: 'Ảnh mẫu', tiktok: 'Ảnh mẫu' }));
+  await symlink(file(elsewhere), file(captionPath));
+  assert.equal(check()[0], 2);
+  await rm(file(captionPath));
+  await link(file(elsewhere), file(captionPath));
+  assert.equal(check()[0], 2);
 });

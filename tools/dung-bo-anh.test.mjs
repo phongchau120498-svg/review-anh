@@ -68,6 +68,18 @@ test('brief và copy bắt buộc đúng giá/link/domain, cả giá được gh
   assert.throws(() => validateCopy(set('Mua ở evil.example.'), brief), /Link trong chữ/);
   assert.doesNotThrow(() => validateCopy(set(`MẪU ${brief.gia} ${brief.link}`), brief));
   assert.doesNotThrow(() => validateCopy(set('Chai màu vàng')));
+  assert.doesNotThrow(() => validateCopy(set('Video quay 2K')));
+  for (const rating of ['Mình đánh giá 10/10', 'Mình đánh giá: 10/10']) {
+    assert.doesNotThrow(() => validateCopy(set(rating)));
+  }
+  for (const price of ['Giá: 199.000', '₫199.000', 'Giá 199000', '2K', 'Video quay 2K, chỉ 199k']) {
+    assert.throws(() => validateCopy(set(price)), /Giá trong chữ/);
+  }
+  for (const gia of ['199.000', '₫199.000', '199.000 đồng']) {
+    assert.doesNotThrow(() => validateCopy(set('Giá: ' + gia), { ...brief, gia }));
+    assert.throws(() => validateCopy(set('Giá: ' + gia.replace('199', '198')), { ...brief, gia }), /Giá trong chữ/);
+  }
+  assert.throws(() => validateCopy(set('Giá: 199.000 đồng'), { ...brief, gia: '199.000' }), /Giá trong chữ/);
   assert.throws(() => validateCopy(set(`Giá ${brief.gia}`)), /Giá trong chữ/);
   assert.throws(() => validateCopy(set(`Xem ${brief.link}`)), /Link trong chữ/);
   await assert.rejects(renderSet({ ...set('MẪU'), gia: brief.gia }, { browser, traiNghiem: true }), /gia không khớp/);

@@ -71,7 +71,7 @@ Truyền ghi chú từ chat như một đối số shell. Thay mỗi dấu nháy
 
 1. Với mỗi đường dẫn trong JSON, kiểm tra file nằm dưới `ra/<sp>/<run_id>/`. Dùng `shared_computer` với `computer_id`, `folder_id`, `action: "read_file"`, `encoding: "base64"` và `path` là đường dẫn đó thêm tiền tố `review-anh/`. Dùng đúng đường dẫn script trả về, kể cả khi đó là bản nén trong `_xem/`.
 2. Giải mã trường `content` từ base64 thành file JPG trong workspace của Thu Trinh, rồi gọi `attach_file` với `path` trỏ tới file vừa lưu trong workspace đó. Có thể đặt `name` hiển thị lần lượt là `bang-ket-qua.jpg`, `01.jpg`, `02.jpg`…
-3. Gửi `ly_do` theo đúng thứ tự ảnh, rồi gửi `caption.threads` (tối đa 500 ký tự) và `caption.tiktok` (tiêu đề tối đa 90 ký tự).
+3. Gửi `ly_do` theo đúng thứ tự ảnh, rồi gửi `caption.threads` và tiêu đề `caption.tiktok`. Nếu `canh_bao` có mục vượt giới hạn độ dài, ghi kèm vị trí cần rút gọn.
 
 Chỉ gửi ảnh kết quả dưới `ra/`. Ảnh gốc trong `nguon/` là hardlink, `read_file` sẽ từ chối.
 

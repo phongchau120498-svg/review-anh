@@ -24,17 +24,22 @@ Thương hiệu mỹ phẩm có kho ảnh và video sản phẩm quay sẵn, c�
 ## Kiến trúc
 
 ```text
-Người dùng ──▶ Claude Code (/lam-bo-anh)  ─┐
-Người dùng ──▶ Bot MausBot ── shared_computer ──▶ tools/giao-viec.sh ──▶ Claude Code headless ─┤
-                                                                                              ▼
-docs/brand/ (chung + <brand>)  ──đọc──▶  chọn ảnh từ nguon/<sp>/ ──▶ bo-anh.json ──▶ tools/dung-bo-anh.mjs
-                                                                                   (mẫu HTML + Playwright)
-                                                                                              ▼
-                                                              ra/<sp>/<run_id>/: JPEG + manifest + bảng xem
+Người dùng ──▶ Claude Code (/lam-bo-anh) ───────────────────────────┐
+Người dùng ──▶ Thu Trinh ──▶ shared_computer ──▶ giao-viec.sh ──────┤
+                                                                   ▼
+     Đọc docs/brand/ ──▶ chọn ảnh ──▶ bo-anh.json ──▶ dung-bo-anh
+                                                                   ▼
+                        JPEG + manifest + bảng xem + kiểm ảnh, chữ
+                                                                   ▼
+                 Kiểm caption, tự soát và gọi agent nếu áp dụng
+                                                                   ▼
+                                        Trình bản nháp và ghi phản hồi
 ```
 
 - **Não** là agent (Claude Code hoặc bot), không nằm trong repo. **Repo chỉ là tay chân**: công cụ chạy chắc chắn và kiểm được.
 - **Nguồn sự thật về brand**: `docs/brand/`. Mọi đường (skill, giao việc, bot) đọc cùng các file này.
+- **Soát trước khi trình.** Các bước gồm kiểm ảnh, soát máy cho chữ và caption, và rà theo checklist. `/lam-bo-anh` gọi thêm agent chỉ đọc với tối đa hai vòng sửa. Khi anh yêu cầu làm nhanh, bỏ lượt agent. Xem [các lệnh trong README](../README.md#dựng-bộ-ảnh).
+- **Học từ phản hồi.** Ghi phản hồi vào bảng bài học theo brand và đọc các dòng gần nhất ở lượt sau. Khi có ít nhất hai góp ý sửa hoặc bỏ cùng loại chưa xử lý, đưa một đề xuất cụ thể để anh duyệt trước khi đổi quy tắc. Xem [lệnh ghi bài học](../README.md#ghi-phản-hồi-và-đo-lượt-giao-việc).
 - **Kho**: mục lục `kho/<brand>.tsv` vào Git; ảnh thật ở `nguon/` và bản dựng ở `ra/` thì không. Máy mới chạy `tools/drive-kho.sh dong-bo` để tải kho.
 - **MCP server** (`mcp/server.mjs`) bọc cùng công cụ cho bot gọi trực tiếp. Hiện chưa dùng được với bot trên máy chủ riêng (xem [Ground Truth](protocols/ground-truth.md)). Hướng lâu dài là chạy MCP trên chính máy chủ bot.
 

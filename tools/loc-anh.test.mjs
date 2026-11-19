@@ -72,12 +72,17 @@ test('bảng nguồn tạo mọi trang, giữ gọi một trang và --tat-ca b�
   }
   const table = (...args) => exec('bash', [path.join(folder, 'tools/bang-nguon.sh'), 'bo-test', ...args]);
   const all = await table('--tat-ca');
-  assert.match(all.stdout, /trang-1\.jpg \(trang 1\/2, 41 ảnh\)/);
-  assert.match(all.stdout, /trang-2\.jpg \(trang 2\/2, 41 ảnh\)/);
+  assert.match(all.stdout, /trang-tat-ca-1\.jpg \(trang 1\/2, 41 ảnh\)/);
+  assert.match(all.stdout, /trang-tat-ca-2\.jpg \(trang 2\/2, 41 ảnh\)/);
+  const sheetFolder = path.join(folder, 'ra/_bang-nguon/bo-test');
+  const unfiltered = await readFile(path.join(sheetFolder, 'trang-tat-ca-1.jpg'));
   const filtered = await table();
   assert.match(filtered.stdout, /trang-1\.jpg \(trang 1\/1, 1 ảnh\)/);
   const page = await table('1');
   assert.equal(page.stdout, filtered.stdout);
+  assert.deepEqual(await readFile(path.join(sheetFolder, 'trang-tat-ca-1.jpg')), unfiltered);
+  assert.notDeepEqual(await readFile(path.join(sheetFolder, 'trang-1.jpg')), unfiltered);
+  await access(path.join(sheetFolder, 'trang-tat-ca-2.jpg'));
   await assert.rejects(table('2'), /có 1 trang/);
   const { stdout } = await exec(process.execPath, [path.join(folder, 'tools/loc-anh.mjs'), 'bo-test', '--tat-ca']);
   assert(stdout.includes('Ảnh thật.JPG\n'));

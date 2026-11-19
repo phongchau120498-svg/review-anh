@@ -17,7 +17,7 @@ const maxImage = 2 * 1024 * 1024;
 const runPattern = /^\d{4}(?:-\d{2}){2}T\d{2}(?:-\d{2}){2}-\d{3}Z-[a-f0-9]{8}$/;
 const productPattern = /^[a-z0-9-]+$/;
 const modelPattern = /^[a-z0-9.-]+$/;
-const sheetPattern = /^trang-[1-9]\d{0,5}\.jpg$/;
+const sheetPattern = /^trang-(?:tat-ca-)?[1-9]\d{0,5}\.jpg$/;
 const source = product => `nguon/${product}`;
 const output = product => `ra/${product}`;
 const sheet = product => `ra/_bang-nguon/${product}`;
@@ -57,7 +57,7 @@ async function manifest(product, work, run) {
   requireThat(data.run_id === run && data.san_pham === product && data.bang_xem === preview &&
     data.manifest === `${base}/manifest.json` && Array.isArray(data.anh) && data.anh.length >= 3 &&
     data.anh.length <= 4 && data.kiem?.length === data.anh.length && typeof data.soat_chu?.dat === 'boolean' &&
-    Array.isArray(data.soat_chu.loi) && data.anh.every((image, index) =>
+    Array.isArray(data.soat_chu.loi) && Array.isArray(data.soat_chu.canh_bao) && data.anh.every((image, index) =>
       image === `${base}/0${index + 1}.jpg` && data.kiem[index]?.dat === true && data.kiem[index]?.path === image &&
       /^[a-f0-9]{64}$/.test(data.kiem[index].sha256)),
   'Manifest của lượt dựng không hợp lệ');
@@ -152,7 +152,9 @@ async function runAllowed(product, work, command) {
   let cache;
   if (args[0] === 'tools/bang-nguon.sh') {
     const dir = await directory(sheet(product));
-    const names = args[2] && args[2] !== '--tat-ca' ? [`trang-${args[2]}.jpg`] : (await readdir(dir)).filter(name => sheetPattern.test(name));
+    const all = args[2] === '--tat-ca';
+    const names = args[2] && !all ? [`trang-${args[2]}.jpg`] : (await readdir(dir))
+      .filter(name => sheetPattern.test(name) && name.startsWith('trang-tat-ca-') === all);
     for (const name of names) await regular(`${sheet(product)}/${name}`, { allowMissing: true });
     cache = path.join(dir, '.cham-anh.json');
     writable.push(dir);
@@ -349,8 +351,16 @@ async function job(product, note, model) {
         running.child.once('exit', () => running.child.stdin.destroy());
         running.child.stdin.write(toJson({ args, env }) + '\n');
         running.child.stderr.pipe(errors);
-        const { stdout } = await running;
-        response = JSON.parse(stdout);
+        const { stdout, failure } = await running.catch(error => ({ stdout: error.stdout, failure: error }));
+        try { response = JSON.parse(stdout); }
+        catch (error) { if (!failure) throw error; }
+        if (response?.type === 'result' && (Number.isFinite(response.num_turns) || response.usage)) {
+          do_luong = metrics(response, model ?? env.ANTHROPIC_MODEL);
+        }
+        if (failure) {
+          if (stdout) await handle.appendFile(stdout).catch(() => {});
+          throw failure;
+        }
         await handle.appendFile(stdout);
       } finally {
         running.child.stdin.destroy();
@@ -360,11 +370,9 @@ async function job(product, note, model) {
       }
     } catch (error) {
       if (error.code === 124 || error.code === 137) throw new Error('het-gio');
-      if (error.stdout) await appendFile(log, error.stdout);
       throw new Error('Claude Code không hoàn thành lượt dựng');
     }
-    if (response.type === 'result' && Number.isFinite(response.num_turns)) do_luong = metrics(response, model ?? env.ANTHROPIC_MODEL);
-    requireThat(response.type === 'result' && response.subtype === 'success' && !response.is_error,
+    requireThat(response?.type === 'result' && response.subtype === 'success' && !response.is_error,
       'Claude Code không hoàn thành lượt dựng');
     const { run_id, ly_do, caption } = response.structured_output ?? {};
     const data = await manifest(product, work, run_id);
@@ -386,11 +394,12 @@ async function job(product, note, model) {
     const { soatChu } = await import('./soat-chu.mjs');
     const captionReport = await soatChu({ data: { anh: [] }, caption, product });
     const errors = [...data.soat_chu.loi, ...captionReport.loi];
+    const canh_bao = [...data.soat_chu.canh_bao, ...captionReport.canh_bao];
     requireThat(data.soat_chu.dat && captionReport.dat,
       `Chữ vi phạm: ${errors.slice(0, 3).map(({ cho, cum, loai }) => `${cho} (${cum ?? loai})`).join(', ')}`);
     const [bang_xem, ...anh] = await Promise.all([data.bang_xem, ...data.anh].map(sendable));
     await rm(work, { recursive: true, force: true });
-    return { ok: true, run_id, bang_xem, anh, ly_do, caption: { threads: caption.threads, tiktok: caption.tiktok }, do_luong };
+    return { ok: true, run_id, bang_xem, anh, ly_do, caption: { threads: caption.threads, tiktok: caption.tiktok }, canh_bao, do_luong };
   } catch (error) {
     if (do_luong && !recorded) await appendMetrics('', product, do_luong).catch(async error => {
       await appendFile(log, `\nLỗi ghi đo lường: ${error.message}\n`).catch(() => {});

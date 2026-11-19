@@ -60,13 +60,19 @@ node tools/dung-bo-anh.mjs --trai-nghiem nguon/<sp>/bo-anh.json
 
 Với bài bán hàng đã có brief xác nhận, bỏ cờ `--trai-nghiem` khi dựng. Đọc `bang_xem` trong JSON trả về bằng Read. Lưu caption và tiêu đề thành JSON với hai khóa `threads` và `tiktok` ở `ra/<sp>/<run_id>/_xem/caption.json`.
 
-Rà từng slide trên bảng xem, mở ảnh kết quả cỡ thật nếu chưa rõ. Chọn ảnh thay thế nếu chữ che nhãn hoặc phần thao tác, hay ảnh chưa minh họa đúng ý của slide.
+Rà từng slide trên bảng xem, mở ảnh kết quả cỡ thật nếu chưa rõ. Ghi lại ảnh cần đổi nếu chữ che nhãn hoặc phần thao tác, hay ảnh chưa minh họa đúng ý của slide.
 
-Soát theo checklist “Tự soát trước khi trình” trong `docs/brand/chung/cach-nghi-content.md`, gồm cả caption. Dùng `kiem` và `soat_chu` trong JSON trả về để kiểm chuẩn ảnh và chữ trên ảnh. Tất cả giá trị `dat` cần là `true` trước khi gọi agent soát. Cảnh báo độ dài chỉ cần sửa nếu chữ vượt bố cục.
+Soát theo checklist “Tự soát trước khi trình” trong `docs/brand/chung/cach-nghi-content.md`, gồm cả caption. Dùng `kiem` và `soat_chu` trong kết quả dựng. Lưu caption rồi chạy lệnh dưới đây cho từng lượt, kể cả khi người dùng yêu cầu làm “nhanh”.
 
-Gọi Agent với `subagent_type: soat-bo-anh`. Gửi mã brand, loại bản nháp, nguyên văn ghi chú của người dùng (hoặc báo không có), cùng đường dẫn `bo-anh.json`, `bang_xem` và `caption.json` của lượt này. Nếu người dùng yêu cầu làm “nhanh”, chỉ bỏ bước gọi agent. Luồng `giao-viec` cũng dùng soát máy và checklist, do chạy headless với bộ tool giới hạn.
+```bash
+node tools/soat-chu.mjs nguon/<sp>/bo-anh.json --caption ra/<sp>/<run_id>/_xem/caption.json
+```
 
-Nếu tự soát, soát máy hay agent tìm ra lỗi, sửa nội dung hoặc ảnh rồi dựng lại. Tối đa **3 lượt dựng gồm 2 vòng sửa**. Soát đủ mỗi lượt dựng, kể cả sau vòng sửa thứ hai. Gửi đúng ba đường dẫn của lượt mới khi gọi agent. Sau giới hạn, báo các điểm còn lệch hoặc chưa xác minh khi trình bản nháp. Nếu còn lỗi soát máy, báo lỗi và dừng trước khi trình bộ ảnh.
+Với bài bán hàng, thêm `--ban-hang` trước đường dẫn `bo-anh.json`. Cảnh báo độ dài trên ảnh chỉ cần sửa nếu chữ vượt bố cục.
+
+Khi kiểm ảnh và soát máy ảnh lẫn caption đều có `dat: true`, gọi Agent với `subagent_type: soat-bo-anh` ngay cả khi tự soát đã thấy lỗi bố cục. Gửi mã brand, loại bản nháp, nguyên văn ghi chú của người dùng (hoặc báo không có), cùng đường dẫn `bo-anh.json`, `bang_xem` và `caption.json` của lượt này. Nếu người dùng yêu cầu làm “nhanh”, bỏ bước gọi agent.
+
+Gom các lỗi từ tự soát, soát máy và agent của cùng lượt để sửa một lần rồi dựng lại. Tối đa **3 lượt dựng gồm 2 vòng sửa**. Soát đủ mỗi lượt dựng, kể cả sau vòng sửa thứ hai. Sau giới hạn, báo các điểm còn lệch hoặc chưa xác minh khi trình bản nháp. Nếu kiểm ảnh hoặc soát máy còn lỗi, báo lỗi và dừng trước khi trình bộ ảnh.
 
 Số vòng và token được đo tự động trong luồng `giao-viec` chạy headless. Phiên tương tác tự soát theo các bước trên.
 

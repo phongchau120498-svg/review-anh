@@ -58,12 +58,13 @@ async function mediaPath(value) {
   return safePath(value, inside(path.join(ROOT, 'nguon'), absolute) ? 'nguon' : 'ra');
 }
 
-export async function readBoundedFile(file, maxBytes, label) {
+export async function readBoundedFile(file, maxBytes, label, { singleLink = false } = {}) {
   // Mở nonblocking để FIFO đổi vào giữa realpath và open không giữ tool vô hạn.
   const handle = await open(file, constants.O_RDONLY | constants.O_NONBLOCK | constants.O_NOFOLLOW);
   try {
     const info = await handle.stat();
     if (!info.isFile()) throw new Error(`${label}: cần file thường`);
+    if (singleLink && info.nlink !== 1) throw new Error(`${label}: không nhận hardlink`);
     const { size } = info;
     if (size > maxBytes) throw new Error(`${label}: tối đa ${maxBytes} byte`);
     const bytes = Buffer.allocUnsafe(size + 1);
@@ -112,11 +113,22 @@ export function validateCopy(data, brief = {}) {
     if (brief.link && url.startsWith(brief.link) && /^[.,!?;:…'’”»\)\]}]*$/u.test(url.slice(brief.link.length))) return ' ';
     throw new Error('Link trong chữ không khớp nguyên văn brief');
   });
-  // shortcut: chỉ nhận giá có đơn vị, mở rộng khi brief thật cần cách ghi khác.
-  const money = /\b\d+(?:[., \u00a0\u202f]\d+)*[ \t\u00a0\u202f]*(?:đồng|₫|đ|vnđ|vnd|k|nghìn|triệu)(?![\p{L}\p{M}\p{N}])/giu;
+  // shortcut: số trần cần nhãn "giá" để phân biệt với số đo, mở rộng khi brief thật cần.
+  const amount = String.raw`\d+(?:[., \u00a0\u202f]\d+)*`;
+  const space = String.raw`[ \t\u00a0\u202f]`;
+  const gap = space + '*';
+  const word = String.raw`[\p{L}\p{M}\p{N}]`;
+  const withUnit = String.raw`\b${amount}${gap}(?:đồng|₫|đ|vnđ|vnd|k|nghìn|triệu)|₫${gap}${amount}`;
+  const withLabel = String.raw`(?<=(?<!${word}|đánh${space}+)giá${gap}:?${gap})\b${amount}`;
+  const money = new RegExp(String.raw`(?:${withUnit}|${withLabel})(?!${word}|[.,]\d)`, 'giu');
   const allowed = brief.gia?.match(money) ?? [];
-  for (const price of withoutLinks.match(money) ?? []) {
-    if (!allowed.includes(price)) throw new Error('Giá trong chữ không khớp nguyên văn brief');
+  for (const match of withoutLinks.matchAll(money)) {
+    const [price] = match;
+    const resolution = /^(?:2|4|8)K$/.test(price) &&
+      /(?<![\p{L}\p{M}\p{N}])(?:video[ \t]+quay|độ phân giải)[ \t]+$/iu.test(withoutLinks.slice(0, match.index));
+    if (!resolution && price !== brief.gia && !allowed.includes(price)) {
+      throw new Error('Giá trong chữ không khớp nguyên văn brief');
+    }
   }
 }
 

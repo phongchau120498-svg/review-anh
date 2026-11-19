@@ -1,6 +1,6 @@
 # review-anh
 
-Làm series review dạng ảnh từ kho tư liệu sản phẩm, ưu tiên TikTok dọc **9:16, 1080x1920**, đồng thời kiểm chuẩn JPEG của Threads. MausBot gọi MCP của repo để chọn nguồn, dựng/kiểm ảnh và tải lên Postiz; đăng bài dùng thẻ Postiz có sẵn của MausBot.
+Làm bản nháp review dạng ảnh từ kho tư liệu sản phẩm, ưu tiên TikTok dọc **9:16, 1080x1920**, đồng thời kiểm chuẩn JPEG của Threads. Làm trực tiếp trong Claude Code hoặc giao qua Thu Trinh trên máy Linux. MCP có công cụ dựng và chuẩn bị ảnh cho luồng đăng qua Postiz khi được duyệt.
 
 ## Cấu trúc
 
@@ -17,7 +17,7 @@ Làm series review dạng ảnh từ kho tư liệu sản phẩm, ưu tiên TikT
 
 ## Cài trên máy
 
-Cần Node.js 22+, FFmpeg/ffprobe, ImageMagick 7 (`magick`) có decoder HEIC, util-linux (`flock`) và Gitleaks **8.30.1**. Kiểm cô lập MausBot bằng `npm test` cần Node.js 24+ và checkout OpenMausBot có dependencies ở thư mục anh em `../OpenMausBot`; test không sửa checkout đó. Lệnh chữ kiểu cũ dùng Noto Sans Bold hệ thống (đổi bằng `TIKTOK_ANH_FONT`).
+Cần Node.js 22+, FFmpeg/ffprobe, ImageMagick 7 (`magick`) có decoder HEIC, `file` để kiểm định dạng ảnh mới tải, util-linux (`flock`) và Gitleaks **8.30.1**. Kiểm cô lập MausBot bằng `npm test` cần Node.js 24+ và checkout OpenMausBot có dependencies ở thư mục anh em `../OpenMausBot`. Test không sửa checkout đó. Lệnh chữ kiểu cũ dùng Noto Sans Bold hệ thống (đổi bằng `TIKTOK_ANH_FONT`).
 
 ```bash
 npm ci
@@ -27,13 +27,26 @@ tools/drive-kho.sh dong-bo   # tải ~485 ảnh (~750 MB) từ Drive về nguon/
 npm test
 ```
 
-Làm content: đọc [AGENTS.md](AGENTS.md); trong Claude Code gõ `/lam-bo-anh <san-pham> "<ý tưởng>"`. Giọng văn và quy tắc thương hiệu nằm ở `docs/brand/`.
+Làm content trong Claude Code bằng `/lam-bo-anh <san-pham> "<ý tưởng>"`. Dùng `/them-brand` để thêm brand. Xem [quy trình làm content](AGENTS.md#làm-content).
 
 Playwright ghim phiên bản trong `package.json`/lock. Hook từ chối commit nếu thiếu/sai phiên bản Gitleaks hoặc quét staged phát hiện secret. Sau clone cần đặt `core.hooksPath` như trên; không commit token, `.env`, tư liệu hay ảnh xuất.
 
+## Xem và lọc ảnh nguồn
+
+```bash
+tools/bang-nguon.sh <sp>
+tools/bang-nguon.sh <sp> 1
+tools/bang-nguon.sh <sp> --tat-ca
+node tools/loc-anh.mjs <sp> --diem
+```
+
+`bang-nguon` tạo mọi trang theo mặc định, hoặc chỉ trang được chỉ định. Mỗi trang có tối đa 40 ảnh. Lệnh lọc ảnh mờ, tối và gần trùng, giữ ảnh nét nhất trong nhóm gần trùng. Dùng `--tat-ca` để xem toàn bộ nguồn qua các file `trang-tat-ca-N.jpg`. `loc-anh` in tên ảnh được giữ và có thể trả điểm cùng lý do loại qua `--diem`. Điểm được lưu theo thời gian sửa và kích thước file trong `nguon/<sp>/.cham-anh.json`, hoặc trong thư mục bảng xem khi chạy headless.
+
+`dong-bo` dùng `tools/sua-duoi.sh <thư-mục-tạm>` để sửa đuôi theo định dạng thật của ảnh **vừa tải**. Nếu tên thay đổi, `dong-bo` cập nhật cột `tai_ve` trước khi tạo hardlink sản phẩm. Dùng lệnh sửa đuôi với ảnh mới trong thư mục tạm.
+
 ## Dựng bộ ảnh
 
-Mỗi sản phẩm cần `nguon/<slug>/brief.json` theo [ví dụ MẪU](docs/brief-mau.json): `ten`, đúng 3 `diem_noi_bat`, `gia` và `link` là chuỗi, `domains_thuong_hieu` là danh sách hostname chính xác (không tự cho phép subdomain). Link bắt buộc HTTPS và thuộc danh sách này. Brief/JSON tối đa 100 KB.
+Bản trải nghiệm dùng `--trai-nghiem` và bỏ giá, link. Bài bán hàng cần `nguon/<slug>/brief.json` do người dùng xác nhận theo [brief mẫu](docs/brief-mau.json), gồm `ten`, đúng 3 `diem_noi_bat`, `gia` và `link` là chuỗi, cùng `domains_thuong_hieu` là danh sách hostname chính xác. Link bắt buộc HTTPS và thuộc danh sách này. Brief và JSON bộ ảnh đều tối đa 100 KB.
 
 JSON bộ ảnh theo [bộ MẪU](docs/bo-anh-mau.json), gồm `san_pham` và `anh` (1–20 ảnh):
 
@@ -43,19 +56,33 @@ JSON bộ ảnh theo [bộ MẪU](docs/bo-anh-mau.json), gồm `san_pham` và `a
 
 ```bash
 node tools/dung-bo-anh.mjs nguon/san-pham-mau/bo-anh.json
-tools/tiktok-anh.sh kiem ra/san-pham-mau/<run-id>/*.jpg
-tools/tiktok-anh.sh luoi ra/san-pham-mau/<run-id>/*.jpg
+node tools/dung-bo-anh.mjs --trai-nghiem nguon/<sp>/bo-anh.json
+node tools/soat-chu.mjs nguon/<sp>/bo-anh.json
+node tools/soat-chu.mjs nguon/<sp>/bo-anh.json --caption ra/<sp>/<run_id>/_xem/caption.json
 ```
 
-CLI trả JSON gồm `san_pham`, `run_id`, `thu_muc`, `manifest`, `anh` (danh sách đường dẫn ảnh đăng), `kiem` (kết quả từng ảnh), `brief` (tên/giá/link), `bang_xem`. Đường dẫn tính theo gốc repo dù chạy từ thư mục khác. Tên sản phẩm chuẩn hóa NFC, bỏ dấu về `[a-z0-9-]` và được trả lại rõ trong kết quả. Ảnh nguồn bắt buộc ở đúng thư mục sản phẩm; mọi nguồn/đích dùng realpath + path.relative để chặn traversal và symlink thoát `nguon/`/`ra/`. Dựng vào thư mục tạm rồi đổi tên một lần khi cả bộ đạt.
+CLI trả JSON gồm `san_pham`, `run_id`, `thu_muc`, `manifest`, `anh` (danh sách đường dẫn ảnh), `kiem` (kết quả từng ảnh), `brief` (tên/giá/link), `bang_xem` và `soat_chu`. Đường dẫn tính theo gốc repo dù chạy từ thư mục khác. Tên sản phẩm chuẩn hóa NFC, bỏ dấu về `[a-z0-9-]` và được trả lại rõ trong kết quả. Ảnh nguồn bắt buộc ở đúng thư mục sản phẩm. Mọi nguồn và đích dùng realpath và path.relative để chặn traversal và symlink thoát `nguon/` hoặc `ra/`. Dựng vào thư mục tạm, rồi đổi tên một lần khi cả bộ đạt kiểm ảnh.
+
+`soat_chu` gồm `dat`, `loi` và `canh_bao`. Khi có cụm cấm, CLI dựng vẫn trả ảnh để sửa và báo `soat_chu.dat: false`. Độ dài vượt ngưỡng chỉ cảnh báo. Với `soat-chu.mjs`, thêm `--ban-hang` trước đường dẫn draft để kiểm theo brief bán hàng. Thêm `--caption` và đường dẫn caption của cùng lượt dựng để kiểm cả hai chuỗi `threads` và `tiktok`. Mã thoát là `0` nếu đạt, `1` nếu có lỗi soát, `2` nếu đầu vào hoặc cách gọi sai. Cả `/lam-bo-anh` và luồng headless đều kiểm caption bằng máy trước khi trả.
 
 Chữ được gán bằng `textContent`. Trang tắt JavaScript, có CSP, nhúng font/raster data URI và chặn mọi yêu cầu mạng/file. Decoder ảnh ép theo đuôi JPEG/PNG/HEIC/WebP để từ chối SVG/MVG giả ảnh. Vùng chữ chừa ít nhất 220px trên, 520px dưới và 170px phải; chữ tự xuống dòng/co cỡ, không đủ chỗ thì báo lỗi và bỏ bản tạm.
 
-Giá trong chữ hỗ trợ số có dấu phân cách `.`/`,`/khoảng trắng kèm `đ`, `đồng`, `₫`, `VNĐ`, `VND`, `k`, `nghìn`, `triệu`. Đoạn giá phải khớp nguyên văn brief. Link phải dùng URL HTTPS đầy đủ trong brief. Tool nhận ra cả tên miền ASCII viết trần và cho phép dấu câu sau URL đúng. Người duyệt vẫn kiểm giá viết bằng chữ hoặc số trần và các công dụng được nêu.
+Giá trong chữ hỗ trợ số có dấu phân cách `.`/`,`/khoảng trắng với đơn vị `đ`, `đồng`, `₫`, `VNĐ`, `VND`, `k`, `nghìn`, `triệu`. Tool cũng nhận `₫` đứng trước số và số đi sau nhãn “giá”. Đoạn giá phải khớp nguyên văn brief. Link phải dùng URL HTTPS đầy đủ trong brief. Tool nhận ra cả tên miền ASCII viết trần và cho phép dấu câu sau URL đúng. Người duyệt vẫn kiểm các công dụng, giá viết bằng chữ và số không có nhãn hoặc đơn vị.
 
 `kiem` báo đủ từng ảnh rồi trả mã lỗi chung. Tiêu chí gồm JPEG giải mã được toàn bộ, 1080x1920, sRGB, không profile/comment/metadata, dưới 20.000.000 byte TikTok và tối đa 8.000.000 byte Threads. Manifest giữ `anh` là danh sách đường dẫn ảnh đăng và ghi `kiem[].sha256` cho bytes đã kiểm lúc dựng. Bảng xem nằm riêng trong `_xem/`.
 
 Bộ hiện có gắn rõ **MẪU**, giá/link `example.com` chỉ để kiểm kỹ thuật. Dùng brief thật cho lượt thử sản phẩm.
+
+## Ghi phản hồi và đo lượt giao việc
+
+```bash
+node tools/ghi-bai-hoc.mjs <sp> <run_id> <duyet|sua|bo> <loai> "<lý do>"
+node tools/ghi-bai-hoc.mjs --da-dua-vao-brand <sp> <ma1,ma2> <file> "<mục>"
+```
+
+Dùng `run_id` thật và lý do một dòng tối đa 300 ký tự. Loại gồm `giong-van`, `cau-cam`, `claim`, `chon-anh`, `chinh-ta`, `bo-cuc` và `khac`. Bỏ dữ liệu cá nhân theo [Security](docs/protocols/security.md). Dùng lệnh thứ hai để ghi mốc sau khi người dùng duyệt và quy tắc đã được cập nhật.
+
+Lượt `tools/giao-viec.sh <sp> [ghi-chu]` trả `canh_bao` về độ dài chữ và caption khi dựng thành công. Lệnh trả `do_luong` khi có số đo từ Claude Code và ghi `ra/_do-luong.tsv`. Các cột gồm model, số vòng, giây, token vào/ra, cache ghi/đọc và chi phí quy ra giá API. Với lượt lỗi có số đo nhưng chưa xác nhận lượt dựng, `run_id` có thể trống. Model mặc định lấy từ cấu hình Claude Code. Chỉ đặt `GIAO_VIEC_MODEL` khi người dùng chọn model cho lượt đó.
 
 ## Các lệnh thử cũ
 
@@ -63,6 +90,8 @@ Bộ hiện có gắn rõ **MẪU**, giá/link `example.com` chỉ để kiểm 
 tools/tiktok-anh.sh khung nguon/video.mp4 16
 tools/tiktok-anh.sh bang nguon
 tools/tiktok-anh.sh chu ra/video/khung-03.jpg ra/bo/1.jpg "Câu móc" tren
+tools/tiktok-anh.sh kiem ra/san-pham-mau/<run-id>/*.jpg
+tools/tiktok-anh.sh luoi ra/san-pham-mau/<run-id>/*.jpg
 ```
 
 `chu` và `khung` giữ cách dựng cũ. `kiem`/`luoi` dùng chung bộ kiểm/đường dẫn với renderer mới.

@@ -1,16 +1,13 @@
 # HANDOFF
 
-Cập nhật lần cuối: 2026-11-19 15:40 — Claude Code
+Cập nhật lần cuối: 2026-11-19 — Codex
 
-## Bộ brand dùng chung, đa brand và bộ protocol · phụ trách: phiên tiếp theo · nhánh: `main` · cập nhật: 2026-11-19
+## Tối ưu bộ brand và quy trình · phụ trách: phiên 19/11 · nhánh: `main`
 
-- Mục tiêu: mọi agent (Claude Code của anh/sếp, Codex, bot) đọc chung một bộ quy tắc brand rồi mới làm; thêm brand, sản phẩm, nguồn mới không phải sửa code. Task T-10 trong [Tracking](docs/protocols/tracking.md).
-- Chặng hiện tại: đã viết xong `docs/brand/` (chung + moaw), `AGENTS.md`, `CLAUDE.md`, skill `/lam-bo-anh`, `tools/drive-kho.sh dong-bo`, [hướng dẫn thêm brand](docs/them-brand-san-pham-nguon.md), Blueprint và sáu protocol trong `docs/protocols/`.
-- Dở dang chưa commit: **toàn bộ** phần trên, cùng các sửa trong `tools/giao-viec.mjs` (hàm `brandOf`, quyền đọc `docs/brand/chung` và brand của sản phẩm), `tools/giao-viec.test.mjs`, README, `docs/kho-nguon.md`, `docs/huong-dan-thu-trinh-may-linux.md`. Mục lục chuyển từ `nguon/_kho/muc-luc.tsv` sang `kho/moaw.tsv` (vào Git, có `drive_id`). Không đưa `.claude/agent-memory/` vào commit.
-- Tiếp theo: 1. Anh duyệt rồi commit. 2. Chạy `/lam-bo-anh body-oil "..."` trong một phiên Claude Code mới để kiểm skill. 3. *(Chờ anh)* T-02 điền ô CẦN CHỐT, T-06 có đổi tên sản phẩm cũ sang `moaw-` không.
-- Ràng buộc: brand là tiền tố mã sản phẩm, sản phẩm cũ không có tiền tố là `moaw`. Không lồng `nguon/<brand>/<sp>/` (phải sửa code kiểm đường dẫn).
-- Đã thử, thất bại: `read` với IFS=tab gộp cột trống, làm `dong-bo` bỏ sót 66 slide; đã đổi sang ký tự ngăn `\037`.
-- Kiểm tra: `node --test tools/*.test.mjs mcp/server.test.mjs` 22/22; `dong-bo` 485 có sẵn / 0 lỗi; giả lập máy mới tải 3 ảnh đúng. Chưa kiểm: `/lam-bo-anh` chạy thật, `npm test` toàn repo, `brandOf` với brand có tiền tố.
+- Điều kiện còn thiếu và bằng chứng ở [Tracking T-12](docs/protocols/tracking.md#t-12--tối-ưu-brand-và-quy-trình). Trung vị đo lại là 37 vòng so với 32,5 ban đầu. Bộ ảnh vẫn có lỗi bố cục dù qua kiểm máy. Ca Love Oil đã dừng hỏi đúng kỳ vọng.
+- Đã soát lại phần sửa contract sau review. Gate chung đạt 44/44. Máy cục bộ chặn Bubblewrap khi gọi trực tiếp, kể cả qua `aa-exec -p unconfined` do thiếu `cap net_admin`. Dùng dịch vụ systemd của user như lệnh trong [Tracking](docs/protocols/tracking.md).
+- Dở dang chưa commit: không có đầu việc triển khai để lại. T-12 còn nghiệm thu chất lượng và số vòng, yêu cầu làm nhanh và vòng góp ý thật chưa chạy qua Claude Code CLI hoặc chat Thu Trinh.
+- T-10 còn kiểm `dong-bo` trên máy thứ hai. T-02 và T-06 chờ anh chốt.
 
 ## Thu Trinh làm bộ ảnh Moaw Moaws qua máy Linux mượn · phụ trách: anh và phiên tiếp theo · nhánh: `main` · cập nhật: 2026-11-19
 

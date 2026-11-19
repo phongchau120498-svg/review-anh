@@ -72,13 +72,18 @@ assert(!prompt.includes('Mốc bài học 2 |'));
 assert(prompt.includes('tối đa 3 lượt dựng'));
 assert(prompt.endsWith(JSON.stringify(scenario === 'cancel' ? '' : '\\\\n$() ; ghi chú')));
 if (process.env.CLAUDE_STUB_CASE === 'timeout') process.exit(124);
+if (scenario === 'failed-with-usage') {
+  console.log(JSON.stringify({type:'result',subtype:'error_max_turns',is_error:true,
+    duration_ms:500, usage:{input_tokens:7,output_tokens:4}, modelUsage:{'claude-opus-stub':{}}}));
+  process.exit(1);
+}
 if (process.env.CLAUDE_STUB_CASE === 'cancel') {
   spawn('flock', [process.env.CLAUDE_STUB_MARKER + '.lock', '/bin/sh', '-c', 'touch "$1"; sleep 6',
     'sh', process.env.CLAUDE_STUB_MARKER + '.ready'], {detached:true,stdio:'ignore'}).unref();
   setInterval(() => {}, 1000);
   return;
 }
-for (const command of ['ls ' + source, 'tools/bang-nguon.sh other 1', page + ' && touch outside',
+for (const command of ['ls ' + source, 'tools/bang-nguon.sh other 1', 'tools/bang-nguon.sh other --tat-ca', page + ' && touch outside',
   page + ' > outside', page + '\\nwhoami', page + '$(whoami)', 'TOOLS=1 ' + page,
   'node tools/dung-bo-anh.mjs nguon/other/bo-anh.json', 'tools/tiktok-anh.sh chu a b c',
   'tools/tiktok-anh.sh kiem /etc/passwd', 'node tools/soat-chu.mjs nguon/other/bo-anh.json',
@@ -114,8 +119,12 @@ if (process.env.CLAUDE_STUB_CASE === 'forged') {
 const sheet = bash('tools/bang-nguon.sh ' + product);
 assert.equal(sheet.status, 0, sheet.stderr);
 assert.match(sheet.stdout, /trang-1\\.jpg/);
-assert.equal(bash('tools/bang-nguon.sh ' + product + ' --tat-ca').status, 0);
+const all = bash('tools/bang-nguon.sh ' + product + ' --tat-ca');
+assert.equal(all.status, 0, all.stderr);
+assert.match(all.stdout, /trang-tat-ca-1\\.jpg/);
 allow('Read', {file_path:'ra/_bang-nguon/' + product + '/trang-1.jpg'});
+allow('Read', {file_path:'ra/_bang-nguon/' + product + '/trang-tat-ca-1.jpg'});
+deny('Read', {file_path:'ra/_bang-nguon/other/trang-tat-ca-1.jpg'});
 const slides = [1,2,3].map((i) => ({mau:i === 1 ? 'bia' : 'chi-tiet', nguon:source + '/mau-' + i + '.jpg',
   tieu_de:'Mẫu', ...(i === 1 ? {} : {y:['Ảnh mẫu','Bản nháp']})}));
 const save = () => writeFileSync(write.file_path, JSON.stringify({san_pham:product,anh:slides}));
@@ -125,7 +134,7 @@ if (scenario === 'success') {
   slides[0].tieu_de = 'Mua tại https://example.com';
   save();
   for (let i = 0; i < 2; i++) assert.match(bash(render).stderr, /Link trong chữ/);
-  slides[0].tieu_de = 'Mẫu';
+  slides[0].tieu_de = 'Ảnh a a a a a a a a a a a a';
 }
 save();
 const run = bash(render);
@@ -217,9 +226,13 @@ test('giao-viec khóa quyền, xác minh ảnh và luôn trả một JSON', asyn
   await rm(sheetPath);
   const result = run('success');
   assert.equal(result.status, 0, result.value.loi);
-  const { ok, run_id, bang_xem, anh, ly_do, caption, do_luong } = result.value;
+  const { ok, run_id, bang_xem, anh, ly_do, caption, canh_bao, do_luong } = result.value;
   assert.equal(ok, true);
   assert.deepEqual(caption, { threads: '🍑'.repeat(501), tiktok: 'Bộ ảnh nháp' });
+  assert.deepEqual(canh_bao, [
+    { loai: 'do-dai', cho: 'anh[0].tieu_de', gioi_han: 12, thuc_te: 13 },
+    { loai: 'do-dai', cho: 'caption.threads', gioi_han: 500, thuc_te: 501 },
+  ]);
   assert.equal(ly_do.length, 3);
   assert.deepEqual(do_luong, { model: 'claude-opus-stub', so_vong: 9, giay: 2.75, token_vao: 22,
     cache_ghi: 300, cache_doc: 2500, token_ra: 450, gia_api_usd: 0.08 });
@@ -246,7 +259,17 @@ test('giao-viec khóa quyền, xác minh ảnh và luôn trả một JSON', asyn
     assert.equal(failed.value.do_luong.model, scenario === 'forbidden-caption' ? 'claude-sonnet-stub' : 'claude-opus-stub');
   }
   assert.match(run('tampered').value.loi, /Ảnh đã đổi sau khi kiem/);
-  assert.equal((await readFile(file('ra/_do-luong.tsv'), 'utf8')).trim().split('\n').length, 5);
+  const tsv = file('ra/_do-luong.tsv');
+  const beforeFailure = await readFile(tsv, 'utf8');
+  assert.equal(beforeFailure.trim().split('\n').length, 5);
+  const failed = run('failed-with-usage');
+  assert.equal(failed.status, 1);
+  assert.equal(failed.value.ok, false);
+  assert.match(failed.value.loi, /^Claude Code không hoàn thành lượt dựng/);
+  assert.deepEqual(failed.value.do_luong, { model: 'claude-opus-stub', so_vong: null, giay: 0.5,
+    token_vao: 7, cache_ghi: null, cache_doc: null, token_ra: 4, gia_api_usd: null });
+  assert.equal(await readFile(tsv, 'utf8'), beforeFailure +
+    ["", product, 'claude-opus-stub', '', 0.5, 7, '', '', 4, ''].join('\t') + '\n');
 
   // Match the detached /bin/sh and group-wide SIGKILL used by sharedCommand.
   const request = spawn('/bin/sh', ['-c', 'exec "$1" "$2"', 'sh', file('tools/giao-viec.sh'), product], {
