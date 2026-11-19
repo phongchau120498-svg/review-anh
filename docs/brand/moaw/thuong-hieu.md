@@ -1,13 +1,12 @@
 # Thương hiệu Moaw Moaws (mã brand `moaw`)
 
-Cập nhật 19/11/2026. Mọi thông tin dưới đây chép từ nhãn sản phẩm và 66 slide carousel thương hiệu đã đăng (`nguon/_kho/anh-cuon/`). Ô **CẦN CHỐT** là phần chưa có nguồn, phải chờ anh hoặc sếp điền. Agent không tự điền những ô này.
+Cập nhật 19/11/2026. Thông tin thương hiệu và sản phẩm lấy từ nhãn và 66 slide carousel đã đăng (`nguon/_kho/anh-cuon/`). Xem [Câu hỏi mở](#câu-hỏi-mở) cho các mục **CẦN CHỐT**. Chờ anh hoặc sếp xác nhận trước khi dùng thông tin đó trong bài.
 
 ## Thương hiệu
 
 - Tên: **Moaw Moaws**. Logo chữ "MO / aw" xếp chồng. Handle trên ảnh: `@moawmoaws.vietnam`.
 - Ngành: chăm sóc da body tại nhà, gồm tẩy tế bào chết, ủ bột, dầu dưỡng và nước hoa.
 - Lời hứa chung trên các bài đã đăng: da body **trắng – mướt – thơm** nhờ một routine đều đặn.
-- Khách hàng: **CẦN CHỐT**. Suy từ giọng văn, nhiều khả năng là nữ trẻ thích skincare body, hay xem TikTok/Threads.
 
 ## Sản phẩm
 
@@ -17,9 +16,9 @@ Cập nhật 19/11/2026. Mọi thông tin dưới đây chép từ nhãn sản p
 | `love-oil` | Passion Body **Love Oil** | Love oil, chai hồng | Da khô, muốn thơm; dùng **buổi sáng** | Mùi hương nước hoa cao cấp; nền dầu hạnh nhân nhẹ, thấm nhanh; dưỡng ẩm, làm mịn, giữ hương lâu trên da |
 | `muoi-hong` | Radiant White Booster **Body Scrub**, Himalayan Pink Salt & Shea Butter (hũ) | Tẩy tế bào chết muối hồng | Mọi loại da | Hạt vừa phải, làm sạch tốt; có bơ hạt mỡ và dầu dừa nên không khô da; mùi dâu tây ngọt thơm; 2–3 lần/tuần |
 | `bot-thao-moc` | Radiant White Booster **Herbal Powder**, Bột tắm trắng thảo mộc, 500 g | Bột ủ thảo mộc | Ủ body | Mix sẵn 7 loại thảo mộc; ủ 15–20 phút, 2–3 lần/tuần; pha sệt với sữa chua không đường, sữa tươi không đường hoặc nước lọc, có thể thêm 2–3 giọt body oil |
-| `sunkissed` | **CẦN CHỐT** tên trên nhãn | Bộ chai nhỏ, nước hoa | **CẦN CHỐT** | **CẦN CHỐT** |
-| `scrub-radiant-white` | Radiant White Exfoliating Body Scrub (túi) | **CẦN CHỐT**: có phải bản túi của tuýp tím không? | **CẦN CHỐT** | **CẦN CHỐT** |
-| `scrub-nach` | B-Salt Tone Up Pit Scrub (túi) | Scrub nách | Vùng nách | **CẦN CHỐT** |
+| `sunkissed` | — | Bộ chai nhỏ, nước hoa | — | — |
+| `scrub-radiant-white` | Radiant White Exfoliating Body Scrub (túi) | — | — | — |
+| `scrub-nach` | B-Salt Tone Up Pit Scrub (túi) | Scrub nách | Vùng nách | — |
 | chưa có thư mục, mới 3 ảnh | Radiant White Exfoliating Body Scrub, **Rice Milk & Almond**, tuýp tím 230 g | Sữa gạo hạnh nhân | Da thường | Dạng kem, hạt siêu nhỏ, không xước da; mùi sữa gạo ngọt |
 | chưa có thư mục, mới 3 ảnh | Radiant White Gentle **Peeling Gel**, AHA & BHA, Arbutin, Glutathione, tuýp xanh 230 g | Gel tắm AHA–BHA | Da dày sừng, thô ráp | Gel trong suốt có hạt nhỏ; sạch sâu, thông thoáng lỗ chân lông; hương phấn em bé |
 | `combo` | Nhiều sản phẩm | Routine, set quà | — | Thứ tự routine: tẩy tế bào chết → (ủ bột) → tắm sạch bằng sữa tắm → thoa body oil khi da còn ẩm |
@@ -36,4 +35,13 @@ Giá bán và link mua **không ghi ở file này**. Bài có giá hoặc link p
 - Tự nhận đã dùng hoặc kể trải nghiệm khi anh chưa đưa ghi chú trải nghiệm.
 - Chê sản phẩm của thương hiệu khác.
 
-**CẦN CHỐT**: danh sách từ cấm chính thức của thương hiệu hoặc của sàn, và mức "trắng" nào được phép nói.
+## Câu hỏi mở
+
+| Câu hỏi | Khuyến nghị | Ưu tiên | Ai chốt |
+|---|---|---|---|
+| Tệp khách hàng chính là ai? | Nữ 18–30 mê skincare body, xem TikTok/Threads. Dùng làm giả định nội bộ chờ xác nhận. | Trung | Anh hoặc sếp |
+| Bộ chai nhỏ tên gì, hợp với ai và có điểm nào được nói? | Tạm gọi "bộ chai nhỏ". Xin ảnh nhãn rõ hoặc bài brand đã đăng trước khi điền thêm. | Thấp | Anh |
+| Túi Radiant White có phải bản túi của tuýp tím? Hợp với ai, được nói điểm nào? | Tạm coi là bản túi của tuýp tím khi phân loại. Khi viết, dùng tên trên nhãn túi và chờ xác nhận trước khi áp dụng các điểm của tuýp tím. | Thấp | Anh |
+| Scrub nách có điểm nổi bật nào được nói? | Dùng tên trên nhãn và vùng dùng. Xin nhãn hoặc bài brand đã đăng trước khi thêm công dụng hay cách dùng. | Thấp | Anh hoặc sếp |
+| Brand hoặc sàn có danh sách từ cấm chính thức nào? | Dùng [danh sách chung](../chung/cam.txt) và [danh sách Moaw](cam.txt) trước. Cập nhật khi anh hoặc sếp có nguồn xác nhận. | Cao | Anh hoặc sếp |
+| Mức "trắng" nào được phép nói? | Giữ mặc định tránh lời hứa làm trắng. Chỉ gỡ từng cụm khỏi danh sách khi đã chốt T-02. | Cao | Anh hoặc sếp |

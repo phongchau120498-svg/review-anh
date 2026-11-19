@@ -6,6 +6,16 @@ Cập nhật 19/11/2026. Rút từ 66 slide thương hiệu đã đăng và lờ
 
 Viết như **một cô bạn thân mê skincare body đang chỉ mẹo cho hội chị em**: thân, vui, nói thẳng điều mình thấy, không đọc thông số như tờ quảng cáo.
 
+## Moaw là / Moaw không là
+
+| Moaw là | Moaw không là |
+|---|---|
+| Thân như bạn thân chỉ mẹo ("mí bà", "nha", "nè") | Suồng sã, thô, chê người đọc |
+| Cụ thể: số giọt, số phút, số lần/tuần, bước làm | Chung chung kiểu "dưỡng da hiệu quả" |
+| Vui, chơi chữ nhẹ ("tế bào *chết*", "troắng") | Lố, meme dày đặc, sai chính tả không chủ đích |
+| Nói cảm nhận thấy được (thấm nhanh, mùi kẹo, da căng bóng) | Đọc thành phần hay công dụng như tờ hướng dẫn |
+| Tự tin về sản phẩm của mình | Hứa quá ("x2 trắng", "trị") hoặc chê brand khác |
+
 ## Cách xưng hô và câu chữ
 
 - Gọi người đọc: **"mí bà"**, "bà nào", "chị em". Người viết xưng "mình" hoặc không xưng. Không dùng "quý khách", "bạn" kiểu trang trọng.
@@ -16,8 +26,7 @@ Viết như **một cô bạn thân mê skincare body đang chỉ mẹo cho hộ
   - `sckd/stkd` = sữa chua không đường / sữa tươi không đường;
   - `2–3l/tuần` = 2–3 lần/tuần, `15–20p` = 15–20 phút.
 - Chơi chữ nhẹ: "tế bào **chết**" trong ngoặc kép, "trắng" viết thành "troắng", "embe'" thay cho em bé.
-- Từ dễ bị sàn lọc thì chèn dấu chấm: `viê.m`, `kíc.h ứng`, `việ.m lcl`.
-- Emoji: 1–2 cái mỗi slide, hợp nội dung: ✨ 🍓 🎀 🫧 ❤️, ❌/✓ cho nên/không nên, 📌 cho Day.
+- Chọn emoji hợp nội dung theo bảng tông bên dưới. Dùng ❌/✓ cho nên/không nên và 📌 cho Day.
 
 ## Câu mở (hook) kiểu thương hiệu đã dùng
 
@@ -34,14 +43,21 @@ Viết như **một cô bạn thân mê skincare body đang chỉ mẹo cho hộ
 - Nhắc thương hiệu nhẹ: tên sản phẩm 1 lần ở bìa hoặc slide đầu. Không lặp tên thương hiệu mỗi slide.
 - Không có giá, link hay "mua ngay" trong ảnh và caption của bản review trải nghiệm.
 
-## Không viết
+## Tông theo chỗ đặt chữ
 
-- Liệt kê thành phần hoặc công dụng như tờ hướng dẫn ("Thành phần A giúp… B giúp… C giúp…").
-- Văn quảng cáo sáo rỗng: "sản phẩm tuyệt vời", "chất lượng hàng đầu", "giải pháp hoàn hảo".
-- Lời hứa trong mục "Mặc định tránh" của [thương hiệu](thuong-hieu.md).
-- Tiếng Anh dài. Chỉ giữ tên sản phẩm và vài từ quen ("routine", "body oil", "tips").
+| Chỗ | Độ dài | Tông | Emoji |
+|---|---|---|---|
+| Bìa `tieu_de` | ≤ 12 từ, xuống dòng khi cần | Câu hỏi, đối lập hoặc lời thoại | 0–1 |
+| Bìa `phu` | ≤ 10 từ | Nói bộ này về gì | 0 |
+| Chi tiết `tieu_de` | ≤ 10 từ | Một ý chính | 0–1 |
+| Chi tiết mỗi `y` | ≤ 14 từ | Mẹo cụ thể, có số khi được | 0–1 |
+| Caption Threads | ≤ 500 ký tự | Kể lại ý chính trong 2–4 câu, kết bằng câu hỏi hoặc lời rủ, thêm 2–4 hashtag | 1–2 |
+| Tiêu đề TikTok | ≤ 90 ký tự | Chính là câu hook | 1 |
 
-## Caption
+Các ngưỡng là mức cảnh báo. Giữ tên sản phẩm và vài từ tiếng Anh quen như "routine", "body oil", "tips".
 
-- **Threads** (tối đa 500 ký tự): 2–4 câu kể lại ý chính của bộ ảnh bằng giọng trên, kết bằng một câu hỏi hoặc lời rủ ("mí bà xài thử chưa?"). Thêm 2–4 hashtag ngắn ở cuối.
-- **TikTok** (tiêu đề tối đa 90 ký tự): chính là câu hook, thêm 1 emoji.
+## Cấm tuyệt đối
+
+- Bỏ câu sáo trong [danh sách chung](../chung/cam.txt) và lời hứa trong [danh sách Moaw](cam.txt), kể cả biến thể chèn dấu, tách chữ hoặc viết chệch.
+- Bỏ lời hứa trong mục [Mặc định tránh](thuong-hieu.md#được-nói-và-không-nên-nói), lời chê brand khác và trải nghiệm tự bịa. Bản review trải nghiệm luôn bỏ giá, link và lời rủ mua.
+- Đối chiếu cách sửa và mẫu câu có nguồn trong [Ví dụ Moaw](vi-du.md).
