@@ -88,6 +88,25 @@ test('bảng nguồn tạo mọi trang, giữ gọi một trang và --tat-ca b�
   assert(stdout.includes('Ảnh thật.JPG\n'));
 });
 
+test('bảng ưu tiên cắt giữa đúng 9:16 và vạch vùng chữ trên ảnh ngang', async t => {
+  const folder = await fixture(t, ['loc-anh.mjs', 'bang-nguon.sh']);
+  await cp(path.join(root, 'fonts'), path.join(folder, 'fonts'), { recursive: true });
+  await mkdir(path.join(folder, 'nguon/bo-test'), { recursive: true });
+  await mkdir(path.join(folder, 'kho'));
+  await writeFile(path.join(folder, 'kho/bo-test-uu-tien.txt'), 'vang-mat.jpg\nanh-ngang.png\n');
+  await exec('magick', ['-size', '320x160', 'xc:#ff5959', '-fill', '#3a9e3a', '-draw',
+    'rectangle 110,0 210,159', '-fill', 'black', '-draw', 'rectangle 135,105 155,153 rectangle 170,105 190,153',
+    path.join(folder, 'nguon/bo-test/anh-ngang.png')]);
+  const { stdout } = await exec('bash', [path.join(folder, 'tools/bang-nguon.sh'), 'bo-test', '--uu-tien']);
+  assert.match(stdout, /trang-uu-tien-1\.jpg \(trang 1\/1, 1 ảnh\)/);
+  const page = path.join(folder, 'ra/_bang-nguon/bo-test/trang-uu-tien-1.jpg');
+  const { stdout: pixels } = await exec('magick', [page, '-format',
+    '%[fx:p{10,10}.g] %[fx:p{195,10}.g] %[fx:p{80,64}.b] %[fx:p{80,10}.b]', 'info:']);
+  const [left, right, guide, plain] = pixels.split(' ').map(Number);
+  assert(left > 0.55 && right > 0.55, 'center crop excludes red wings on both sides');
+  assert(guide > 0.75 && plain < 0.3, 'blue detail guide starts at the expected scaled height');
+});
+
 test('sửa đuôi có hậu tố, giữ file đúng đuôi và không ghi đè file có sẵn', async t => {
   const folder = await fixture(t, ['sua-duoi.sh']);
   const existing = path.join(folder, 'ảnh.png');

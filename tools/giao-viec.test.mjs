@@ -70,6 +70,8 @@ for (const part of promptParts) {
 }
 assert(!prompt.includes('Mốc bài học 2 |'));
 assert(prompt.includes('tối đa 3 lượt dựng'));
+assert(prompt.includes('tools/bang-nguon.sh ' + product + ' --uu-tien'));
+assert(prompt.includes('Sản phẩm không có brief để đọc'));
 assert(prompt.endsWith(JSON.stringify(scenario === 'cancel' ? '' : '\\\\n$() ; ghi chú')));
 if (process.env.CLAUDE_STUB_CASE === 'timeout') process.exit(124);
 if (scenario === 'failed-with-usage') {
@@ -122,9 +124,14 @@ assert.match(sheet.stdout, /trang-1\\.jpg/);
 const all = bash('tools/bang-nguon.sh ' + product + ' --tat-ca');
 assert.equal(all.status, 0, all.stderr);
 assert.match(all.stdout, /trang-tat-ca-1\\.jpg/);
+const selected = bash('tools/bang-nguon.sh ' + product + ' --uu-tien');
+assert.equal(selected.status, 0, selected.stderr);
+assert.match(selected.stdout, /trang-uu-tien-1\\.jpg/);
 allow('Read', {file_path:'ra/_bang-nguon/' + product + '/trang-1.jpg'});
 allow('Read', {file_path:'ra/_bang-nguon/' + product + '/trang-tat-ca-1.jpg'});
+allow('Read', {file_path:'ra/_bang-nguon/' + product + '/trang-uu-tien-1.jpg'});
 deny('Read', {file_path:'ra/_bang-nguon/other/trang-tat-ca-1.jpg'});
+deny('Read', {file_path:'ra/_bang-nguon/other/trang-uu-tien-1.jpg'});
 const slides = [1,2,3].map((i) => ({mau:i === 1 ? 'bia' : 'chi-tiet', nguon:source + '/mau-' + i + '.jpg',
   tieu_de:'Mẫu', ...(i === 1 ? {} : {y:['Ảnh mẫu','Bản nháp']})}));
 const save = () => writeFileSync(write.file_path, JSON.stringify({san_pham:product,anh:slides}));
@@ -171,7 +178,9 @@ test('giao-viec khóa quyền, xác minh ảnh và luôn trả một JSON', asyn
   const marker = file('called');
   await mkdir(file('bin'));
   await mkdir(file('tools'));
+  await mkdir(file('kho'));
   await mkdir(file(source), { recursive: true });
+  await writeFile(file(`kho/${product}-uu-tien.txt`), 'mau-1.jpg\n');
   for (const name of ['giao-viec.sh', 'giao-viec.mjs', 'bang-nguon.sh', 'loc-anh.mjs', 'dung-bo-anh.mjs', 'brand.mjs', 'soat-chu.mjs']) {
     await cp(path.join(repo, 'tools', name), file(`tools/${name}`));
   }
@@ -213,7 +222,10 @@ test('giao-viec khóa quyền, xác minh ảnh và luôn trả một JSON', asyn
   await assert.rejects(access(marker), { code: 'ENOENT' });
   await rm(file(`${source}/bo-anh.json`));
   assert.match(run('api').value.loi, /cần đăng nhập gói Claude/);
-  assert.deepEqual(run('timeout'), { status: 1, value: { ok: false, loi: 'het-gio' } });
+  const timedOut = run('timeout');
+  assert.equal(timedOut.status, 1);
+  assert.equal(timedOut.value.loi, 'het-gio');
+  assert.equal(timedOut.value.buoc.dung_thu, 0);
   assert.match(run('forged').value.loi, /Không hoàn thành lượt dựng/);
   await rm(file('ra/' + product), { recursive: true });
   const sheetPath = file(`ra/_bang-nguon/${product}/trang-1.jpg`);
@@ -226,7 +238,7 @@ test('giao-viec khóa quyền, xác minh ảnh và luôn trả một JSON', asyn
   await rm(sheetPath);
   const result = run('success');
   assert.equal(result.status, 0, result.value.loi);
-  const { ok, run_id, bang_xem, anh, ly_do, caption, canh_bao, do_luong } = result.value;
+  const { ok, run_id, bang_xem, anh, ly_do, caption, canh_bao, do_luong, buoc } = result.value;
   assert.equal(ok, true);
   assert.deepEqual(caption, { threads: '🍑'.repeat(501), tiktok: 'Bộ ảnh nháp' });
   assert.deepEqual(canh_bao, [
@@ -236,6 +248,9 @@ test('giao-viec khóa quyền, xác minh ảnh và luôn trả một JSON', asyn
   assert.equal(ly_do.length, 3);
   assert.deepEqual(do_luong, { model: 'claude-opus-stub', so_vong: 9, giay: 2.75, token_vao: 22,
     cache_ghi: 300, cache_doc: 2500, token_ra: 450, gia_api_usd: 0.08 });
+  assert.deepEqual([buoc.tao_bang, buoc.tao_bang_dat, buoc.doc_bang, buoc.doc_anh_goc, buoc.doc_bang_ket_qua,
+    buoc.ghi_nhap, buoc.dung_thu, buoc.dung_xong], [3, 3, 3, 1, 1, 1, 4, 1]);
+  assert(buoc.tu_choi_hook > 0 && buoc.tao_bang_ms > 0 && buoc.dung_ms > 0);
   assert.equal(await readFile(file('ra/_do-luong.tsv'), 'utf8'),
     `run_id\tsan_pham\tmodel\tso_vong\tgiay\ttoken_vao\tcache_ghi\tcache_doc\ttoken_ra\tgia_api_usd\n${run_id}\t${product}\tclaude-opus-stub\t9\t2.75\t22\t300\t2500\t450\t0.08\n`);
   assert((await lstat(file(`ra/_bang-nguon/${product}/.cham-anh.json`))).isFile());
@@ -248,7 +263,9 @@ test('giao-viec khóa quyền, xác minh ảnh và luôn trả một JSON', asyn
     const info = await lstat(file(image));
     assert(info.isFile() && info.nlink === 1 && info.size <= 2 * 1024 * 1024);
   }
-  assert.match(await readFile(file(`${base}/_xem/giao-viec.log`), 'utf8'), /chỉ có trong log/);
+  const runLog = await readFile(file(`${base}/_xem/giao-viec.log`), 'utf8');
+  assert.match(runLog, /chỉ có trong log/);
+  assert(runLog.includes(`Số đếm theo bước: ${JSON.stringify(buoc)}`));
 
   for (const [scenario, message] of [['forbidden-caption', 'caption.threads (hoàn hảo)'],
     ['forbidden-image', 'anh[0].tieu_de (trị viêm)']]) {

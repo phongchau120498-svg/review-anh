@@ -32,9 +32,9 @@ Chọn **một** dạng trong `docs/brand/chung/cach-nghi-content.md` dựa trê
 tools/bang-nguon.sh <sp>
 ```
 
-Lệnh tạo và in đường dẫn mọi trang bảng, mỗi trang 40 ảnh. Dùng Read xem các bảng và mở ảnh gốc trong `nguon/<sp>/` khi cần nhìn kỹ. Chọn 3–4 ảnh theo mục "Chọn ảnh". Nếu cần xem cả ảnh đã lọc, dùng `tools/bang-nguon.sh <sp> --tat-ca`.
+Lệnh tạo và in đường dẫn mọi trang bảng, mỗi trang 40 ảnh. Nếu có `kho/<sp>-uu-tien.txt`, xem một trang trước bằng `tools/bang-nguon.sh <sp> --uu-tien` rồi mở các trang còn lại khi cần. Dùng Read xem bảng và mở ảnh gốc trong `nguon/<sp>/` khi cần nhìn kỹ. Chọn 3–4 ảnh theo mục "Chọn ảnh". Nếu cần xem cả ảnh đã lọc, dùng `tools/bang-nguon.sh <sp> --tat-ca`.
 
-Đối chiếu từng ảnh với ý cụ thể của slide trong khung dọc 9:16. Ưu tiên ảnh có vùng trống ở giữa cho chữ, với nhãn sản phẩm và phần thao tác nằm ngoài vùng chữ.
+Ảnh trên bảng đã cắt đúng khung dọc 9:16. Vạch vàng đứt đánh dấu vùng chữ bìa, vạch xanh liền đánh dấu vùng chữ chi tiết. Tiêu đề và nhóm ý bắt đầu tại mép trên của hộp tương ứng. Đối chiếu từng ảnh với ý của slide, giữ nhãn sản phẩm và phần thao tác ngoài vùng dự định đặt chữ.
 
 ## 4. Viết `nguon/<sp>/bo-anh.json`
 
