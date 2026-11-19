@@ -313,8 +313,11 @@ async function main(args) {
     const [draft, ...extra] = traiNghiem ? files : args;
     if (!draft || extra.length) throw new Error('Dùng: node tools/dung-bo-anh.mjs [--trai-nghiem] nguon/<sp>/bo-anh.json');
     const input = await mediaPath(draft);
-    if ((await stat(input)).size > 100000) throw new Error('JSON bộ ảnh tối đa 100 KB');
-    console.log(JSON.stringify(await renderSet(JSON.parse(await readFile(input, 'utf8')), { traiNghiem }), null, 2));
+    const data = JSON.parse(await readBoundedFile(input, 100000, 'JSON bộ ảnh'));
+    const result = await renderSet(data, { traiNghiem });
+    const { soatChu } = await import('./soat-chu.mjs');
+    const soat_chu = await soatChu({ data, product: result.san_pham, traiNghiem });
+    console.log(JSON.stringify({ ...result, soat_chu }, null, 2));
   }
 }
 

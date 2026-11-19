@@ -180,6 +180,21 @@ test('kiem duyệt hết từng ảnh, báo format/kích thước/metadata/8MB/2
   await writeFile(path.join(source, 'bo-anh.json'), JSON.stringify(set('MẪU chạy từ /tmp')));
   const cli = await exec(process.execPath, [path.join(ROOT, 'tools/dung-bo-anh.mjs'), `nguon/${product}/bo-anh.json`], { cwd: os.tmpdir() });
   assert(JSON.parse(cli.stdout).kiem.every(check => check.dat));
+  assert.deepEqual(JSON.parse(cli.stdout).soat_chu, { dat: true, loi: [], canh_bao: [] });
+});
+
+test('CLI dựng khi chữ vướng cụm cấm, giữ chặn giá/link và giữ cấu trúc manifest', async () => {
+  const draft = path.join(source, 'bo-anh.json');
+  const render = () => exec(process.execPath, [path.join(ROOT, 'tools/dung-bo-anh.mjs'), '--trai-nghiem', draft]);
+  await writeFile(draft, JSON.stringify(set('Trị viê.m')));
+  const { stdout } = await render();
+  const data = JSON.parse(stdout);
+  assert(data.kiem.every(check => check.dat));
+  assert.equal(data.soat_chu.dat, false);
+  assert(data.soat_chu.loi.some(({ loai, cum }) => loai === 'cum-cam' && cum === 'trị viêm'));
+  assert.equal(JSON.parse(await readFile(path.join(ROOT, data.manifest), 'utf8')).soat_chu, undefined);
+  await writeFile(draft, JSON.stringify(set('Chỉ 999k tại https://example.com')));
+  await assert.rejects(render(), /Link trong chữ không khớp/);
 });
 
 test('chu từ thư mục con theo cwd cũ và chỉ in đúng đường dẫn ra trên stdout', async () => {
