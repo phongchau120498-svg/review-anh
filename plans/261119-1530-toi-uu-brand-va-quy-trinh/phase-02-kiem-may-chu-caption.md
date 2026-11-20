@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Kiểm máy chữ và caption"
-status: pending
+status: completed
 priority: P1
 dependencies: [1]
 ---
@@ -72,9 +72,9 @@ tools/giao-viec.mjs import brandOf từ brand.mjs (bỏ bản sao trong file);
 
 ## Success Criteria
 
-- [ ] Test hẹp đạt. Có test cho cả trường hợp bắt đúng và trường hợp không bắt nhầm.
-- [ ] `node tools/soat-chu.mjs nguon/body-oil/bo-anh.json` chạy trên một bộ thật, in JSON và mã thoát đúng.
-- [ ] `giao-viec` không còn bản sao của `brandOf`. Caption có cụm cấm làm lượt dựng trả `ok:false`.
+- [x] Test hẹp đạt. Có test cho cả trường hợp bắt đúng và trường hợp không bắt nhầm.
+- [x] `node tools/soat-chu.mjs nguon/body-oil/bo-anh.json` chạy trên một bộ thật, in JSON và mã thoát đúng.
+- [x] `giao-viec` không còn bản sao của `brandOf`. Caption có cụm cấm làm lượt dựng trả `ok:false`.
 
 ## Risk Assessment
 

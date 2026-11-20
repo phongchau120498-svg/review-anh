@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Skill thêm brand"
-status: pending
+status: in-progress
 priority: P3
 dependencies: [1, 4]
 ---
@@ -40,8 +40,8 @@ Biến `docs/them-brand-san-pham-nguon.md` thành lệnh `/them-brand`, theo cá
 ## Success Criteria
 
 - [ ] `/them-brand` có mặt. Chạy thử khô tạo đủ 6 file brand cộng mục lục, và agent soát khung chấm "đạt" hoặc chỉ ra đúng chỗ thiếu.
-- [ ] Không còn dấu vết brand thử trong repo.
-- [ ] File hướng dẫn liệt kê đủ bộ file mới.
+- [x] Không còn dấu vết brand thử trong repo.
+- [x] File hướng dẫn liệt kê đủ bộ file mới.
 
 ## Risk Assessment
 

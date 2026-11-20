@@ -2,6 +2,11 @@
 
 Nhật ký mốc, quyết định và sự cố, mới nhất ở trên. Chi tiết nằm trong commit và plan được dẫn.
 
+## 2026-11-20
+
+- **Chặn chữ che nhãn trong bản dựng trải nghiệm.** Vạch trên bảng nguồn giúp chọn ảnh nhưng ba lượt thật vẫn dùng thêm bảng và hai bộ còn lỗi. Dùng vùng bảo vệ đánh dấu trên các ảnh đã xem để renderer báo chính xác slide cần đổi. Headless tạo bảng ưu tiên trước để bỏ một lượt gọi công cụ và đo toàn thời gian chuẩn bị. Bằng chứng kiểm cục bộ và phần nghiệm thu còn mở ở [Tracking T-12](tracking.md#kiểm-cục-bộ-vùng-bảo-vệ-và-chuẩn-bị-bảng).
+- **Soát đúng lượt dựng.** Lưu bản chữ đã dựng cạnh caption và bảng xem để lượt soát tiếp tục dùng nội dung cũ nếu draft nguồn đã đổi. Anh chọn chốt triển khai trước, nghiệm thu sau. Các bước còn lại nằm trong [plan](../../plans/261119-1530-toi-uu-brand-va-quy-trinh/plan.md#nghiệm-thu-sau-triển-khai).
+
 ## 2026-11-19
 
 - **Duyệt thử bảng chọn ảnh 9:16 và đo theo bước.** Anh chọn giữ mẫu slide và model mặc định. Bảng nguồn cắt giữa giống khung dựng rồi kẻ vạch cho chữ bìa và chi tiết. Body Oil có trang ưu tiên để thử giảm lượt mở bảng, kèm đường xem toàn kho. Bộ đếm phân biệt thao tác được phép, lần dựng thành công và lần bị từ chối, vì tổng `num_turns` trong log cũ chưa đủ để phân tích nguyên nhân. Xem [bằng chứng T-12](tracking.md#đo-lại-với-bảng-916).

@@ -1,12 +1,12 @@
 # HANDOFF
 
-Cập nhật lần cuối: 2026-11-19 17:34 — Codex
+Cập nhật lần cuối: 2026-11-20 — Codex
 
-## Tối ưu bộ brand và quy trình · phụ trách: phiên 19/11 · nhánh: `main`
+## Tối ưu bộ brand và quy trình · phụ trách: phiên 20/11 · nhánh: `main`
 
-- T-12 còn nghiệm thu số vòng và bố cục. Xem [ba lượt Body Oil và số đếm theo bước](docs/protocols/tracking.md#đo-lại-với-bảng-916). Bằng chứng ảnh và log ở `ra/_kiem-t12/` trên máy này.
-- Tiếp theo nếu anh giao: dùng lại các ảnh từng che nhãn, nhất là `IMG_8008.jpg`, để kiểm cục bộ cách chặn chọn ảnh vướng chữ và lý do quay về bảng đầy đủ. Giữ mẫu và model mặc định. Lượt này đã dùng đúng ba lượt Claude được giao. Yêu cầu làm nhanh và vòng góp ý thật còn chờ kiểm.
-- Đã thử, thất bại: gate fixture gặp `EMFILE` khi dùng watcher mặc định, kể cả tăng giới hạn file. Chạy bằng dịch vụ systemd của user với polling chỉ dành cho test đã đạt. Cú pháp và bằng chứng ở [Tracking](docs/protocols/tracking.md#đo-lại-với-bảng-916).
+- T-12 còn nghiệm thu các phase 3, 5 và 7. Xem [bằng chứng và điều kiện xong](docs/protocols/tracking.md#kiểm-cục-bộ-vùng-bảo-vệ-và-chuẩn-bị-bảng). Bản dựng mẫu bột ủ cục bộ còn thiếu góc ảnh thể hiện độ sệt. Ảnh và log cục bộ ở `ra/_kiem-t12-vung/`.
+- Anh chọn nghiệm thu sau. Khi tới lượt nghiệm thu, làm theo [các bước và bằng chứng cần giữ](plans/261119-1530-toi-uu-brand-va-quy-trinh/plan.md#nghiệm-thu-sau-triển-khai). Love Oil dùng bằng chứng cũ. Giữ mẫu và model mặc định.
+- Đã thử, thất bại: gate fixture có thể gặp `EMFILE` với watcher mặc định. Lệnh dùng polling riêng cho test nằm trong Tracking. Lượt đo thật gần nhất vẫn là 34 vòng.
 - Dở dang chưa commit: không.
 - T-10 còn kiểm `dong-bo` trên máy thứ hai. T-02 và T-06 chờ anh chốt.
 

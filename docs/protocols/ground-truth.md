@@ -1,6 +1,6 @@
 # Ground Truth
 
-Cập nhật 19/11/2026. Hiện trạng đã kiểm. Thiết kế xem [Blueprint](../BLUEPRINT.md).
+Cập nhật 20/11/2026. Hiện trạng đã kiểm. Thiết kế xem [Blueprint](../BLUEPRINT.md).
 
 ## Mục đích
 
@@ -11,8 +11,8 @@ Dựng bộ ảnh review dọc 9:16 có chữ tiếng Việt từ kho ảnh sả
 - Node.js (máy anh dùng v26), ImageMagick 7 có HEIC, FFmpeg, Playwright Chromium, util-linux `flock`, Gitleaks 8.30.1. Cài theo README, mục "Cài trên máy".
 - Lệnh chính:
   - `tools/bang-nguon.sh <sp> [trang|--tat-ca|--uu-tien]`: bảng xem nguồn cắt 9:16 và có vạch vùng chữ. Bảng thường có tối đa 40 ảnh mỗi trang. Xem [cách dùng bảng ưu tiên](../../README.md#xem-và-lọc-ảnh-nguồn).
-  - `node tools/dung-bo-anh.mjs [--trai-nghiem] nguon/<sp>/bo-anh.json`: dựng bộ ảnh.
-  - `node tools/soat-chu.mjs [--ban-hang] nguon/<sp>/bo-anh.json`: kiểm chữ trên slide, có tùy chọn kiểm caption của lượt dựng. Xem [cú pháp trong README](../../README.md#dựng-bộ-ảnh).
+  - `node tools/dung-bo-anh.mjs [--trai-nghiem] nguon/<sp>/bo-anh.json`: dựng bộ ảnh. Bản trải nghiệm kiểm va chạm chữ với [vùng bảo vệ có đánh dấu](../../README.md#dựng-bộ-ảnh).
+  - `node tools/soat-chu.mjs [--ban-hang] nguon/<sp>/bo-anh.json`: kiểm chữ trên slide. Khi soát caption, dùng bản chụp draft từ cùng lượt dựng. Xem [cú pháp trong README](../../README.md#dựng-bộ-ảnh).
   - `tools/drive-kho.sh dong-bo|tai|khung`: lấy nguồn từ Drive.
   - `tools/giao-viec.sh <sp> [ghi chú]`: giao việc cho Claude Code headless, kiểm cả caption trước khi trả kết quả.
 - Quality gate: `npm test`, gồm fixture OpenMausBot nên cần `../OpenMausBot`. Thay đổi nhỏ chạy test hẹp của phần sửa: `node --test tools/<file>.test.mjs mcp/server.test.mjs`.

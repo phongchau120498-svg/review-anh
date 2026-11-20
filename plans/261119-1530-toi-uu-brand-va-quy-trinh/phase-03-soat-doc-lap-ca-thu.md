@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Soát độc lập và ca thử"
-status: pending
+status: in-progress
 priority: P2
 dependencies: [1, 2]
 ---
@@ -60,8 +60,8 @@ VI PHẠM:
 
 ## Success Criteria
 
-- [ ] Agent `soat-bo-anh` có mặt, chỉ đọc, trả đúng khuôn.
-- [ ] `/lam-bo-anh` chạy `soat-chu` rồi agent soát trước khi trình, có giới hạn 2 vòng.
+- [x] Agent `soat-bo-anh` có mặt, chỉ đọc, trả đúng khuôn.
+- [x] `/lam-bo-anh` chạy `soat-chu` rồi agent soát trước khi trình, có giới hạn 2 vòng.
 - [ ] 3 ca thử chạy xong: ca 1 và 2 đạt `soat-chu`; ca 3 dừng lại hỏi. Kết quả ghi Tracking kèm `run_id`.
 
 ## Risk Assessment

@@ -1,7 +1,7 @@
 ---
 phase: 7
 title: "Giảm vòng gọi và đo lường"
-status: pending
+status: in-progress
 priority: P1
 dependencies: [2, 4]
 ---
@@ -98,14 +98,14 @@ giao-viec      prompt: [luật cố định][chung/cach-nghi-content][<brand>/th
 
 ## Success Criteria
 
-- [ ] Test hẹp đạt:
+- [x] Test hẹp đạt:
   ```bash
   node --test tools/loc-anh.test.mjs tools/dung-bo-anh.test.mjs tools/giao-viec.test.mjs tools/soat-chu.test.mjs
   ```
   `bash -n` các script đạt.
-- [ ] Ngưỡng lọc ghi trong code, kèm số liệu body-oil: còn bao nhiêu ảnh, loại bao nhiêu. Có bằng chứng đã xem bằng mắt các ảnh bị loại.
+- [x] Ngưỡng lọc ghi trong code, kèm số liệu body-oil: còn bao nhiêu ảnh, loại bao nhiêu. Có bằng chứng đã xem bằng mắt các ảnh bị loại.
 - [ ] Sau 3 lượt đo lại, **trung vị số vòng giảm ít nhất 30%** so với đường cơ sở (trung vị 32,5 vòng), và chất lượng bộ ảnh vẫn đạt `soat_chu` cùng checklist. Không đạt thì ghi rõ lý do và vòng nào còn thừa, không sửa số.
-- [ ] `ra/_do-luong.tsv` có đủ các dòng đo.
+- [x] `ra/_do-luong.tsv` có đủ các dòng đo.
 
 ## Risk Assessment
 

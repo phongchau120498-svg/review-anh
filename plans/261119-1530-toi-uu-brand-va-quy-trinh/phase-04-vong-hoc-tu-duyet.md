@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Vòng học từ duyệt"
-status: pending
+status: completed
 priority: P2
 dependencies: [2]
 ---
@@ -78,9 +78,9 @@ node tools/ghi-bai-hoc.mjs <sp> <run_id> <duyet|sua|bo> <loai> "<lý do>"
 
 ## Success Criteria
 
-- [ ] Test hẹp đạt.
-- [ ] Ghi thử một dòng bằng một `run_id` thật của Moaw thì `bai-hoc.md` đúng khuôn. Xóa dòng thử trước khi commit, hoặc giữ lại nếu đó là kết quả duyệt thật.
-- [ ] `/lam-bo-anh` đọc bài học trước khi viết, ghi bài học sau khi người dùng trả lời, và chỉ đề xuất sửa brand khi đủ điều kiện.
+- [x] Test hẹp đạt.
+- [x] Ghi thử một dòng bằng một `run_id` thật của Moaw thì `bai-hoc.md` đúng khuôn. Xóa dòng thử trước khi commit, hoặc giữ lại nếu đó là kết quả duyệt thật.
+- [x] `/lam-bo-anh` đọc bài học trước khi viết, ghi bài học sau khi người dùng trả lời, và chỉ đề xuất sửa brand khi đủ điều kiện.
 
 ## Risk Assessment
 

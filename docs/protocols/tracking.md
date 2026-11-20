@@ -1,6 +1,6 @@
 # Tracking
 
-Cập nhật 19/11/2026. Trạng thái: **chưa làm / đang làm / đã kiểm chứng / bị chặn**. Chỉ ghi "đã kiểm chứng" khi có bằng chứng đạt điều kiện xong. Lịch sử và lý do ở [Tracelog](tracelog.md). Chi tiết chặng nằm trong plan được dẫn.
+Cập nhật 20/11/2026. Trạng thái: **chưa làm / đang làm / đã kiểm chứng / bị chặn**. Chỉ ghi "đã kiểm chứng" khi có bằng chứng đạt điều kiện xong. Lịch sử và lý do ở [Tracelog](tracelog.md). Chi tiết chặng nằm trong plan được dẫn.
 
 | Mã | Mục tiêu | Trạng thái | Phụ trách | Phụ thuộc / trở ngại | Điều kiện xong | Bằng chứng |
 |---|---|---|---|---|---|---|
@@ -15,7 +15,7 @@ Cập nhật 19/11/2026. Trạng thái: **chưa làm / đang làm / đã kiểm 
 | T-09 | Kiểu chữ trên ảnh theo brand (hộp trắng mờ, chữ có chân như slide Moaw) | chưa làm, chờ user chốt | — | Quyết định thiết kế | Anh duyệt mẫu mới | — |
 | T-10 | Bộ brand dùng chung, `/lam-bo-anh`, `dong-bo`, cấu trúc đa brand, bộ protocol | đang làm | phiên 19/11 | Còn thiếu kiểm `dong-bo` trên máy thứ hai | Test hẹp đạt, `dong-bo` chạy trên máy mới, `/lam-bo-anh` ra một bộ thật trong phiên mới | `f71c7ee`: `node --test tools/*.test.mjs mcp/server.test.mjs` 22/22, `dong-bo` 485 có sẵn / 0 lỗi, giả lập máy mới tải 3 ảnh đúng. Hai bộ thật từ phiên Claude Code mới ở T-12 |
 | T-11 | Bàn giao repo cho công ty: chuyển sang tổ chức, máy dùng chung | chưa làm, chờ user chốt | anh | T-02, T-06 | Sếp clone, cài, chạy `dong-bo` và `/lam-bo-anh` trên máy sếp | — |
-| T-12 | [Tối ưu brand và quy trình](../../plans/261119-1530-toi-uu-brand-va-quy-trinh/plan.md) | đang làm | phiên 19/11 | Hai bộ Body Oil còn chữ đè nhãn hoặc chai, trung vị mới 34 vòng so với mục tiêu ≤ 22,75 | Bộ brand, soát chữ, soát độc lập, bài học, thêm brand, lọc ảnh và số đo hoạt động. Ba ca Moaw đạt kỳ vọng, trung vị số vòng giảm ≥ 30%, review và gate đạt | [Đo lại với bảng 9:16](#đo-lại-với-bảng-916) |
+| T-12 | [Tối ưu brand và quy trình](../../plans/261119-1530-toi-uu-brand-va-quy-trinh/plan.md) | đang làm | phiên 20/11 | Phần triển khai xong. Anh chọn nghiệm thu trên Claude sau để xét bố cục, soát khung brand và đo lại so với mục tiêu ≤ 22,75 vòng | Bộ brand, soát chữ, soát độc lập, bài học, thêm brand, lọc ảnh và số đo hoạt động. Ba ca Moaw đạt kỳ vọng, trung vị số vòng giảm ≥ 30%, review và gate đạt | [Kiểm cục bộ vùng bảo vệ và chuẩn bị bảng](#kiểm-cục-bộ-vùng-bảo-vệ-và-chuẩn-bị-bảng) |
 
 ## T-12 · Tối ưu brand và quy trình
 
@@ -76,10 +76,26 @@ Trung vị số vòng tăng từ 32,5 lên 37 (+13,85%), trong khi mục tiêu l
 
 Cả ba lượt dùng `claude-opus-5-5` mặc định, `ok: true`, 9/9 JPEG và soát lại cả chữ ảnh lẫn caption bằng `soatChu` đạt, 0 cảnh báo. Bộ đếm hook và Claude CLI đều ghi 0 từ chối. Cả ba đều rời bảng ưu tiên và mở thêm bảng nguồn. Tổng thời gian tạo bảng lần lượt là 29,243 / 29,205 / 15,023 giây, thời gian thực hiện API là 188,190 / 121,178 / 193,210 giây theo log. File `ra/_kiem-t12/do-luong.tsv` giữ số đo gốc. Trung vị **34 vòng** giảm 8,1% so với 37 vòng lần trước nhưng vẫn cao hơn đường cơ sở 32,5, trong khi thời gian trung vị tăng từ 119,512 lên 213,748 giây. **T-12 chưa đạt tiêu chí số vòng và bố cục.** Không chạy lượt thứ tư.
 
+| Trung vị | Vòng | Giây | Token vào | Cache ghi | Cache đọc | Token ra |
+|---|---:|---:|---:|---:|---:|---:|
+| Đường cơ sở, 4 lượt | 32,5 | 109 | 41 | 26.404 | ≈354.500 | ≈7.750 |
+| Sau phase 7, 3 lượt | 37 | 119,512 | 42 | 44.207 | 676.028 | 9.081 |
+| Sau bảng 9:16, 3 lượt | 34 | 213,748 | 44 | 49.959 | 740.885 | 15.494 |
+
+### Kiểm cục bộ vùng bảo vệ và chuẩn bị bảng
+
+- **20/11, `986d37f`.** `dung-bo-anh --trai-nghiem` dùng vùng bảo vệ đã đánh dấu cho từng ảnh. Lỗi va nhãn, thao tác hoặc tràn chữ được gom theo slide. `giao-viec` chuẩn bị bảng ưu tiên trước phiên Claude, giữ đường tạo bảng thường khi bước này thất bại, ghi thời gian chuẩn bị và mở rộng bảng riêng. Ngân sách Claude trừ thời gian chuẩn bị. Bản bán hàng và MCP vẫn đi luồng hiện có. `mau/` và cấu hình model mặc định không đổi.
+- **Tái hiện cục bộ.** Chạy `node tools/dung-bo-anh.mjs --trai-nghiem <draft>` với hai draft Body Oil của lượt 2 và 3 trong `ra/_kiem-t12/` và draft bột ủ cũ. Cả ba thoát `1`, chỉ đúng sáu slide đè nhãn, cổ chai, bàn chải hoặc phần bột. Hai bản sửa thủ công Body Oil `2026-11-20T03-23-24-102Z-821a9943` và bột ủ `2026-11-20T03-23-25-404Z-d8a9bd0d` đạt 6/6 JPEG và soát chữ ảnh. Xem mắt, nhãn chính của hai bộ đọc rõ. Slide pha bột vẫn cần ảnh thể hiện độ sệt để nghiệm thu nội dung. Bằng chứng cục bộ ở `ra/_kiem-t12-vung/`.
+- **Phải đo lại trên Claude.** Hai lệnh `tools/bang-nguon.sh <sp> --uu-tien` tạo hai bảng 8 ảnh trong tổng khoảng 3 giây với cache chấm chưa có, không sinh cache chấm. Stub xác nhận Claude nhận đúng đường dẫn bảng tạo trước, chuyển sang lệnh bảng thường khi còn JPEG cũ mà prebuild thất bại, và lỗi bố cục qua launcher không được tính là dựng thành công. Đây là kiểm cục bộ. Số đo `num_turns` thật gần nhất vẫn là trung vị 34.
+- **Gate và review.** Chạy `node --test tools/giao-viec.test.mjs tools/dung-bo-anh.test.mjs tools/loc-anh.test.mjs tools/soat-chu.test.mjs` qua dịch vụ systemd của user, đạt 22/22. Review độc lập rà renderer, launcher, đường bán hàng và MCP. Đã sửa việc trừ deadline, số đo prebuild và gom lỗi, rà lại không còn blocker. Gate `npm test` qua systemd với `CHOKIDAR_USEPOLLING=true` và `CHOKIDAR_INTERVAL=2000` đạt 46/46, không bỏ qua test nào. Kiểm cú pháp và `git diff --check` đạt.
+- **Soát đúng lượt dựng.** `node --test tools/dung-bo-anh.test.mjs tools/soat-chu.test.mjs mcp/server.test.mjs` đạt 29/29. Bản chụp JSON vẫn soát đúng sau khi draft nguồn đổi. Kiểm sai lượt, symlink, hardlink và bảng xem bị lệnh `luoi` ghi đè. Review độc lập đã rà lại việc kiểm SHA-256 của bảng xem và bản chụp, không còn lỗi Critical hoặc High. Luồng MCP và lệnh soát manifest cũ vẫn qua test.
+- **Gate cuối phần triển khai.** `systemd-run --user --quiet --wait --pipe --collect --working-directory "$PWD" --setenv "PATH=$PATH" --setenv CHOKIDAR_USEPOLLING=true --setenv CHOKIDAR_INTERVAL=2000 -- npm test` thoát 0, đạt 46/46, 0 bỏ qua. `node --check` trên 11 file `tools/*.mjs`, `bash -n` trên 5 file `tools/*.sh` và `git diff --check` đạt. Kiểm 71 liên kết nội bộ trên 17 file Markdown có sửa, 0 liên kết gãy. Log cục bộ ở `ra/_kiem-t12-vung/gate-snapshot.log`.
+- **Còn nghiệm thu theo yêu cầu của anh.** Phase 3 cần Claude chạy lại Body Oil và bột ủ với kết luận soát độc lập. Love Oil đã có bằng chứng. Phase 5 cần lượt `/them-brand thu` giữ kết luận và vị trí cụ thể reviewer chỉ ra. Phase 7 cần ba lượt Body Oil cùng ghi chú, đối chiếu mốc ≤ 22,75 vòng và kiểm mắt. Phiên này dùng renderer cục bộ và stub. Xem [các bước nghiệm thu](../../plans/261119-1530-toi-uu-brand-va-quy-trinh/plan.md#nghiệm-thu-sau-triển-khai).
+
 ## Nợ kỹ thuật
 
 - Đề xuất cách lưu trữ bớt bài học khi bảng `bai-hoc.md` vượt 200 dòng. Lượt viết chỉ đọc 10 dòng gần nhất.
-- Hai phiên `/lam-bo-anh` chạy cùng sản phẩm có thể ghi chung `bo-anh.json` trong khi agent soát đang đọc. Luồng headless giữ khóa theo sản phẩm và dùng bản chụp draft.
+- Hai phiên `/lam-bo-anh` chạy cùng sản phẩm có thể ghi đè bản nháp nguồn trước lúc dựng. Soát bản đã dựng dùng bản chụp theo lượt. Luồng headless giữ khóa theo sản phẩm.
 - Chưa đo ngưỡng 75 giây khi headless chấm kho lớn chưa có cache rồi tạo mọi trang trong một lệnh. Body Oil chỉ có ba trang.
 - `read_file` của MausBot từ chối file hardlink, nên bot không gửi được ảnh gốc trong `nguon/`, chỉ gửi được ảnh trong `ra/`.
 - Bảng xem 40 ảnh HEIC tốn khoảng 2,5 GB RAM cho magick. Cần tính khi chạy trên máy chủ nhỏ.

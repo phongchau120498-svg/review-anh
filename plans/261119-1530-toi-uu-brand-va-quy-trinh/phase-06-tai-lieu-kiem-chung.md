@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: "Tài liệu và kiểm chung"
-status: pending
+status: completed
 priority: P1
 dependencies: [1, 2, 3, 4, 5, 7]
 ---
@@ -42,10 +42,10 @@ Cập nhật tài liệu cho khớp với phần đã làm, review độc lập 
 
 ## Success Criteria
 
-- [ ] Tài liệu khớp code. Không có liên kết gãy.
-- [ ] Review độc lập không còn lỗi Critical hay High chưa xử lý.
-- [ ] `npm test` đạt toàn bộ. Lệnh và kết quả thật ghi trong Tracking T-12.
-- [ ] Working tree sạch sau commit. Chưa push nếu chưa được phép.
+- [x] Tài liệu khớp code. Không có liên kết gãy.
+- [x] Review độc lập không còn lỗi Critical hay High chưa xử lý.
+- [x] `npm test` đạt toàn bộ. Lệnh và kết quả thật ghi trong Tracking T-12.
+- [x] Working tree sạch sau commit. Chưa push nếu chưa được phép.
 
 ## Risk Assessment
 

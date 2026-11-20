@@ -41,7 +41,7 @@ tools/bang-nguon.sh <sp> --uu-tien
 node tools/loc-anh.mjs <sp> --diem
 ```
 
-`bang-nguon` tạo mọi trang theo mặc định, hoặc chỉ trang được chỉ định. Mỗi trang có tối đa 40 ảnh đã cắt theo khung thật 9:16. Vạch vàng đứt đánh dấu vùng chữ bìa và vạch xanh liền đánh dấu vùng chữ chi tiết. Lệnh lọc ảnh mờ, tối và gần trùng, giữ ảnh nét nhất trong nhóm gần trùng. Dùng `--uu-tien` để mở một trang tối đa 16 ảnh từ `kho/<sp>-uu-tien.txt` khi sản phẩm có danh sách chọn sẵn. Hiện Body Oil có danh sách này. Dùng `--tat-ca` để xem toàn bộ nguồn qua các file `trang-tat-ca-N.jpg`. `loc-anh` in tên ảnh được giữ và có thể trả điểm cùng lý do loại qua `--diem`. Điểm được lưu theo thời gian sửa và kích thước file trong `nguon/<sp>/.cham-anh.json`, hoặc trong thư mục bảng xem khi chạy headless.
+`bang-nguon` tạo mọi trang theo mặc định, hoặc chỉ trang được chỉ định. Mỗi trang có tối đa 40 ảnh đã cắt theo khung thật 9:16. Vạch vàng đứt đánh dấu vùng chữ bìa và vạch xanh liền đánh dấu vùng chữ chi tiết. Bảng thường lọc ảnh mờ, tối và gần trùng. Dùng `--uu-tien` để mở một trang tối đa 16 ảnh chọn bằng mắt trong `kho/<sp>-uu-tien.txt`. Body Oil và bột ủ thảo mộc có danh sách sẵn. Bảng ưu tiên chỉ lấy những tên trong danh sách còn có trong kho. Claude headless dùng bảng được tạo trước nếu bước này thành công. Dùng `--tat-ca` để xem toàn bộ nguồn qua các file `trang-tat-ca-N.jpg`. `loc-anh` in tên ảnh được giữ và có thể trả điểm cùng lý do loại qua `--diem`. Điểm được lưu theo thời gian sửa và kích thước file trong `nguon/<sp>/.cham-anh.json`, hoặc trong thư mục bảng xem khi chạy headless.
 
 `dong-bo` dùng `tools/sua-duoi.sh <thư-mục-tạm>` để sửa đuôi theo định dạng thật của ảnh **vừa tải**. Nếu tên thay đổi, `dong-bo` cập nhật cột `tai_ve` trước khi tạo hardlink sản phẩm. Dùng lệnh sửa đuôi với ảnh mới trong thư mục tạm.
 
@@ -59,12 +59,14 @@ JSON bộ ảnh theo [bộ MẪU](docs/bo-anh-mau.json), gồm `san_pham` và `a
 node tools/dung-bo-anh.mjs nguon/san-pham-mau/bo-anh.json
 node tools/dung-bo-anh.mjs --trai-nghiem nguon/<sp>/bo-anh.json
 node tools/soat-chu.mjs nguon/<sp>/bo-anh.json
-node tools/soat-chu.mjs nguon/<sp>/bo-anh.json --caption ra/<sp>/<run_id>/_xem/caption.json
+node tools/soat-chu.mjs ra/<sp>/<run_id>/_xem/bo-anh.json --caption ra/<sp>/<run_id>/_xem/caption.json
 ```
 
-CLI trả JSON gồm `san_pham`, `run_id`, `thu_muc`, `manifest`, `anh` (danh sách đường dẫn ảnh), `kiem` (kết quả từng ảnh), `brief` (tên/giá/link), `bang_xem` và `soat_chu`. Đường dẫn tính theo gốc repo dù chạy từ thư mục khác. Tên sản phẩm chuẩn hóa NFC, bỏ dấu về `[a-z0-9-]` và được trả lại rõ trong kết quả. Ảnh nguồn bắt buộc ở đúng thư mục sản phẩm. Mọi nguồn và đích dùng realpath và path.relative để chặn traversal và symlink thoát `nguon/` hoặc `ra/`. Dựng vào thư mục tạm, rồi đổi tên một lần khi cả bộ đạt kiểm ảnh.
+CLI trả JSON gồm `san_pham`, `run_id`, `thu_muc`, `manifest`, `anh` (danh sách đường dẫn ảnh), `kiem` (kết quả từng ảnh), `brief` (tên/giá/link), `bang_xem`, `ban_nhap` và `soat_chu`. `ban_nhap` trỏ đến bản chụp JSON ở `_xem/bo-anh.json` của đúng lượt dựng. Đường dẫn tính theo gốc repo dù chạy từ thư mục khác. Tên sản phẩm chuẩn hóa NFC, bỏ dấu về `[a-z0-9-]` và được trả lại rõ trong kết quả. Ảnh nguồn bắt buộc ở đúng thư mục sản phẩm. Mọi nguồn và đích dùng realpath và path.relative để chặn traversal và symlink thoát `nguon/` hoặc `ra/`. Dựng vào thư mục tạm, rồi đổi tên một lần khi cả bộ đạt kiểm ảnh.
 
-`soat_chu` gồm `dat`, `loi` và `canh_bao`. Khi có cụm cấm, CLI dựng vẫn trả ảnh để sửa và báo `soat_chu.dat: false`. Độ dài vượt ngưỡng chỉ cảnh báo. Với `soat-chu.mjs`, thêm `--ban-hang` trước đường dẫn draft để kiểm theo brief bán hàng. Thêm `--caption` và đường dẫn caption của cùng lượt dựng để kiểm cả hai chuỗi `threads` và `tiktok`. Mã thoát là `0` nếu đạt, `1` nếu có lỗi soát, `2` nếu đầu vào hoặc cách gọi sai. Cả `/lam-bo-anh` và luồng headless đều kiểm caption bằng máy trước khi trả.
+`soat_chu` gồm `dat`, `loi` và `canh_bao`. Khi có cụm cấm, CLI dựng vẫn trả ảnh để sửa và báo `soat_chu.dat: false`. Độ dài vượt ngưỡng chỉ cảnh báo. Với `soat-chu.mjs`, thêm `--ban-hang` trước đường dẫn draft để kiểm theo brief bán hàng. Thêm `--caption` và đường dẫn caption để kiểm hai chuỗi `threads`, `tiktok` cùng bản chụp JSON trong manifest của lượt đó. Manifest lưu SHA-256 của bản chụp và bảng xem để phát hiện file bị ghi đè. Manifest cũ thiếu bản chụp vẫn dùng draft trong `nguon/`. Mã thoát là `0` nếu đạt, `1` nếu có lỗi soát, `2` nếu đầu vào hoặc cách gọi sai. Cả `/lam-bo-anh` và luồng headless đều kiểm caption bằng máy trước khi trả.
+
+Bản dựng `--trai-nghiem` đối chiếu từng dòng chữ với vùng nhãn hoặc thao tác đã đánh dấu trong `kho/<sp>-vung-bao-ve.json`. Mỗi tên ảnh ánh xạ tới danh sách `[trái, trên, phải, dưới, mô tả]` theo pixel của ảnh đã crop 1080×1920. Khi phát hiện giao nhau hoặc chữ tràn khung, lệnh báo các slide cần sửa, thoát `1` và dọn bản dựng tạm. Kiểm mắt vẫn áp dụng cho mọi ảnh, kể cả ảnh chưa được đánh dấu.
 
 Chữ được gán bằng `textContent`. Trang tắt JavaScript, có CSP, nhúng font/raster data URI và chặn mọi yêu cầu mạng/file. Decoder ảnh ép theo đuôi JPEG/PNG/HEIC/WebP để từ chối SVG/MVG giả ảnh. Vùng chữ chừa ít nhất 220px trên, 520px dưới và 170px phải; chữ tự xuống dòng/co cỡ, không đủ chỗ thì báo lỗi và bỏ bản tạm.
 
@@ -85,7 +87,7 @@ Dùng `run_id` thật và lý do một dòng tối đa 300 ký tự. Loại gồ
 
 Lượt `tools/giao-viec.sh <sp> [ghi-chu]` trả `canh_bao` về độ dài chữ và caption khi dựng thành công. Lệnh trả `do_luong` khi có số đo từ Claude Code và ghi `ra/_do-luong.tsv`. Các cột gồm model, số vòng, giây, token vào/ra, cache ghi/đọc và chi phí quy ra giá API. Với lượt lỗi có số đo nhưng chưa xác nhận lượt dựng, `run_id` có thể trống. Model mặc định lấy từ cấu hình Claude Code. Chỉ đặt `GIAO_VIEC_MODEL` khi người dùng chọn model cho lượt đó.
 
-Trường `buoc` và dòng “Số đếm theo bước” trong log ghi số yêu cầu đọc, tìm và sửa nháp được hook cho phép, số lần tạo bảng và thử dựng, số thành công và thời gian từng nhóm. `tu_choi_hook` là số lần hook từ chối, `tu_choi_cli` là số Claude CLI báo nếu có. Hai số này có thể trùng nhau. Bộ đếm giữ số lần và thời gian, không lưu đầu vào của công cụ.
+Trường `buoc` và dòng “Số đếm theo bước” trong log ghi số yêu cầu đọc, tìm và sửa nháp được hook cho phép, số lần tạo bảng và thử dựng, số thành công và thời gian từng nhóm. `tao_bang_truoc` đếm lần thử chuẩn bị bảng, `tao_bang_truoc_dat` đếm lần chuẩn bị thành công. Có số đếm và thời gian riêng cho bảng thường và `--tat-ca`. `buoc.tong_ms` gồm phần chuẩn bị và hậu kiểm, còn `do_luong.giay` do Claude Code báo. `tu_choi_hook` và `tu_choi_cli` có thể đếm trùng một lần từ chối. Bộ đếm giữ số lần và thời gian, không lưu đầu vào của công cụ.
 
 ## Các lệnh thử cũ
 

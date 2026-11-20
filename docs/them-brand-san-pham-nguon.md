@@ -44,7 +44,7 @@ Trong Claude Code, gọi `/them-brand [tên hoặc mã brand]`. Mọi agent làm
    - `kho/<brand>.tsv` chỉ có dòng tiêu đề 8 cột, ngăn bằng tab theo đúng thứ tự ở mục “Thêm nguồn mới”. Nhập nguồn và sản phẩm theo các mục tương ứng khi làm các việc đó.
 
 6. **Soát khung brand.** Gọi `soat-bo-anh` với chế độ “soát khung brand”, mã brand, danh sách bài và vị trí các file nguồn agent có thể đọc. Nếu nguồn chỉ có link, đưa đoạn trích hoặc ảnh tương ứng kèm link và vị trí để agent đối chiếu. Sửa lỗi có bằng chứng. Khi thiếu nguồn, báo phần chưa xác minh cùng cách bổ sung.
-7. **Ghi nhận và báo lại.** Ghi một dòng vào [Knowledge](protocols/knowledge-base.md), mục “Brand đang có”, và một mốc vào [Tracelog](protocols/tracelog.md). Trình đường dẫn bộ khung, kết luận soát và các câu hỏi mở kèm khuyến nghị. Ghi bằng chứng vào [Tracking](protocols/tracking.md).
+7. **Ghi nhận và báo lại.** Ghi một dòng vào [Knowledge](protocols/knowledge-base.md), mục “Brand đang có”, và một mốc vào [Tracelog](protocols/tracelog.md). Trình đường dẫn bộ khung, kết luận của agent soát và các câu hỏi mở kèm khuyến nghị. Với mỗi lỗi agent chỉ ra, giữ vị trí `file#mục` hoặc `file:dòng`, bằng chứng ngắn và tình trạng đã sửa hay còn mở trong [Tracking](protocols/tracking.md). Với lượt thử trong thư mục tạm, giữ kết luận và vị trí lỗi trước khi dọn.
 
 Chỉ sửa `docs/brand/chung/` khi người dùng đồng ý áp dụng thay đổi cho mọi brand.
 

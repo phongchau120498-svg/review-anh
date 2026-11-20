@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Nâng cấp giọng văn Moaw"
-status: pending
+status: completed
 priority: P1
 dependencies: []
 ---
@@ -107,10 +107,10 @@ Bổ sung bộ brand Moaw theo mô hình "giọng cố định, tông đổi the
 
 ## Success Criteria
 
-- [ ] Bốn mục mới có mặt. Bảng "là / không là" có 5 dòng.
-- [ ] `vi-du.md` có 2 bộ mẫu và 6–8 cặp. Mọi câu "sau" tra ngược được về slide đã đăng (ghi tên file slide nếu xác định được) hoặc lời anh.
-- [ ] Hai file `cam.txt` có đúng định dạng: mỗi dòng một cụm, `#` là chú thích.
-- [ ] Không còn ô CẦN CHỐT nào thiếu khuyến nghị.
+- [x] Bốn mục mới có mặt. Bảng "là / không là" có 5 dòng.
+- [x] `vi-du.md` có 2 bộ mẫu và 6–8 cặp. Mọi câu "sau" tra ngược được về slide đã đăng (ghi tên file slide nếu xác định được) hoặc lời anh.
+- [x] Hai file `cam.txt` có đúng định dạng: mỗi dòng một cụm, `#` là chú thích.
+- [x] Không còn ô CẦN CHỐT nào thiếu khuyến nghị.
 
 ## Risk Assessment
 

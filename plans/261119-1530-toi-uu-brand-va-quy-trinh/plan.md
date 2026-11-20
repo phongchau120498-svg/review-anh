@@ -1,7 +1,7 @@
 ---
 title: "Tối ưu bộ brand và quy trình làm bộ ảnh"
 description: "Bổ sung giọng văn theo mẫu Anthropic/ECC, kiểm máy chữ, soát độc lập, vòng học từ duyệt, skill thêm brand"
-status: pending
+status: in-progress
 priority: P2
 branch: "main"
 tags: [brand, content, agent]
@@ -43,13 +43,25 @@ Bộ brand (`docs/brand/`) và skill `/lam-bo-anh` đã có khung đúng, nhưng
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Nâng cấp giọng văn Moaw](./phase-01-giong-van-moaw.md) | Pending |
-| 2 | [Kiểm máy chữ và caption](./phase-02-kiem-may-chu-caption.md) | Pending |
-| 3 | [Soát độc lập và ca thử](./phase-03-soat-doc-lap-ca-thu.md) | Pending |
-| 4 | [Vòng học từ duyệt](./phase-04-vong-hoc-tu-duyet.md) | Pending |
-| 5 | [Skill thêm brand](./phase-05-skill-them-brand.md) | Pending |
-| 6 | [Tài liệu và kiểm chung](./phase-06-tai-lieu-kiem-chung.md) | Pending |
-| 7 | [Giảm vòng gọi và đo lường](./phase-07-giam-vong-goi-do-luong.md) | Pending |
+| 1 | [Nâng cấp giọng văn Moaw](./phase-01-giong-van-moaw.md) | Completed |
+| 2 | [Kiểm máy chữ và caption](./phase-02-kiem-may-chu-caption.md) | Completed |
+| 3 | [Soát độc lập và ca thử](./phase-03-soat-doc-lap-ca-thu.md) | In Progress |
+| 4 | [Vòng học từ duyệt](./phase-04-vong-hoc-tu-duyet.md) | Completed |
+| 5 | [Skill thêm brand](./phase-05-skill-them-brand.md) | In Progress |
+| 6 | [Tài liệu và kiểm chung](./phase-06-tai-lieu-kiem-chung.md) | Completed |
+| 7 | [Giảm vòng gọi và đo lường](./phase-07-giam-vong-goi-do-luong.md) | In Progress |
+
+Ngày 20/11, phần triển khai được chốt trước theo yêu cầu của anh. Ba phase 3, 5 và 7 giữ trạng thái đang làm để phản ánh phần nghiệm thu còn mở. Xem [bằng chứng T-12](../../docs/protocols/tracking.md#kiểm-cục-bộ-vùng-bảo-vệ-và-chuẩn-bị-bảng).
+
+## Nghiệm thu sau triển khai
+
+| Phase | Việc cần chạy | Bằng chứng cần giữ |
+|---|---|---|
+| 3 | Chạy lại hai ca dựng trong [ca thử Moaw](../../docs/brand/moaw/ca-thu.md). Giữ bằng chứng cũ của Love Oil. | `run_id`, ảnh, kết quả soát chữ và kết luận soát độc lập. Với bột ủ, đối chiếu ảnh có thể hiện độ sệt. |
+| 5 | Chạy `/them-brand thu` trong thư mục tạm với 5–20 bài nguồn mô phỏng có vị trí tra lại. Dọn thương hiệu giả sau khi lưu kết quả. | Đủ sáu file và TSV. Giữ kết luận soát khung cùng vị trí lỗi cụ thể nếu có. |
+| 7 | Chạy đúng ba lượt `env -u GIAO_VIEC_MODEL tools/giao-viec.sh body-oil 'da bóng mịn sau tắm'` trong bản sao cô lập. Khôi phục cùng draft và điều kiện cache trước mỗi lượt. | Giữ cả lượt lỗi, model, `num_turns`, `do_luong`, `buoc` và bảng xem. So trung vị với mốc ≤ 22,75 vòng và xem nhãn, thao tác, chữ cùng caption của cả ba bộ. |
+
+Ghi kết quả vào T-12. Chốt trạng thái từng phase theo bằng chứng thu được. Giữ mẫu và model mặc định khi nghiệm thu.
 
 ## Thứ tự và phụ thuộc
 
@@ -69,18 +81,18 @@ Bộ brand (`docs/brand/`) và skill `/lam-bo-anh` đã có khung đúng, nhưng
 
 ## Tiêu chí nghiệm thu cả plan
 
-- [ ] Giọng văn Moaw có bảng "Moaw là / Moaw không là", bảng tông theo chỗ đặt chữ, file ví dụ (2–3 bộ mẫu và 6–8 cặp trước/sau), danh sách cụm cấm. Mọi câu ví dụ có nguồn (slide đã đăng hoặc lời anh).
-- [ ] `node tools/soat-chu.mjs nguon/<sp>/bo-anh.json` báo **lỗi** khi:
+- [x] Giọng văn Moaw có bảng "Moaw là / Moaw không là", bảng tông theo chỗ đặt chữ, file ví dụ (2–3 bộ mẫu và 6–8 cặp trước/sau), danh sách cụm cấm. Mọi câu ví dụ có nguồn (slide đã đăng hoặc lời anh).
+- [x] `node tools/soat-chu.mjs nguon/<sp>/bo-anh.json` báo **lỗi** khi:
   - có cụm cấm, kể cả khi viết chèn dấu chấm kiểu `viê.m`;
   - có giá hoặc link trong bản trải nghiệm.
 
   Nó báo **cảnh báo** khi chữ dài quá ngưỡng. `giao-viec` chặn caption có cụm cấm. Tất cả có test.
-- [ ] `/lam-bo-anh` gọi agent soát độc lập (chỉ đọc) trước khi trình. Agent soát trả kết luận có bằng chứng. Bộ trả về tối đa 2 vòng sửa.
-- [ ] `node tools/ghi-bai-hoc.mjs` ghi được một dòng có kiểm hợp lệ vào `docs/brand/<brand>/bai-hoc.md`. `/lam-bo-anh` và `giao-viec` đọc bài học trước khi viết. Đề xuất sửa brand cần người dùng duyệt.
+- [x] `/lam-bo-anh` gọi agent soát độc lập (chỉ đọc) trước khi trình. Agent soát trả kết luận có bằng chứng. Bộ trả về tối đa 2 vòng sửa.
+- [x] `node tools/ghi-bai-hoc.mjs` ghi được một dòng có kiểm hợp lệ vào `docs/brand/<brand>/bai-hoc.md`. `/lam-bo-anh` và `giao-viec` đọc bài học trước khi viết. Đề xuất sửa brand cần người dùng duyệt.
 - [ ] `/them-brand` dẫn đủ quy trình thêm brand và tạo đủ bộ file brand.
 - [ ] 3 ca thử Moaw chạy qua `/lam-bo-anh`: `soat-chu` đạt, agent soát đạt, kết quả ghi trong Tracking.
 - [ ] Lượt `giao-viec` trả `do_luong` và ghi `ra/_do-luong.tsv`. Sau 3 lượt đo lại, trung vị số vòng giảm ≥ 30% so với đường cơ sở 32,5 vòng (phase 7), chất lượng vẫn đạt.
-- [ ] `npm test` đạt toàn bộ. Có một lượt review độc lập cuối plan. Tài liệu và protocol khớp với code.
+- [x] `npm test` đạt toàn bộ. Có một lượt review độc lập cuối plan. Tài liệu và protocol khớp với code.
 
 ## Câu hỏi mở (có khuyến nghị)
 
