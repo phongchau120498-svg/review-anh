@@ -32,7 +32,7 @@ Chọn **một** dạng trong `docs/brand/chung/cach-nghi-content.md` dựa trê
 tools/bang-nguon.sh <sp>
 ```
 
-Lệnh tạo và in đường dẫn mọi trang bảng, mỗi trang 40 ảnh. Nếu có `kho/<sp>-uu-tien.txt`, xem một trang trước bằng `tools/bang-nguon.sh <sp> --uu-tien` rồi mở các trang còn lại khi cần. Dùng Read xem bảng và mở ảnh gốc trong `nguon/<sp>/` khi cần nhìn kỹ. Chọn 3–4 ảnh theo mục "Chọn ảnh". Nếu cần xem cả ảnh đã lọc, dùng `tools/bang-nguon.sh <sp> --tat-ca`.
+Lệnh tạo và in đường dẫn mọi trang bảng, mỗi trang 40 ảnh. Nếu có `kho/<sp>-uu-tien.txt`, xem một trang trước bằng `tools/bang-nguon.sh <sp> --uu-tien`. Chỉ mở thêm bảng khi thiếu ảnh minh họa một ý cụ thể. Dùng Read xem bảng, mở ảnh gốc khi chưa nhìn rõ nhãn hay thao tác cần minh họa. Chọn 3–4 ảnh theo mục "Chọn ảnh". Nếu cần xem cả ảnh đã lọc, dùng `tools/bang-nguon.sh <sp> --tat-ca`.
 
 Ảnh trên bảng đã cắt đúng khung dọc 9:16. Vạch vàng đứt đánh dấu vùng chữ bìa, vạch xanh liền đánh dấu vùng chữ chi tiết. Tiêu đề và nhóm ý bắt đầu tại mép trên của hộp tương ứng. Đối chiếu từng ảnh với ý của slide, giữ nhãn sản phẩm và phần thao tác ngoài vùng dự định đặt chữ.
 
@@ -58,19 +58,19 @@ Soạn caption Threads và tiêu đề TikTok theo giọng brand ngay khi viết
 node tools/dung-bo-anh.mjs --trai-nghiem nguon/<sp>/bo-anh.json
 ```
 
-Với bài bán hàng đã có brief xác nhận, bỏ cờ `--trai-nghiem` khi dựng. Đọc `bang_xem` trong JSON trả về bằng Read. Lưu caption và tiêu đề thành JSON với hai khóa `threads` và `tiktok` ở `ra/<sp>/<run_id>/_xem/caption.json`.
+Với bài bán hàng đã có brief xác nhận, bỏ cờ `--trai-nghiem` khi dựng. Nếu lệnh báo lỗi bố cục, đổi ảnh hoặc rút gọn chữ ở tất cả slide được liệt kê trước lần dựng tiếp theo. Tính lần dựng lỗi vào giới hạn 3 lượt. Khi lệnh thành công, đọc `bang_xem` trong JSON trả về bằng Read. Dùng `ban_nhap` trong cùng kết quả để soát đúng chữ đã dựng. Lưu caption và tiêu đề thành JSON với hai khóa `threads` và `tiktok` ở `ra/<sp>/<run_id>/_xem/caption.json`.
 
 Rà từng slide trên bảng xem, mở ảnh kết quả cỡ thật nếu chưa rõ. Ghi lại ảnh cần đổi nếu chữ che nhãn hoặc phần thao tác, hay ảnh chưa minh họa đúng ý của slide.
 
 Soát theo checklist “Tự soát trước khi trình” trong `docs/brand/chung/cach-nghi-content.md`, gồm cả caption. Dùng `kiem` và `soat_chu` trong kết quả dựng. Lưu caption rồi chạy lệnh dưới đây cho từng lượt, kể cả khi người dùng yêu cầu làm “nhanh”.
 
 ```bash
-node tools/soat-chu.mjs nguon/<sp>/bo-anh.json --caption ra/<sp>/<run_id>/_xem/caption.json
+node tools/soat-chu.mjs ra/<sp>/<run_id>/_xem/bo-anh.json --caption ra/<sp>/<run_id>/_xem/caption.json
 ```
 
 Với bài bán hàng, thêm `--ban-hang` trước đường dẫn `bo-anh.json`. Cảnh báo độ dài trên ảnh chỉ cần sửa nếu chữ vượt bố cục.
 
-Khi kiểm ảnh và soát máy ảnh lẫn caption đều có `dat: true`, gọi Agent với `subagent_type: soat-bo-anh` ngay cả khi tự soát đã thấy lỗi bố cục. Gửi mã brand, loại bản nháp, nguyên văn ghi chú của người dùng (hoặc báo không có), cùng đường dẫn `bo-anh.json`, `bang_xem` và `caption.json` của lượt này. Nếu người dùng yêu cầu làm “nhanh”, bỏ bước gọi agent.
+Khi kiểm ảnh và soát máy ảnh lẫn caption đều có `dat: true`, gọi Agent với `subagent_type: soat-bo-anh` ngay cả khi tự soát đã thấy lỗi bố cục. Gửi mã brand, loại bản nháp, nguyên văn ghi chú của người dùng (hoặc báo không có), cùng đường dẫn `ban_nhap`, `bang_xem` và `caption.json` của lượt này. Nếu người dùng yêu cầu làm “nhanh”, bỏ bước gọi agent.
 
 Gom các lỗi từ tự soát, soát máy và agent của cùng lượt để sửa một lần rồi dựng lại. Tối đa **3 lượt dựng gồm 2 vòng sửa**. Soát đủ mỗi lượt dựng, kể cả sau vòng sửa thứ hai. Sau giới hạn, báo các điểm còn lệch hoặc chưa xác minh khi trình bản nháp. Nếu kiểm ảnh hoặc soát máy còn lỗi, báo lỗi và dừng trước khi trình bộ ảnh.
 

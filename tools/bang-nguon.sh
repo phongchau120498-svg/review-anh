@@ -21,6 +21,8 @@ opts=(); tien_to=trang
 if [[ $mode == --tat-ca ]]; then
   opts+=(--tat-ca)
   tien_to=trang-tat-ca
+elif [[ $mode == --uu-tien ]]; then
+  opts+=(--tat-ca) # Danh sách ưu tiên đã được chọn bằng mắt.
 fi
 node tools/loc-anh.mjs "$sp" "${opts[@]}" --nul > "$tam/anh"
 mapfile -d '' -t anh < "$tam/anh"

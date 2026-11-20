@@ -125,6 +125,31 @@ test('120 ký tự, dấu Việt và iframe hiện nguyên văn; font nhúng, kh
   } finally { await context.close(); }
 });
 
+test('gom mọi slide đè vùng bảo vệ, chỉ tính dòng có chữ và dọn lượt nháp lỗi', async t => {
+  const config = path.join(ROOT, 'kho', `${product}-vung-bao-ve.json`);
+  await writeFile(config, JSON.stringify({
+    '-anh.jpg': [[430, 530, 520, 620, 'nhãn chai']],
+    'anh.png': [[430, 1115, 520, 1175, 'thao tác']],
+  }), { flag: 'wx' });
+  t.after(() => rm(config));
+  const detail = { mau: 'chi-tiet', nguon: `nguon/${product}/anh.png`, tieu_de: 'Tiêu đề', y: ['Dòng một', 'Dòng hai'] };
+  const draft = set('Tiêu đề');
+  draft.anh.push(detail);
+  const longLine = 'Chữ rất dài '.repeat(40);
+  const mixed = { ...draft, anh: [draft.anh[0], { ...detail, y: Array(3).fill(longLine) }, detail] };
+  const before = await readdir(output);
+  await assert.rejects(renderSet(mixed, { browser, traiNghiem: true }), error => {
+    assert.match(error.message, /Slide 1 \(-anh\.jpg\): tiêu đề đè nhãn chai/);
+    assert.match(error.message, /Slide 2 \(anh\.png\): Chữ quá dài/);
+    assert.match(error.message, /Slide 3 \(anh\.png\): dòng ý đè thao tác/);
+    return true;
+  });
+  assert.deepEqual(await readdir(output), before);
+  const clear = { ...draft, anh: [{ ...draft.anh[0], nguon: detail.nguon }, { ...detail, nguon: draft.anh[0].nguon }] };
+  assert((await renderSet(clear, { browser, traiNghiem: true })).kiem.every(check => check.dat));
+  assert((await renderSet(draft, { browser })).kiem.every(check => check.dat));
+});
+
 test('dựng JPEG/PNG, tên bắt đầu bằng -, manifest đúng ảnh đăng và bảng xem riêng', async () => {
   const data = set('MẪU chữ tiếng Việt ỗ ự ẫ');
   data.anh.push({ mau: 'chi-tiet', nguon: `nguon/${product}/anh.png`, tieu_de: 'Chi tiết MẪU', y: ['MẪU một', 'MẪU hai'] });
@@ -142,6 +167,9 @@ test('dựng JPEG/PNG, tên bắt đầu bằng -, manifest đúng ảnh đăng 
   const manifest = JSON.parse(await readFile(path.join(ROOT, result.manifest), 'utf8'));
   assert.deepEqual(manifest.anh, result.anh);
   assert.deepEqual(manifest.kiem, result.kiem);
+  assert.equal(Object.hasOwn(result, 'ban_nhap'), false);
+  assert.deepEqual(Object.keys(manifest).sort(), ['anh', 'bang_xem', 'brief', 'kiem', 'run_id', 'san_pham']);
+  assert.deepEqual(await readdir(path.join(ROOT, result.thu_muc, '_xem')), ['bang-ket-qua.jpg']);
   for (const check of manifest.kiem) {
     assert.equal(check.sha256, createHash('sha256').update(await readFile(path.join(ROOT, check.path))).digest('hex'));
   }
@@ -195,16 +223,39 @@ test('kiem duyệt hết từng ảnh, báo format/kích thước/metadata/8MB/2
   assert.deepEqual(JSON.parse(cli.stdout).soat_chu, { dat: true, loi: [], canh_bao: [] });
 });
 
-test('CLI dựng khi chữ vướng cụm cấm, giữ chặn giá/link và giữ cấu trúc manifest', async () => {
+test('CLI lưu đúng bản nháp của lượt dựng dù nguồn đổi, giữ chặn giá/link', async () => {
   const draft = path.join(source, 'bo-anh.json');
   const render = () => exec(process.execPath, [path.join(ROOT, 'tools/dung-bo-anh.mjs'), '--trai-nghiem', draft]);
-  await writeFile(draft, JSON.stringify(set('Trị viê.m')));
+  const draftData = { ...set('Trị viê.m'), san_pham: product.toUpperCase() };
+  draftData.anh.push({ mau: 'chi-tiet', nguon: `nguon/${product}/anh.png`, tieu_de: 'Tiêu đề', y: ['Dòng một', 'Dòng hai'] });
+  const original = JSON.stringify(draftData, null, 2) + '\n';
+  await writeFile(draft, original);
   const { stdout } = await render();
   const data = JSON.parse(stdout);
+  assert.equal(data.san_pham, product);
   assert(data.kiem.every(check => check.dat));
   assert.equal(data.soat_chu.dat, false);
   assert(data.soat_chu.loi.some(({ loai, cum }) => loai === 'cum-cam' && cum === 'trị viêm'));
-  assert.equal(JSON.parse(await readFile(path.join(ROOT, data.manifest), 'utf8')).soat_chu, undefined);
+  const manifest = JSON.parse(await readFile(path.join(ROOT, data.manifest), 'utf8'));
+  assert.equal(manifest.soat_chu, undefined);
+  assert.equal(data.ban_nhap, `${data.thu_muc}/_xem/bo-anh.json`);
+  assert.equal(manifest.ban_nhap, data.ban_nhap);
+  assert.equal(await readFile(path.join(ROOT, data.ban_nhap), 'utf8'), original);
+  const caption = `${data.thu_muc}/_xem/caption.json`;
+  const review = input => exec(process.execPath, [path.join(ROOT, 'tools/soat-chu.mjs'), input, '--caption', caption])
+    .then(() => null, error => error);
+  await writeFile(path.join(ROOT, caption), JSON.stringify({ threads: 'Ảnh mẫu', tiktok: 'Ảnh mẫu' }));
+  await writeFile(draft, JSON.stringify(set('Ảnh mẫu')));
+  for (const input of [draft, data.ban_nhap]) {
+    const error = await review(input);
+    assert.equal(error?.code, 1);
+    assert.deepEqual(JSON.parse(error.stdout), data.soat_chu);
+  }
+  await exec('bash', [path.join(ROOT, 'tools/tiktok-anh.sh'), 'luoi', data.anh[0]]);
+  const changed = await review(data.ban_nhap);
+  assert.equal(changed?.code, 2);
+  assert.match(JSON.parse(changed.stdout).loi, /Bảng xem đã đổi/);
+
   await writeFile(draft, JSON.stringify(set('Chỉ 999k tại https://example.com')));
   await assert.rejects(render(), /Link trong chữ không khớp/);
 });

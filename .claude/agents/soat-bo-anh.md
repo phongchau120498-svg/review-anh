@@ -9,7 +9,7 @@ Chọn chế độ “soát khung brand” khi lời giao ghi rõ chế độ n�
 
 ## Soát bộ ảnh
 
-Đọc `docs/brand/chung/cach-nghi-content.md` và `docs/brand/<brand>/{thuong-hieu,giong-van,vi-du}.md` của brand được giao. Nếu có `bai-hoc.md`, tham khảo tối đa 10 dòng mới nhất trong bảng. Đọc `bo-anh.json`, caption và ảnh `bang_xem` của cùng một lượt dựng.
+Đọc `docs/brand/chung/cach-nghi-content.md` và `docs/brand/<brand>/{thuong-hieu,giong-van,vi-du}.md` của brand được giao. Nếu có `bai-hoc.md`, tham khảo tối đa 10 dòng mới nhất trong bảng. Đọc bản chụp `ban_nhap` (`ra/<sp>/<run_id>/_xem/bo-anh.json`), caption và ảnh `bang_xem` từ cùng thư mục `_xem/`. Nếu thiếu bản chụp hoặc có đường dẫn thuộc lượt khác, ghi phần đối chiếu chưa xác minh.
 
 - So chữ trên ảnh và caption với bảng “là / không là”, “Tông theo chỗ đặt chữ”, danh sách cụm cấm và checklist “Tự soát trước khi trình”. Kiểm tên sản phẩm, chính tả, góc chung và giọng từng chỗ.
 - Đối chiếu công dụng với tài liệu brand và lời kể trải nghiệm với ghi chú gốc của người dùng. Thiếu ghi chú thì kiểm xem có lời tự nhận đã dùng hay không. Bản trải nghiệm phải bỏ giá, link và lời rủ mua.

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { hash } from 'node:crypto';
 import { cp, link, mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -138,7 +139,8 @@ test('CLI trả JSON và exit 0, 1, 2; chế độ bán hàng kiểm đúng brie
   const manifestPath = file(output + '/manifest.json');
   const manifest = { san_pham: 'body-oil', run_id: runId, bang_xem: preview, anh: [output + '/01.jpg'] };
   await writeFile(manifestPath, JSON.stringify({ ...manifest, san_pham: 'other' }));
-  await writeFile(file(preview), 'Ảnh xem thử');
+  const previewText = 'Ảnh xem thử';
+  await writeFile(file(preview), previewText);
   assert.equal(check()[0], 2);
   await writeFile(manifestPath, JSON.stringify(manifest));
   const [status, report] = check();
@@ -166,5 +168,69 @@ test('CLI trả JSON và exit 0, 1, 2; chế độ bán hàng kiểm đúng brie
   assert.equal(check()[0], 2);
   await rm(file(captionPath));
   await link(file(elsewhere), file(captionPath));
+  assert.equal(check()[0], 2);
+
+  await rm(file(captionPath));
+  await writeCaption({ threads: 'Ảnh mẫu', tiktok: 'Ảnh mẫu' });
+  const snapshot = output + '/_xem/bo-anh.json';
+  const snapshotText = JSON.stringify(draft('129.000 đồng, https://example.com/mau'));
+  const checksums = text => ({ ban_nhap_sha256: hash('sha256', text), bang_xem_sha256: hash('sha256', previewText) });
+  const writeManifest = (ban_nhap, text = snapshotText) => writeFile(manifestPath, JSON.stringify({
+    ...manifest, ban_nhap, ...(ban_nhap === undefined ? {} : checksums(text)),
+  }));
+  const checkSnapshot = (...args) => run(...args, snapshot, '--caption', captionPath);
+  const otherRun = '2026-11-19T12-00-00-000Z-abcdef02';
+  const otherOutput = 'ra/body-oil/' + otherRun;
+  const otherSnapshot = otherOutput + '/_xem/bo-anh.json';
+  const otherPreview = otherOutput + '/_xem/bang-ket-qua.jpg';
+  const otherText = JSON.stringify(draft('Ảnh mẫu'));
+  await mkdir(file(otherOutput + '/_xem'), { recursive: true });
+  await writeFile(file(otherSnapshot), otherText);
+  await writeFile(file(otherPreview), previewText);
+  await writeFile(file(otherOutput + '/manifest.json'), JSON.stringify({
+    ...manifest, run_id: otherRun, bang_xem: otherPreview, anh: [otherOutput + '/01.jpg'], ban_nhap: otherSnapshot, ...checksums(otherText),
+  }));
+  await writeFile(file(snapshot), snapshotText);
+
+  assert.equal(checkSnapshot()[0], 2);
+  await writeFile(manifestPath, JSON.stringify({ ...manifest, ban_nhap: snapshot }));
+  assert.equal(checkSnapshot()[0], 2);
+  await writeManifest(snapshot);
+  assert.equal(checkSnapshot()[0], 1);
+  assert.equal(checkSnapshot('--ban-hang')[0], 0);
+  assert.equal(run(snapshot)[0], 1);
+  assert.equal(run(otherSnapshot)[0], 0);
+  assert.equal(run(otherSnapshot, '--caption', captionPath)[0], 2);
+  for (const path of [otherSnapshot, input, file(snapshot), output + '/_xem/../_xem/bo-anh.json', null]) {
+    await writeManifest(path);
+    assert.equal(check()[0], 2);
+  }
+
+  await writeManifest(snapshot);
+  await rm(file(preview));
+  await link(file(otherPreview), file(preview));
+  assert.equal(check()[0], 2);
+  await writeManifest(undefined);
+  assert.equal(check()[0], 0);
+  await writeManifest(snapshot);
+  await rm(file(preview));
+  await writeFile(file(preview), previewText);
+
+  await rm(file(snapshot));
+  assert.equal(check()[0], 2);
+  await mkdir(file(snapshot));
+  assert.equal(check()[0], 2);
+  await rm(file(snapshot), { recursive: true });
+  await symlink(file(otherSnapshot), file(snapshot));
+  assert.equal(check()[0], 2);
+  await rm(file(snapshot));
+  await link(file(otherSnapshot), file(snapshot));
+  assert.equal(check()[0], 2);
+  await rm(file(snapshot));
+  await writeFile(file(snapshot), otherText);
+  assert.match(check()[1].loi, /Bản nháp đã đổi/);
+  const wrongProduct = JSON.stringify({ ...draft('Ảnh mẫu'), san_pham: 'other' });
+  await writeFile(file(snapshot), wrongProduct);
+  await writeManifest(snapshot, wrongProduct);
   assert.equal(check()[0], 2);
 });

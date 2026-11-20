@@ -69,11 +69,13 @@ for (const part of promptParts) {
   prior = prompt.indexOf(part);
 }
 assert(!prompt.includes('Mốc bài học 2 |'));
-assert(prompt.includes('tối đa 3 lượt dựng'));
-assert(prompt.includes('tools/bang-nguon.sh ' + product + ' --uu-tien'));
+assert(prompt.toLowerCase().includes('tối đa 3 lượt dựng'));
+const readyBoard = 'ra/_bang-nguon/' + product + '/trang-uu-tien-1.jpg';
+assert.equal(prompt.includes(readyBoard), scenario !== 'no-board');
+if (scenario === 'no-board') assert(prompt.includes('Chạy Bash: tools/bang-nguon.sh ' + product));
 assert(prompt.includes('Sản phẩm không có brief để đọc'));
 assert(prompt.endsWith(JSON.stringify(scenario === 'cancel' ? '' : '\\\\n$() ; ghi chú')));
-if (process.env.CLAUDE_STUB_CASE === 'timeout') process.exit(124);
+if (scenario === 'timeout' || scenario === 'no-board') process.exit(124);
 if (scenario === 'failed-with-usage') {
   console.log(JSON.stringify({type:'result',subtype:'error_max_turns',is_error:true,
     duration_ms:500, usage:{input_tokens:7,output_tokens:4}, modelUsage:{'claude-opus-stub':{}}}));
@@ -124,9 +126,7 @@ assert.match(sheet.stdout, /trang-1\\.jpg/);
 const all = bash('tools/bang-nguon.sh ' + product + ' --tat-ca');
 assert.equal(all.status, 0, all.stderr);
 assert.match(all.stdout, /trang-tat-ca-1\\.jpg/);
-const selected = bash('tools/bang-nguon.sh ' + product + ' --uu-tien');
-assert.equal(selected.status, 0, selected.stderr);
-assert.match(selected.stdout, /trang-uu-tien-1\\.jpg/);
+allow('Bash', {command:'tools/bang-nguon.sh ' + product + ' --uu-tien'});
 allow('Read', {file_path:'ra/_bang-nguon/' + product + '/trang-1.jpg'});
 allow('Read', {file_path:'ra/_bang-nguon/' + product + '/trang-tat-ca-1.jpg'});
 allow('Read', {file_path:'ra/_bang-nguon/' + product + '/trang-uu-tien-1.jpg'});
@@ -140,8 +140,15 @@ if (forbiddenImage) slides[0].tieu_de = 'Trị viê.m';
 if (scenario === 'success') {
   slides[0].tieu_de = 'Mua tại https://example.com';
   save();
-  for (let i = 0; i < 2; i++) assert.match(bash(render).stderr, /Link trong chữ/);
+  assert.match(bash(render).stderr, /Link trong chữ/);
   slides[0].tieu_de = 'Ảnh a a a a a a a a a a a a';
+  slides[0].phu = 'Che nhãn';
+  save();
+  const collision = bash(render);
+  assert.equal(collision.status, 1);
+  assert.equal(collision.stdout, '');
+  assert.match(collision.stderr, /Slide 1 \\(mau-1\\.jpg\\): chữ phụ đè nhãn chai/);
+  delete slides[0].phu;
 }
 save();
 const run = bash(render);
@@ -180,7 +187,9 @@ test('giao-viec khóa quyền, xác minh ảnh và luôn trả một JSON', asyn
   await mkdir(file('tools'));
   await mkdir(file('kho'));
   await mkdir(file(source), { recursive: true });
-  await writeFile(file(`kho/${product}-uu-tien.txt`), 'mau-1.jpg\n');
+  const priorityList = file(`kho/${product}-uu-tien.txt`);
+  await writeFile(priorityList, 'mau-1.jpg\n');
+  await writeFile(file(`kho/${product}-vung-bao-ve.json`), JSON.stringify({ 'mau-1.jpg': [[430, 855, 520, 914, 'nhãn chai']] }));
   for (const name of ['giao-viec.sh', 'giao-viec.mjs', 'bang-nguon.sh', 'loc-anh.mjs', 'dung-bo-anh.mjs', 'brand.mjs', 'soat-chu.mjs']) {
     await cp(path.join(repo, 'tools', name), file(`tools/${name}`));
   }
@@ -192,6 +201,10 @@ test('giao-viec khóa quyền, xác minh ảnh và luôn trả một JSON', asyn
   await writeFile(file('docs/brand/khac/giong-van.md'), 'khac');
   await symlink(path.join(repo, 'node_modules'), file('node_modules'), 'dir');
   await writeFile(file('bin/claude'), claudeStub, { mode: 0o755 });
+  await writeFile(file('bin/timeout'), `#!/bin/sh
+if [ "\${5-}" = systemd-run ]; then printf '%s\\n' "$4" >> "$CLAUDE_STUB_MARKER.deadline"; fi
+exec /usr/bin/timeout "$@"
+`, { mode: 0o755 });
   await writeFile(file('private.txt'), 'private');
   await symlink(file('private.txt'), file(`${source}/symlink.jpg`));
   for (const i of [1, 2, 3]) {
@@ -226,6 +239,14 @@ test('giao-viec khóa quyền, xác minh ảnh và luôn trả một JSON', asyn
   assert.equal(timedOut.status, 1);
   assert.equal(timedOut.value.loi, 'het-gio');
   assert.equal(timedOut.value.buoc.dung_thu, 0);
+  await access(file(`ra/_bang-nguon/${product}/trang-uu-tien-1.jpg`));
+  await writeFile(priorityList, 'vang-mat.jpg\n');
+  const missingBoard = run('no-board');
+  assert.equal(missingBoard.value.loi, 'het-gio');
+  assert.equal(missingBoard.value.buoc.tao_bang_truoc, 1);
+  assert.equal(missingBoard.value.buoc.tao_bang_truoc_dat, 0);
+  assert(missingBoard.value.buoc.tao_bang_truoc_ms > 0);
+  await writeFile(priorityList, 'mau-1.jpg\n');
   assert.match(run('forged').value.loi, /Không hoàn thành lượt dựng/);
   await rm(file('ra/' + product), { recursive: true });
   const sheetPath = file(`ra/_bang-nguon/${product}/trang-1.jpg`);
@@ -250,7 +271,13 @@ test('giao-viec khóa quyền, xác minh ảnh và luôn trả một JSON', asyn
     cache_ghi: 300, cache_doc: 2500, token_ra: 450, gia_api_usd: 0.08 });
   assert.deepEqual([buoc.tao_bang, buoc.tao_bang_dat, buoc.doc_bang, buoc.doc_anh_goc, buoc.doc_bang_ket_qua,
     buoc.ghi_nhap, buoc.dung_thu, buoc.dung_xong], [3, 3, 3, 1, 1, 1, 4, 1]);
+  assert.deepEqual([buoc.tao_bang_truoc, buoc.tao_bang_thuong, buoc.tao_bang_tat_ca], [1, 1, 1]);
+  assert.equal(buoc.tao_bang_truoc_dat, 1);
+  assert(buoc.tao_bang_truoc_ms > 0 && buoc.tao_bang_thuong_ms > 0 && buoc.tao_bang_tat_ca_ms > 0);
+  const deadlines = (await readFile(marker + '.deadline', 'utf8')).trim().split('\n').map(Number);
+  assert(deadlines.length > 0 && deadlines.every(n => n > 0 && n < 840));
   assert(buoc.tu_choi_hook > 0 && buoc.tao_bang_ms > 0 && buoc.dung_ms > 0);
+  assert(buoc.tong_ms > buoc.tao_bang_ms);
   assert.equal(await readFile(file('ra/_do-luong.tsv'), 'utf8'),
     `run_id\tsan_pham\tmodel\tso_vong\tgiay\ttoken_vao\tcache_ghi\tcache_doc\ttoken_ra\tgia_api_usd\n${run_id}\t${product}\tclaude-opus-stub\t9\t2.75\t22\t300\t2500\t450\t0.08\n`);
   assert((await lstat(file(`ra/_bang-nguon/${product}/.cham-anh.json`))).isFile());

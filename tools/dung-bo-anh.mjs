@@ -4,11 +4,12 @@ import { promisify } from 'node:util';
 import { constants, open, realpath, readFile, writeFile, mkdir, mkdtemp, rename, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createHash, randomUUID } from 'node:crypto';
+import { hash, randomUUID } from 'node:crypto';
 import { chromium } from 'playwright';
 
 export const ROOT = await realpath(path.join(path.dirname(fileURLToPath(import.meta.url)), '..'));
 export const MAX_POST_IMAGE_BYTES = 8000000;
+export const MAX_PREVIEW_BYTES = 20000000;
 const exec = promisify(execFile);
 const inside = (base, file) => {
   const relative = path.relative(base, file);
@@ -173,7 +174,7 @@ export async function checkImages(paths) {
         if (width !== '1080' || height !== '1920') errors.push('TikTok: cần 1080x1920');
         if (colorspace !== 'sRGB') errors.push('TikTok: cần sRGB');
         if (profiles.trim() || comment.join('|').trim()) errors.push('Còn metadata/profile/comment');
-        if (!errors.length) sha256 = createHash('sha256').update(input).digest('hex');
+        if (!errors.length) sha256 = hash('sha256', input);
       }
     } catch (error) {
       errors.push(error.message);
@@ -208,12 +209,30 @@ async function loadAssets() {
   return assets;
 }
 
-export async function fillPage(page, slide, imageData) {
+async function readProtectedAreas(product) {
+  const file = path.join(ROOT, 'kho', `${product}-vung-bao-ve.json`);
+  const bytes = await readBoundedFile(file, 32000, 'Vùng bảo vệ').catch(error => {
+    if (error.code !== 'ENOENT') throw error;
+  });
+  if (!bytes) return {};
+  const areas = JSON.parse(bytes);
+  if (!areas || typeof areas !== 'object' || Array.isArray(areas) || Object.entries(areas).some(([file, boxes]) =>
+    path.basename(file) !== file || !Array.isArray(boxes) || !boxes.length || boxes.some(box => {
+      if (!Array.isArray(box) || box.length !== 5) return true;
+      const [left, top, right, bottom, label] = box;
+      return ![left, top, right, bottom].every(Number.isInteger) || left < 0 || top < 0 ||
+        right > 1080 || bottom > 1920 || left >= right || top >= bottom ||
+        typeof label !== 'string' || !label.trim() || label.length > 80 || /[\r\n\0]/.test(label);
+    }))) throw new Error('Dữ liệu vùng bảo vệ không hợp lệ');
+  return areas;
+}
+
+export async function fillPage(page, slide, imageData, protectedAreas = []) {
   if (!['bia', 'chi-tiet'].includes(slide.mau)) throw new Error('mau phải là bia hoặc chi-tiet');
   const template = await readFile(path.join(ROOT, `mau/${slide.mau}.html`), 'utf8');
   await page.route('**/*', route => route.abort());
   await page.setContent(template.replace('/*CHUNG_CSS*/', await loadAssets()), { waitUntil: 'load' });
-  return page.evaluate(async ({ slide, imageData }) => {
+  return page.evaluate(async ({ slide, imageData, protectedAreas }) => {
     document.querySelector('img').src = imageData;
     document.querySelector('.tieu-de').textContent = slide.tieu_de;
     if (slide.mau === 'bia') document.querySelector('.phu').textContent = slide.phu ?? '';
@@ -237,13 +256,25 @@ export async function fillPage(page, slide, imageData) {
       if (element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth) throw new Error('Chữ quá dài, không vừa vùng an toàn');
       const box = element.getBoundingClientRect();
       if (box.left < 0 || box.top < 220 || box.right > 910 || box.bottom > 1400) throw new Error('Chữ ra ngoài vùng an toàn');
-      layout.push({ text: element.textContent, size, x: box.x, y: box.y, width: box.width, height: box.height });
+      const field = element.matches('.y') ? 'dòng ý' : element.matches('.phu') ? 'chữ phụ' : 'tiêu đề';
+      const entry = { text: element.textContent, size, x: box.x, y: box.y, width: box.width, height: box.height };
+      if (protectedAreas.length) {
+        const lines = [...(element.matches('.y') ? element.querySelectorAll('li') : [element])].flatMap(node => {
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          return [...range.getClientRects()].filter(rect => rect.width > 0 && rect.height > 0);
+        });
+        const covered = protectedAreas.find(([left, top, right, bottom]) => lines.some(line =>
+          line.left < right && line.right > left && line.top < bottom && line.bottom > top));
+        if (covered) entry.che = `${field} đè ${covered[4]}`;
+      }
+      layout.push(entry);
     }
     return layout;
-  }, { slide, imageData });
+  }, { slide, imageData, protectedAreas });
 }
 
-export async function renderSet(data, { browser, timeoutMs = 60000, traiNghiem = false } = {}) {
+export async function renderSet(data, { browser, timeoutMs = 60000, traiNghiem = false, draftSnapshot } = {}) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Bộ ảnh phải là object');
   if (Object.keys(data).some(key => !['san_pham', 'anh', 'gia', 'link'].includes(key))) throw new Error('Trường bộ ảnh không được hỗ trợ');
   const product = normalizeProduct(data.san_pham);
@@ -267,6 +298,7 @@ export async function renderSet(data, { browser, timeoutMs = 60000, traiNghiem =
     slides.push({ ...slide, file });
   }
   validateCopy(data, brief);
+  const protectedAreas = traiNghiem ? await readProtectedAreas(product) : {};
   await mkdir(path.join(ROOT, 'ra'), { recursive: true });
   const destination = await safePath(`ra/${product}`, 'ra', { allowMissing: true });
   await mkdir(destination, { recursive: true });
@@ -283,17 +315,36 @@ export async function renderSet(data, { browser, timeoutMs = 60000, traiNghiem =
     timer = setTimeout(() => context.close().catch(() => {}), timeoutMs);
     const page = await context.newPage();
     const images = [];
+    const layoutIssues = [];
     for (const [index, slide] of slides.entries()) {
       const { stdout } = await exec('magick', ['--', rasterInput(slide.file), '-auto-orient', '-resize', '1080x1920>', '-colorspace', 'sRGB', '-strip', 'jpeg:-'], {
         cwd: ROOT, encoding: 'buffer', timeout: 15000, maxBuffer: 32 * 1024 * 1024,
       });
-      await fillPage(page, slide, `data:image/jpeg;base64,${stdout.toString('base64')}`);
+      const name = path.basename(slide.file);
+      const areas = Object.hasOwn(protectedAreas, name) ? protectedAreas[name] : [];
+      let layout;
+      try {
+        layout = await fillPage(page, slide, `data:image/jpeg;base64,${stdout.toString('base64')}`, areas);
+      } catch (error) {
+        if (!traiNghiem) throw error;
+        const message = ['Chữ quá dài, không vừa vùng an toàn', 'Chữ ra ngoài vùng an toàn']
+          .find(text => error.message.includes(text));
+        if (!message) throw error;
+        layoutIssues.push(`Slide ${index + 1} (${name}): ${message}`);
+        continue;
+      }
+      const covered = layout.flatMap(box => box.che ? [box.che] : []);
+      if (covered.length) {
+        layoutIssues.push(`Slide ${index + 1} (${name}): ${covered.join(', ')}`);
+        continue;
+      }
       const file = await safePath(path.join(temporary, `${String(index + 1).padStart(2, '0')}.jpg`), 'ra', { allowMissing: true });
       const screenshot = await page.screenshot({ type: 'jpeg', quality: 94, timeout: 15000 });
       await writeFile(file, screenshot);
       await command(['--', rasterInput(file), '-colorspace', 'sRGB', '-strip', '-sampling-factor', '4:2:0', '-quality', '92', file]);
       images.push(relative(file));
     }
+    if (layoutIssues.length) throw new Error(`Bố cục chưa đạt. Đổi ảnh hoặc rút gọn chữ.\n${layoutIssues.join('\n')}`);
     const checks = await checkImages(images);
     if (checks.some(check => !check.dat)) throw new Error(`Ảnh không đạt: ${JSON.stringify(checks)}`);
     const preview = await createPreview(images);
@@ -301,6 +352,14 @@ export async function renderSet(data, { browser, timeoutMs = 60000, traiNghiem =
     const manifest = { san_pham: product, run_id: runId, anh: images.map(movePath),
       brief: { ten: brief.ten, gia: brief.gia, link: brief.link },
       kiem: checks.map(check => ({ ...check, path: movePath(check.path) })), bang_xem: movePath(preview) };
+    if (draftSnapshot) {
+      const snapshot = path.join(temporary, '_xem', 'bo-anh.json');
+      await writeFile(snapshot, draftSnapshot, { flag: 'wx', mode: 0o600 });
+      manifest.ban_nhap = movePath(snapshot);
+      manifest.ban_nhap_sha256 = hash('sha256', draftSnapshot);
+      const previewBytes = await readBoundedFile(path.join(ROOT, preview), MAX_PREVIEW_BYTES, 'Bảng xem', { singleLink: true });
+      manifest.bang_xem_sha256 = hash('sha256', previewBytes);
+    }
     await writeFile(await safePath(path.join(temporary, 'manifest.json'), 'ra', { allowMissing: true }), `${JSON.stringify(manifest, null, 2)}\n`);
     await rename(temporary, final);
     return { ...manifest, thu_muc: relative(final), manifest: relative(path.join(final, 'manifest.json')) };
@@ -325,8 +384,9 @@ async function main(args) {
     const [draft, ...extra] = traiNghiem ? files : args;
     if (!draft || extra.length) throw new Error('Dùng: node tools/dung-bo-anh.mjs [--trai-nghiem] nguon/<sp>/bo-anh.json');
     const input = await mediaPath(draft);
-    const data = JSON.parse(await readBoundedFile(input, 100000, 'JSON bộ ảnh'));
-    const result = await renderSet(data, { traiNghiem });
+    const draftSnapshot = await readBoundedFile(input, 100000, 'JSON bộ ảnh');
+    const data = JSON.parse(draftSnapshot);
+    const result = await renderSet(data, { traiNghiem, draftSnapshot });
     const { soatChu } = await import('./soat-chu.mjs');
     const soat_chu = await soatChu({ data, product: result.san_pham, traiNghiem });
     console.log(JSON.stringify({ ...result, soat_chu }, null, 2));

@@ -1,14 +1,16 @@
 import path from 'node:path';
-import { stat } from 'node:fs/promises';
+import { hash } from 'node:crypto';
+import { lstat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { camList } from './brand.mjs';
-import { ROOT, readBoundedFile, readBrief, safePath, validateCopy } from './dung-bo-anh.mjs';
+import { ROOT, MAX_PREVIEW_BYTES, normalizeProduct, readBoundedFile, readBrief, safePath, validateCopy } from './dung-bo-anh.mjs';
 
 const normalize = value => value.normalize('NFC').toLowerCase()
   .replace(/(?<=\p{L})[._*]+(?=\p{L})/gu, '').replace(/\s+/gu, ' ').trim();
 const escape = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const words = value => value.trim() ? value.trim().split(/\s+/u).length : 0;
-const usage = 'Dùng: node tools/soat-chu.mjs [--ban-hang] nguon/<sp>/bo-anh.json [--caption ra/<sp>/<run_id>/_xem/caption.json]';
+const usage = 'Dùng: node tools/soat-chu.mjs [--ban-hang] <nguon/<sp>/bo-anh.json hoặc ban_nhap> [--caption ra/<sp>/<run_id>/_xem/caption.json]';
+const runFile = /^ra\/([a-z0-9-]+)\/(\d{4}(?:-\d{2}){2}T\d{2}(?:-\d{2}){2}-\d{3}Z-[a-f0-9]{8})\/_xem\/(bo-anh|caption)\.json$/;
 
 export async function soatChu({ data, caption, product = data.san_pham, traiNghiem = true, root = ROOT }) {
   const brief = traiNghiem ? undefined : await readBrief(product);
@@ -50,22 +52,37 @@ export async function soatChu({ data, caption, product = data.san_pham, traiNghi
   return { dat: !loi.length, loi, canh_bao };
 }
 
-async function readCaption(file, product) {
+async function exactPath(file, area) {
   const absolute = path.resolve(ROOT, file);
-  const [area, code, run, folder, name, ...extra] = path.relative(ROOT, absolute).split('/');
-  if (area !== 'ra' || code !== product || !/^\d{4}(?:-\d{2}){2}T\d{2}(?:-\d{2}){2}-\d{3}Z-[a-f0-9]{8}$/.test(run) ||
-      folder !== '_xem' || name !== 'caption.json' || extra.length) throw new Error(usage);
-  const manifestPath = path.resolve(path.dirname(absolute), '..', 'manifest.json');
-  const preview = 'ra/' + product + '/' + run + '/_xem/bang-ket-qua.jpg';
-  const previewPath = path.resolve(ROOT, preview);
-  for (const input of [absolute, manifestPath, previewPath]) {
-    if (await safePath(input, 'ra') !== input) throw new Error('Lượt dựng và caption không được dùng symlink');
-  }
+  if (await safePath(absolute, area) !== absolute) throw new Error('Tệp soát không được dùng symlink');
+  return absolute;
+}
+
+async function readRunSnapshot(product, run) {
+  const base = `ra/${product}/${run}`;
+  const preview = `${base}/_xem/bang-ket-qua.jpg`;
+  const manifestPath = await exactPath(`${base}/manifest.json`, 'ra');
+  const previewPath = await exactPath(preview, 'ra');
   const manifest = JSON.parse(await readBoundedFile(manifestPath, 100000, 'manifest.json', { singleLink: true }));
   if (manifest?.san_pham !== product || manifest.run_id !== run || manifest.bang_xem !== preview ||
-      !Array.isArray(manifest.anh) || !manifest.anh.length || !(await stat(previewPath)).isFile()) {
-    throw new Error('Caption cần thuộc đúng lượt dựng của sản phẩm');
+      !Array.isArray(manifest.anh) || !manifest.anh.length) {
+    throw new Error('Manifest và bảng xem cần thuộc đúng lượt dựng');
   }
+  if (!Object.hasOwn(manifest, 'ban_nhap')) {
+    if (!(await lstat(previewPath)).isFile()) throw new Error('Bảng xem cần là file thường');
+    return;
+  }
+  if (manifest.ban_nhap !== `${base}/_xem/bo-anh.json`) throw new Error('Bản nháp cần thuộc đúng lượt dựng');
+  const previewBytes = await readBoundedFile(previewPath, MAX_PREVIEW_BYTES, 'Bảng xem', { singleLink: true });
+  if (hash('sha256', previewBytes) !== manifest.bang_xem_sha256) throw new Error('Bảng xem đã đổi hoặc thiếu SHA-256');
+  const input = await exactPath(manifest.ban_nhap, 'ra');
+  const bytes = await readBoundedFile(input, 100000, 'bo-anh.json', { singleLink: true });
+  if (hash('sha256', bytes) !== manifest.ban_nhap_sha256) throw new Error('Bản nháp đã đổi hoặc thiếu SHA-256');
+  return bytes;
+}
+
+async function readCaption(file) {
+  const absolute = await exactPath(file, 'ra');
   const caption = JSON.parse(await readBoundedFile(absolute, 100000, 'caption.json', { singleLink: true }));
   if (!caption || Object.keys(caption).length !== 2 ||
       ![caption.threads, caption.tiktok].every(value => typeof value === 'string' && value.trim() && !value.includes('\0'))) {
@@ -77,16 +94,27 @@ async function readCaption(file, product) {
 async function main(args) {
   const traiNghiem = args[0] !== '--ban-hang';
   const [file, ...extra] = traiNghiem ? args : args.slice(1);
-  const absolute = path.resolve(ROOT, file ?? '');
-  const product = /^nguon\/([a-z0-9-]+)\/bo-anh\.json$/.exec(path.relative(ROOT, absolute))?.[1];
-  if (!product || (extra.length && (extra.length !== 2 || extra[0] !== '--caption' || !extra[1]))) throw new Error(usage);
-  const input = await safePath(absolute, 'nguon');
-  if (input !== absolute) throw new Error('bo-anh.json không được là symlink');
-  const data = JSON.parse(await readBoundedFile(input, 100000, 'bo-anh.json'));
-  if (data?.san_pham !== product || !Array.isArray(data.anh) || !data.anh.length) {
+  if (!file || (extra.length && (extra.length !== 2 || extra[0] !== '--caption' || !extra[1]))) throw new Error(usage);
+  const relative = value => path.relative(ROOT, path.resolve(ROOT, value));
+  const draft = relative(file);
+  const [, snapshotProduct, snapshotRun, snapshotName] = runFile.exec(draft) ?? [];
+  const sourceProduct = /^nguon\/([a-z0-9-]+)\/bo-anh\.json$/.exec(draft)?.[1];
+  const product = sourceProduct ?? snapshotProduct;
+  const [, captionProduct, captionRun, captionName] = extra.length ? runFile.exec(relative(extra[1])) ?? [] : [];
+  if (!product || (snapshotRun && snapshotName !== 'bo-anh') ||
+      (extra.length && (captionName !== 'caption' || captionProduct !== product || (snapshotRun && snapshotRun !== captionRun)))) {
+    throw new Error(usage);
+  }
+  const run = snapshotRun ?? captionRun;
+  const snapshot = run ? await readRunSnapshot(product, run) : undefined;
+  if (snapshotRun && !snapshot) throw new Error('Lượt dựng thiếu bản nháp');
+  const bytes = snapshot ?? await readBoundedFile(await exactPath(draft, 'nguon'), 100000, 'bo-anh.json');
+  const data = JSON.parse(bytes);
+  if (!Array.isArray(data?.anh) || !data.anh.length ||
+      (snapshot ? normalizeProduct(data.san_pham) : data.san_pham) !== product) {
     throw new Error('Bộ ảnh cần đúng sản phẩm và có ảnh');
   }
-  const caption = extra.length ? await readCaption(extra[1], product) : undefined;
+  const caption = extra.length ? await readCaption(extra[1]) : undefined;
   const report = await soatChu({ data, caption, product, traiNghiem });
   console.log(JSON.stringify(report));
   process.exitCode = report.dat ? 0 : 1;
