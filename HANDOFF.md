@@ -1,6 +1,37 @@
 # HANDOFF
 
-Cập nhật lần cuối: 2026-11-20 — Codex
+Cập nhật lần cuối: 2026-11-21 17:30 — Claude Code
+
+## Đăng TikTok qua Postiz (T-07) · phụ trách: anh + phiên tiếp theo · nhánh: `main` · cập nhật: 2026-11-21
+
+- Mục tiêu: Thu Trinh dựng bộ ảnh, gửi anh duyệt trong chat, anh "ok" thì nó chạy `tools/dang-postiz.mjs` đưa bài vào **nháp inbox TikTok** qua Postiz tự host trên PC Linux. Sau khi app TikTok được duyệt, chuyển sang đăng thẳng theo lịch hằng ngày.
+- Chặng hiện tại: Postiz **thử** chạy được trên PC Linux. Kênh TikTok đã nối (app Sandbox "Moaw Moaws", key bắt đầu `sb`). Bộ Body Oil `ra/body-oil/2026-11-20T03-23-24-102Z-821a9943` đã vào inbox TikTok lúc 21/11 16:08: Postiz báo `PUBLISHED`, URL `p_inbox_...`. Anh chưa xác nhận đã thấy trên app điện thoại. Nháp không hiện ở tab Bản nháp của TikTok Studio web; chỉ xem được trong Hộp thư app, tự hủy sau 24 giờ. `onehand.space` đã chuyển DNS từ Vercel sang Cloudflare (Active 21/11 ~17:20).
+- Dở dang chưa commit: không. Script và test đã commit cùng HANDOFF này.
+- **Trạng thái chỉ có trên PC Linux** (không theo Git, máy nhà không có):
+  - Docker project `review-anh-postiz-thu`: dùng `postiz/docker-compose.yml` + override `ra/.postiz-thu/thu-local.yml` (ảnh lưu local, `NOT_SECURED=true`), env `ra/.postiz-thu/thu.env` (quyền 600, gồm TikTok key/secret và `POSTIZ_API_KEY`; không in ra). Đăng ký đã khóa (`DISABLE_REGISTRATION=true`). Có 2 tài khoản admin; dùng tài khoản thứ hai.
+  - Hai Quick Tunnel tạm, PID trong `ra/.postiz-thu/*.pid`: Postiz `https://pound-fate-jvc-attractions.trycloudflare.com`, trang Terms/Privacy `https://sized-kruger-bent-refugees.trycloudflare.com` (`python3 -m http.server` phục vụ `ra/.postiz-thu/trang/`). **Tắt máy hoặc tunnel chết thì địa chỉ đổi**: app TikTok, Redirect URI và URL prefix phải nhập lại.
+  - File xác minh TikTok `tiktokBZUMSPEzSc32XmbxPk6hwTk91wAQRoUP.txt` đặt trong volume `/uploads` của container Postiz.
+  - Nhật ký đưa bài `ra/.postiz-dang/nhat-ky.jsonl` (chặn đưa trùng, tối đa 5 bài/24 giờ).
+- Tiếp theo:
+  1. *(Anh, trên Cloudflare)* `bot.onehand.space` đang Proxied (cam): chuyển sang **DNS only**, vì proxy gói Free cắt phản hồi im lặng quá 100 giây, và đây là MausBot của bạn anh. `onehand.space` và `www` giữ cam.
+  2. *(Anh, Zero Trust → Networks → Tunnels)* Tạo named tunnel `review-anh-postiz`. Lệnh `service install` có token: **phải chạy trên PC Linux** (`/home/thanh-phong/.local/bin/cloudflared`), không dán vào chat hay Git. Public hostname `postiz.onehand.space` → HTTP `127.0.0.1:4007`. Tạo tunnel trên dashboard thì làm ở đâu cũng được.
+  3. *(Agent, trên PC Linux)* Đổi `MAIN_URL` trong `thu.env` sang `https://postiz.onehand.space`, bỏ `NOT_SECURED` khỏi `thu-local.yml`, `up -d postiz`. Kiểm `can-register=false`, `/api/public/v1/integrations` không key trả 401. Tắt 2 Quick Tunnel. Trang Terms/Privacy đưa sang chỗ cố định trên domain (đừng phục vụ HTML trong `/uploads`; nginx của Postiz cố ý chặn).
+  4. *(Anh + agent)* Cloudflare Access chỉ email anh cho giao diện Postiz. Chừa đường không qua Access cho `/uploads/*` (TikTok kéo ảnh), `/integrations/social/tiktok` (OAuth về trình duyệt đã đăng nhập Access) và `/api/public/v1/*` (vẫn bắt API key). Xem `docs/postiz-local.md` mục 2 và 6.
+  5. *(Anh, TikTok Developers)* Sửa Redirect URI, URL prefix `https://postiz.onehand.space/uploads/` (đặt lại file xác minh), Terms/Privacy, rồi nối lại kênh TikTok trong Postiz.
+  6. *(Anh chốt)* Chuyển app TikTok sang Production và nộp duyệt. Sau khi được duyệt mới đổi script sang `DIRECT_POST` + `PUBLIC_TO_EVERYONE`, và sửa luật "chỉ bản nháp" trong `AGENTS.md` / `docs/protocols/security.md`.
+  7. Cập nhật `docs/huong-dan-thu-trinh-may-linux.md`: thêm bước "anh ok trong chat → `run_command` chạy `node tools/dang-postiz.mjs <run> --caption ... --tieu-de ...`".
+- Blocker: các bước 1, 2, 4, 5 cần anh đăng nhập Cloudflare/TikTok. Bước 2 và 3 cần ngồi ở PC Linux, hoặc PC đó phải bật.
+- Ràng buộc/không được đụng:
+  - **Anh chốt 21/11:** mức duyệt A. Thu Trinh gửi ảnh và caption vào chat, anh "ok" mới đẩy, và chỉ vào nháp TikTok (UPLOAD). Script cố định UPLOAD, chưa có cờ DIRECT_POST.
+  - Anh chốt dùng subdomain `onehand.space` (anh quản lý domain, đăng ký qua Vercel, DNS nay ở Cloudflare). Kênh TikTok đã nối có **722 bài**, có thể là kênh thật, chưa xác nhận. Đừng đăng thẳng.
+  - Không cho bot bấm TikTok Studio trên web: điều khoản TikTok cấm tự động hóa ngoài API, có rủi ro khóa kênh. Anh đã nghe phân tích và giữ hướng Postiz.
+  - Không in hay commit key TikTok, `POSTIZ_API_KEY`, token tunnel. Không dùng `docker compose down -v`.
+- Đã thử, thất bại:
+  - Đăng nhập Postiz qua `trycloudflare.com` bị đá về trang Sign In: Postiz đặt cookie cho `.trycloudflare.com`, mà domain này nằm trong Public Suffix List nên trình duyệt chặn. Tạm sửa bằng `NOT_SECURED=true`. Domain thật thì bỏ.
+  - TikTok báo lỗi `client_key` khi nối kênh: do cài đặt app chưa Apply hoặc chưa đúng; anh sửa trên dashboard thì nối được.
+  - Đặt Terms/Privacy trong `/uploads` của Postiz: nginx trả `application/octet-stream` và chặn script (CSP). Không nới cấu hình đó.
+- Kiểm tra: `node --test tools/dang-postiz.test.mjs` → 1/1 (Postiz giả). Lượt thật: `node tools/dang-postiz.mjs ra/body-oil/2026-11-20T03-23-24-102Z-821a9943 ...` → `ok:true`, post `cmwq6qzsj0002kf93122ry7ta`, DB Postiz `PUBLISHED` + `p_inbox_`. Sau khi Cloudflare Active: `onehand.space` 200, `bot` 200, `www` 307, SSL hợp lệ, DKIM 219/219, SPF và MX khớp. Chưa kiểm: anh thấy nháp trên app; email Resend gửi thật sau khi đổi DNS.
+- Task: T-07 trong [Tracking](docs/protocols/tracking.md). Cách cài Postiz: [postiz-local](docs/postiz-local.md).
 
 ## Tối ưu bộ brand và quy trình · phụ trách: phiên 20/11 · nhánh: `main`
 
